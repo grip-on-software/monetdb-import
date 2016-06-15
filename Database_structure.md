@@ -47,7 +47,7 @@ Context tables:
     -   description
 
 
--   Status
+-   status
     -   id
     -   name
     -   description
