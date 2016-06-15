@@ -17,27 +17,27 @@ The structure will be shown as follows:
 ## Jira
 
 -   issues
-    -   id
-    -   key
-    -   title
-    -   type
-    -   priority
-    -   resolution
-    -   fixVersion
-    -   bugfix
-    -   watchers
-    -   created_at
-    -   updated_at (this is the data of a transition)
-    -   description
-    -   due date
-    -   project_id
-    -   status
-    -   delta_comments
-    -   reporter
-    -   assignee
-    -   attachments
-    -   additional_information
-    -   review_comments
+    -   id - INT
+    -   key - VARCHAR (10)
+    -   title - VARCHAR(250)
+    -   type - INT
+    -   priority - INT
+    -   resolution - INT
+    -   fixVersion - INT
+    -   bugfix - INT
+    -   watchers - INT
+    -   created_at - DATE
+    -   updated_at - DATE
+    -   description - VARCHAR
+    -   duedate - DATE
+    -   project_id - INT
+    -   status - INT
+    -   delta_comments - VARCHAR
+    -   reporter - INT
+    -   assignee - INT
+    -   attachments - INT
+    -   additional_information - VARCHAR
+    -   review_comments - VARCHAR
 
 Context tables:
 
