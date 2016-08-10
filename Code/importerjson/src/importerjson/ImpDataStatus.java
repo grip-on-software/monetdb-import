@@ -35,7 +35,7 @@ public class ImpDataStatus {
  
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://localhost:50000/gros", "monetdb", "monetdb");
+            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
  
             JSONArray a = (JSONArray) parser.parse(new FileReader("/path/to/data.json"));
             

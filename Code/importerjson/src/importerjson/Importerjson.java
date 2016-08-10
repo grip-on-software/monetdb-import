@@ -12,7 +12,7 @@ public class Importerjson {
     
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-    /*    
+        
         ImpData data = new ImpData();
         data.parser();
         
@@ -37,13 +37,9 @@ public class Importerjson {
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
         impDataIssueLink.parser();
         
-    */
         ImpMetricValue impmetricvalue = new ImpMetricValue();
         impmetricvalue.parser();
     
-        //MetricDb mDB = new MetricDb();
-        //mDB.check_metric("ProductLPOC1");
-        //mDB.insert_metric("aaaa");
     }
 
 }

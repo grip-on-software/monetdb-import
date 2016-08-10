@@ -28,7 +28,7 @@ public class MetricDb {
     
         try {
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://localhost:50000/gros", "monetdb", "monetdb");        
+            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");        
             st = con.createStatement();
             sql = "insert into gros.metric(name) values ('"+name+"');";
                     
@@ -53,7 +53,7 @@ public class MetricDb {
     
         try {
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://localhost:50000/gros", "monetdb", "monetdb");        
+            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");        
             st = con.createStatement();
             sql = "insert into gros.metric_value values ("+id+", '"+value+"','"+date+"'"+","+project+");";
                     
@@ -81,7 +81,7 @@ public class MetricDb {
         try {
 
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://localhost:50000/gros", "monetdb", "monetdb");
+            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
             
             st = con.createStatement();
             String sql_var = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
