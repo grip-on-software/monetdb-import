@@ -10,8 +10,6 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,7 +18,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpDataStatus {
+public class ImpDataStatus extends BaseImport{
     
     public void parser(){
 
@@ -35,9 +33,9 @@ public class ImpDataStatus {
  
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
- 
-            JSONArray a = (JSONArray) parser.parse(new FileReader("/path/to/data.json"));
+            con = DriverManager.getConnection(url, user, password);
+            
+            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_status.json"));
             
             for (Object o : a)
             {

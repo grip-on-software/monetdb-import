@@ -7,10 +7,6 @@ package importerjson;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -19,19 +15,10 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpMetricValue {
+public class ImpMetricValue extends BaseImport{
     
     BufferedReader br = null;
-    PreparedStatement pstmt = null;
-    PreparedStatement pstmt2 = null;
-    Connection con = null;
-    Connection con2 = null;
     JSONParser parser = new JSONParser();
-    Statement st = null;
-    Statement st2 = null;
-    ResultSet rs = null;
-    ResultSet rs2 = null;
-
 
     public void parser(){
 
@@ -39,10 +26,9 @@ public class ImpMetricValue {
         MetricDb mDB;
         
         try {
-        
-            JSONArray a = (JSONArray) parser.parse(new FileReader("/path/to/data.json"));
-
-            
+                 
+            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_metrics.json"));
+     
             for (Object o : a)
             {
      

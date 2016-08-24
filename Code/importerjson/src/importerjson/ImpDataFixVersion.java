@@ -19,7 +19,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpDataFixVersion {
+public class ImpDataFixVersion extends BaseImport{
     
     public void parser(){
 
@@ -34,9 +34,9 @@ public class ImpDataFixVersion {
  
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
- 
-            JSONArray a = (JSONArray) parser.parse(new FileReader("/path/to/data.json"));
+            con = DriverManager.getConnection(url, user, password);
+            
+            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_fixVersion.json"));
             
             for (Object o : a)
             {

@@ -20,7 +20,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpData {
+public class ImpData extends BaseImport{
     
     public void parser(){
 
@@ -31,13 +31,11 @@ public class ImpData {
         JSONParser parser = new JSONParser();
  
         try {
- 
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
+            con = DriverManager.getConnection(url, user, password);
             
- 
-            JSONArray a = (JSONArray) parser.parse(new FileReader("/path/to/data.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data.json"));
             
             for (Object o : a)
             {

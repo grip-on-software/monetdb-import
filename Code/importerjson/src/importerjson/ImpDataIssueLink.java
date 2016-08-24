@@ -8,7 +8,6 @@ package importerjson;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import org.json.simple.JSONArray;
@@ -19,7 +18,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpDataIssueLink {
+public class ImpDataIssueLink extends BaseImport{
     
     public void parser(){
 
@@ -34,9 +33,9 @@ public class ImpDataIssueLink {
  
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
- 
-            JSONArray a = (JSONArray) parser.parse(new FileReader("/path/to/data.json"));
+            con = DriverManager.getConnection(url, user, password);
+            
+            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_issuelinks.json"));
             
             for (Object o : a)
             {

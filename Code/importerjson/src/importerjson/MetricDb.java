@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class MetricDb {
+public class MetricDb extends BaseImport{
     
     public void insert_metric(String name){
         
@@ -28,7 +28,8 @@ public class MetricDb {
     
         try {
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");        
+            con = DriverManager.getConnection(url, user, password);
+       
             st = con.createStatement();
             sql = "insert into gros.metric(name) values ('"+name+"');";
                     
@@ -53,7 +54,7 @@ public class MetricDb {
     
         try {
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");        
+            con = DriverManager.getConnection(url, user, password);       
             st = con.createStatement();
             sql = "insert into gros.metric_value values ("+id+", '"+value+"','"+date+"'"+","+project+");";
                     
@@ -81,7 +82,7 @@ public class MetricDb {
         try {
 
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection("jdbc:monetdb://MONETDB_SERVER.localhost:50000/gros", "monetdb", "monetdb");
+            con = DriverManager.getConnection(url, user, password);
             
             st = con.createStatement();
             String sql_var = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
