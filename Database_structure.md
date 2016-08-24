@@ -93,3 +93,5 @@ Relationship tables:
 -   subtasks
     -   id_parent
     -   id_subtask
+
+## History file
