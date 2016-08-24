@@ -29,8 +29,6 @@ public class ImpData {
         Connection con = null;
         Statement st = null;
         JSONParser parser = new JSONParser();
-        
-        //JSONParser parser = new JSONParser();
  
         try {
  
@@ -68,6 +66,7 @@ public class ImpData {
                 String review_comments = (String) jsonObject.get("review_comments");
                 String issue_id = (String) jsonObject.get("issue_id");
                 String resolution = (String) jsonObject.get("resolution");
+                String sprint = (String) jsonObject.get("sprint_id");
                 
                 if ((resolution.trim()).equals("None") ){
                     resolution = "0";
@@ -90,33 +89,8 @@ public class ImpData {
                 if ((bugfix.trim()).equals("None") ){
                     bugfix = "0";
                 }
-            
-                /*
-                System.out.println("additional_information: " + additional_information);
-                System.out.println("assignee: " + assignee);
-                System.out.println("title: " + title);
-                System.out.println("fixVersions: " + fixVersions);
-                System.out.println("priority: " + priority);
-                System.out.println("attachment: " + attachment);
-                System.out.println("project_id: " + project_id);
-                System.out.println("type: " + type);
-                System.out.println("duedate: " + duedate);
-                System.out.println("status: " + status);
-                System.out.println("updated: " + updated);
-                System.out.println("description: " + description);
-                System.out.println("reporter: " + reporter);
-                System.out.println("key: " + key);
-                System.out.println("resolution_date: " + resolution_date);
-                System.out.println("storypoint: " + storypoint);
-                System.out.println("watchers: " + watchers);
-                System.out.println("created: " + created);
-                System.out.println("bugfix: " + bugfix);
-                System.out.println("review_comments: " + review_comments);
-                System.out.println("issue_id: " + issue_id);
-                System.out.println("resolution: " + resolution);
-                */
                 
-                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
@@ -129,19 +103,7 @@ public class ImpData {
                 pstmt.setInt(7, Integer.parseInt(fixVersions));
                 pstmt.setInt(8, Integer.parseInt(bugfix));
                 pstmt.setInt(9, Integer.parseInt(watchers));
-                
-                //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-                //Date dcreated = dateFormat.parse(created);
-                //Timestamp ts_created = new java.sql.Timestamp(dcreated.getTime());
-                
-                //String date = "2009-07-16T19:20:30-05:00";
-                //String pattern = "yyyy-MM-dd'T'HH:mm:ssZ";
-                //DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern);
-                //DateTime dateTime = dtf.parseDateTime(date);
-                //String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-                //DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern);
-                //DateTime dT_created = dtf.parseDateTime(created);
-                //Timestamp ts_created = new Timestamp(dT_created.getMillis());//Timestamp.valueOf(created);
+
                 Timestamp ts_created;              
                 if (created !=null){
                     ts_created = Timestamp.valueOf(created); 
@@ -151,15 +113,6 @@ public class ImpData {
                     pstmt.setNull(10, java.sql.Types.TIMESTAMP);
                 }
                        
-                
-                
-                
-                
-                //Date dupdated = dateFormat.parse(updated);
-                //Timestamp ts_updated = new java.sql.Timestamp(dupdated.getTime());
-                
-                //DateTime dT_updated = dtf.parseDateTime(updated);
-                //Timestamp ts_updated = new Timestamp(dT_updated.getMillis());
                 Timestamp ts_updated;              
                 if (updated !=null){
                     ts_updated = Timestamp.valueOf(updated); 
@@ -168,16 +121,8 @@ public class ImpData {
                     //ts_updated = null;
                     pstmt.setNull(11, java.sql.Types.TIMESTAMP);
                 }
-                
-                //Timestamp ts_updated = Timestamp.valueOf(updated);                
-                //System.out.println(description);            
+                           
                 pstmt.setString(12, description);
-                
-                //Date dduedate = dateFormat.parse(duedate);
-                //Timestamp ts_duedate = new java.sql.Timestamp(dduedate.getTime());
-                
-                //DateTime dT_duedate = dtf.parseDateTime(duedate);
-                //Timestamp ts_duedate = new Timestamp(dT_duedate.getMillis());
                 
                 Timestamp ts_duedate;              
                 if (duedate !=null){
@@ -187,9 +132,6 @@ public class ImpData {
                     //ts_duedate = null;
                     pstmt.setNull(13, java.sql.Types.TIMESTAMP);
                 }
-                
-                //Timestamp ts_duedate = Timestamp.valueOf(duedate);
-                
                 
                 pstmt.setInt(14, Integer.parseInt(project_id));
                 pstmt.setInt(15, Integer.parseInt(status));
@@ -201,10 +143,6 @@ public class ImpData {
                 pstmt.setString(21, review_comments);
                 pstmt.setInt(22, Integer.parseInt(storypoint));
                 
-                //Date dresdate = dateFormat.parse(resolution_date);
-                //Timestamp ts_resolution_date = new java.sql.Timestamp(dresdate.getTime());
-                //DateTime dT_resolution_date = dtf.parseDateTime(resolution_date);
-                //Timestamp ts_resolution_date = new Timestamp(dT_resolution_date.getMillis());
                 Timestamp ts_resolution_date;              
                 if (resolution_date !=null){
                     
@@ -216,12 +154,10 @@ public class ImpData {
                     pstmt.setNull(23, java.sql.Types.TIMESTAMP);
                 }
                 
-                //Timestamp ts_resolution_date = Timestamp.valueOf(resolution_date);                
-                
-                
+                pstmt.setInt(24, Integer.parseInt(sprint));                
+                                
                 pstmt.executeUpdate();
-            }
-            //con.commit(); 
+            } 
             
         }
             

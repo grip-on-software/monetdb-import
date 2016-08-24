@@ -12,10 +12,10 @@ public class Importerjson {
     
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-        
+      
         ImpData data = new ImpData();
         data.parser();
-        
+   
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser();
         
@@ -24,7 +24,7 @@ public class Importerjson {
         
         ImpDataResolution impDataResolution = new ImpDataResolution();
         impDataResolution.parser();
-        
+         
         ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
         impDataRelationshipType.parser();
         
@@ -33,12 +33,15 @@ public class Importerjson {
         
         ImpDataFixVersion impDataFixVersion = new ImpDataFixVersion();
         impDataFixVersion.parser();
-        
+         
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
         impDataIssueLink.parser();
-        
+      
         ImpMetricValue impmetricvalue = new ImpMetricValue();
         impmetricvalue.parser();
+        
+        ImpSprint impsprint = new ImpSprint();
+        impsprint.parser();
     
     }
 

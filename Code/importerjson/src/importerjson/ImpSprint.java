@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -18,7 +19,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpDataType {
+public class ImpSprint {
     
     public void parser(){
 
@@ -26,8 +27,6 @@ public class ImpDataType {
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
-        
-        //JSONParser parser = new JSONParser();
  
         try {
  
@@ -42,17 +41,44 @@ public class ImpDataType {
       
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String description = (String) jsonObject.get("description");
+                
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
+                String start = (String) jsonObject.get("start_date");
+                String end = (String) jsonObject.get("end_date");
                 
-                String sql = "insert into gros.issuetype values (?,?,?);";
+                if ((start.trim()).equals("0") || (start.trim()).equals("None")){
+                    start = null;
+                }
+                
+                if ((end.trim()).equals("0") || (end.trim()).equals("None")){
+                    end = null;
+                }
+                
+                String sql = "insert into gros.sprint values (?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
                 pstmt.setInt(1, Integer.parseInt(id));
                 pstmt.setString(2, name);
-                pstmt.setString(3, description);
+                
+                Timestamp ts_start;              
+                if (start !=null){
+                    ts_start = Timestamp.valueOf(start); 
+                    pstmt.setTimestamp(3,ts_start);
+                } else{
+                    //start = null;
+                    pstmt.setNull(3, java.sql.Types.TIMESTAMP);
+                }
+                
+                Timestamp ts_end;              
+                if (end !=null){
+                    ts_end = Timestamp.valueOf(end); 
+                    pstmt.setTimestamp(4,ts_end);
+                } else{
+                    //end = null;
+                    pstmt.setNull(4, java.sql.Types.TIMESTAMP);
+                }
                 
                 pstmt.executeUpdate();
             }
