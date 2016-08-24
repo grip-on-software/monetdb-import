@@ -33,9 +33,10 @@ public class ImpData extends BaseImport{
         try {
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(url, user, password);
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data.json"));
+            String project_id = "";
             
             for (Object o : a)
             {
@@ -48,7 +49,7 @@ public class ImpData extends BaseImport{
                 String fixVersions = (String) jsonObject.get("fixVersions");
                 String priority = (String) jsonObject.get("priority");
                 String attachment = (String) jsonObject.get("attachment");
-                String project_id = (String) jsonObject.get("project_id");
+                       project_id = (String) jsonObject.get("project_id");
                 String type = (String) jsonObject.get("type");
                 String duedate = (String) jsonObject.get("duedate");
                 String status = (String) jsonObject.get("status");
@@ -64,7 +65,15 @@ public class ImpData extends BaseImport{
                 String review_comments = (String) jsonObject.get("review_comments");
                 String issue_id = (String) jsonObject.get("issue_id");
                 String resolution = (String) jsonObject.get("resolution");
-                String sprint = (String) jsonObject.get("sprint_id");
+                String sprint = (String) jsonObject.get("sprint");
+                
+                System.out.println(sprint);
+                
+                if ((sprint.trim()).equals("null") ){
+                    sprint = "0";
+                }
+                
+                System.out.println(sprint);
                 
                 if ((resolution.trim()).equals("None") ){
                     resolution = "0";
@@ -151,12 +160,15 @@ public class ImpData extends BaseImport{
                     //ts_resolution_date = null;
                     pstmt.setNull(23, java.sql.Types.TIMESTAMP);
                 }
-                
+
                 pstmt.setInt(24, Integer.parseInt(sprint));                
                                 
                 pstmt.executeUpdate();
-            } 
+            }
             
+            //Used for creating Project if it didn't exist
+            this.setProjectID(Integer.parseInt(project_id));
+                  
         }
             
         catch (Exception e) {

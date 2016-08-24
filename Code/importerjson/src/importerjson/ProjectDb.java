@@ -18,9 +18,9 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class MetricDb extends BaseImport{
+public class ProjectDb extends BaseImport{
     
-    public void insert_metric(String name){
+    public void insert_project(int id, String name){
         
         Connection con = null;
         Statement st = null;
@@ -31,49 +31,24 @@ public class MetricDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.metric(name) values ('"+name+"');";
+            sql = "insert into gros.project(project_id,name) values ("+id+",'"+getProject()+"');";
                     
             st.executeUpdate(sql);
             
             con.close();
             
         } catch (SQLException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-    
-    }
-    
-    public void insert_metricValue(int id, String value, String date, int project){
-        
-        Connection con = null;
-        Statement st = null;
-        String sql="";
-    
-        try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());       
-            st = con.createStatement();
-            sql = "insert into gros.metric_value values ("+id+", '"+value+"','"+date+"'"+","+project+");";
-                    
-            st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
     }
    
-    public int check_metric(String name){
+    public int check_project(String name){
 
-        int idMetric = 0;
+        int idProject = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -85,11 +60,11 @@ public class MetricDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT project_id FROM gros.project WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idMetric = rs.getInt("metric_id");
+                idProject = rs.getInt("project_id");
             }
             
             con.close();
@@ -100,7 +75,7 @@ public class MetricDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idMetric;
+        return idProject;
     }
         
 

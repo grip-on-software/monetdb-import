@@ -33,9 +33,9 @@ public class ImpDataResolution extends BaseImport{
  
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(url, user, password);
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_resolution.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_resolution.json"));
             
             for (Object o : a)
             {

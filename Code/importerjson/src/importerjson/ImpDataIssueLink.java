@@ -33,9 +33,9 @@ public class ImpDataIssueLink extends BaseImport{
  
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(url, user, password);
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_issuelinks.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_issuelinks.json"));
             
             for (Object o : a)
             {

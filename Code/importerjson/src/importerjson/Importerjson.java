@@ -15,6 +15,9 @@ public class Importerjson {
       
         ImpData data = new ImpData();
         data.parser();
+        
+        ImpProject impProject = new ImpProject();
+        impProject.parser();
    
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser();
@@ -37,8 +40,8 @@ public class Importerjson {
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
         impDataIssueLink.parser();
       
-        ImpMetricValue impmetricvalue = new ImpMetricValue();
-        impmetricvalue.parser();
+        //ImpMetricValue impmetricvalue = new ImpMetricValue();
+        //impmetricvalue.parser();
         
         ImpSprint impsprint = new ImpSprint();
         impsprint.parser();

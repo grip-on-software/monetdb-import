@@ -27,7 +27,7 @@ public class ImpMetricValue extends BaseImport{
         
         try {
                  
-            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_metrics.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_metrics.json"));
      
             for (Object o : a)
             {

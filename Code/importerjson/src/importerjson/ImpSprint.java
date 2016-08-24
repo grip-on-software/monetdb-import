@@ -29,12 +29,11 @@ public class ImpSprint extends BaseImport{
         JSONParser parser = new JSONParser();
  
         try {
- 
-            
+         
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(url, user, password);
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(path+project+"/data_sprint.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_sprint.json"));
             
             for (Object o : a)
             {
@@ -55,17 +54,18 @@ public class ImpSprint extends BaseImport{
                     end = null;
                 }
                 
-                String sql = "insert into gros.sprint values (?,?,?,?);";
+                String sql = "insert into gros.sprint values (?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
                 pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setString(2, name);
+                pstmt.setInt(2, this.getProjectID());
+                pstmt.setString(3, name);
                 
                 Timestamp ts_start;              
                 if (start !=null){
                     ts_start = Timestamp.valueOf(start); 
-                    pstmt.setTimestamp(3,ts_start);
+                    pstmt.setTimestamp(4,ts_start);
                 } else{
                     //start = null;
                     pstmt.setNull(3, java.sql.Types.TIMESTAMP);
@@ -74,7 +74,7 @@ public class ImpSprint extends BaseImport{
                 Timestamp ts_end;              
                 if (end !=null){
                     ts_end = Timestamp.valueOf(end); 
-                    pstmt.setTimestamp(4,ts_end);
+                    pstmt.setTimestamp(5,ts_end);
                 } else{
                     //end = null;
                     pstmt.setNull(4, java.sql.Types.TIMESTAMP);
