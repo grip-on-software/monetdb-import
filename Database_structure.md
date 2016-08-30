@@ -21,6 +21,7 @@ The structure will be shown as follows:
     -   key - VARCHAR (10)
     -   title - VARCHAR(250)
     -   type - INT
+    -   sprint - INT
     -   priority - INT
     -   resolution - INT
     -   fixVersion - INT
