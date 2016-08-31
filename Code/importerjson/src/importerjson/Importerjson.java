@@ -12,12 +12,14 @@ public class Importerjson {
     
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-      
+
+        int projectID = 0;
+        
         ImpData data = new ImpData();
         data.parser();
         
         ImpProject impProject = new ImpProject();
-        impProject.parser();
+        projectID = impProject.parser();
    
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser();
@@ -44,7 +46,7 @@ public class Importerjson {
         //impmetricvalue.parser();
         
         ImpSprint impsprint = new ImpSprint();
-        impsprint.parser();
+        impsprint.parser(projectID);
     
     }
 

@@ -31,7 +31,7 @@ public class ResolutionDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.resolution(name,description) values ('"+name+"','"+desc+"');";
+            sql = "insert into gros.resolution (name,description) values ('"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
             

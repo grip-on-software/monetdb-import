@@ -21,7 +21,7 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpSprint extends BaseImport{
     
-    public void parser(){
+    public void parser(int project){
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
@@ -58,7 +58,7 @@ public class ImpSprint extends BaseImport{
                 pstmt = con.prepareStatement(sql);
                 
                 pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setInt(2, this.getProjectID());
+                pstmt.setInt(2, project);
                 pstmt.setString(3, name);
                 
                 Timestamp ts_start;              

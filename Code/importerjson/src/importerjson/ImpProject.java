@@ -18,7 +18,7 @@ public class ImpProject extends BaseImport{
     JSONParser parser = new JSONParser();
     ProjectDb pDB;
 
-    public void parser(){
+    public int parser(){
 
         int project = 0;
          
@@ -31,7 +31,6 @@ public class ImpProject extends BaseImport{
 
                 pDB.insert_project(this.getProject());
                 project = pDB.check_project(this.getProject());
-                this.setProjectID(project);
                     
             }
             
@@ -45,6 +44,8 @@ public class ImpProject extends BaseImport{
       
             
         }
+        
+        return project;
         
     }
         
