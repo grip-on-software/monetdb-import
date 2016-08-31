@@ -40,7 +40,6 @@ public class ImpSprint extends BaseImport{
       
                 JSONObject jsonObject = (JSONObject) o;
                 
-                
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 String start = (String) jsonObject.get("start_date");

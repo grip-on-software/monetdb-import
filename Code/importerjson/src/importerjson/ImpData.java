@@ -67,13 +67,9 @@ public class ImpData extends BaseImport{
                 String resolution = (String) jsonObject.get("resolution");
                 String sprint = (String) jsonObject.get("sprint");
                 
-                System.out.println(sprint);
-                
                 if ((sprint.trim()).equals("null") ){
                     sprint = "0";
                 }
-                
-                System.out.println(sprint);
                 
                 if ((resolution.trim()).equals("None") ){
                     resolution = "0";
