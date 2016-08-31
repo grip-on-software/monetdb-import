@@ -26,8 +26,8 @@ public class ImpDataStatus extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
-        
-        //JSONParser parser = new JSONParser();
+        StatusDb statusDB;
+        int stat_id = 0;
  
         try {
  
@@ -46,17 +46,15 @@ public class ImpDataStatus extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
-                String sql = "insert into gros.status values (?,?,?);";
-                
-                pstmt = con.prepareStatement(sql);
-                
-                pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setString(2, name);
-                pstmt.setString(3, description);
-                
-                pstmt.executeUpdate();
+                statusDB = new StatusDb();
+                stat_id = statusDB.check_status(Integer.parseInt(id));
+            
+                if(stat_id == 0){
+
+                    statusDB.insert_status(name,description);
+                    
+                }
             }
-            //con.commit(); 
             
         }
             

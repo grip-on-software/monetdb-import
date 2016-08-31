@@ -18,9 +18,9 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class ProjectDb extends BaseImport{
+public class StatusDb extends BaseImport{
     
-    public void insert_project(String name){
+    public void insert_status(String name, String desc){
         
         Connection con = null;
         Statement st = null;
@@ -31,24 +31,24 @@ public class ProjectDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.project(name) values ('"+getProject()+"');";
+            sql = "insert into gros.status(name,description) values ('"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
             
             con.close();
             
         } catch (SQLException ex) {
-            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(StatusDb.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(StatusDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
     }
    
-    public int check_project(String name){
+    public int check_status(String name){
 
-        int idProject = 0;
+        int idStatus = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -60,11 +60,11 @@ public class ProjectDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT project_id FROM gros.project WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT id FROM gros.status WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idProject = rs.getInt("project_id");
+                idStatus = rs.getInt("id");
             }
             
             con.close();
@@ -75,9 +75,40 @@ public class ProjectDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idProject;
+        return idStatus;
+    }
+    
+    public int check_status(int id){
+
+        int idStatus = 0;
+        Connection con = null;
+        Statement st = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+
+            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            
+            st = con.createStatement();
+            String sql_var = "SELECT count(id) FROM gros.status WHERE id = " + id;
+            rs = st.executeQuery(sql_var);
+ 
+            while (rs.next()) {
+                idStatus = rs.getInt(1);
+            }
+            
+            con.close();
+            
+        }
+            
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return idStatus;
     }
         
-
 }
     

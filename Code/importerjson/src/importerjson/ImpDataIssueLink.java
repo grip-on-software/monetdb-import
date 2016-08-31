@@ -50,9 +50,10 @@ public class ImpDataIssueLink extends BaseImport{
                 
                 pstmt = con.prepareStatement(sql);
                 
-                pstmt.setInt(1, Integer.parseInt(to_id));
-                pstmt.setInt(2, Integer.parseInt(relationshiptype));
-                pstmt.setInt(3, Integer.parseInt(from_id));
+                pstmt.setInt(1, Integer.parseInt(from_id));
+                pstmt.setInt(2, Integer.parseInt(to_id));
+                pstmt.setInt(3, Integer.parseInt(relationshiptype));
+                
                 
               
                 pstmt.executeUpdate();

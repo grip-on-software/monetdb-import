@@ -6,7 +6,6 @@
 package importerjson;
 
 import java.io.BufferedReader;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 /**
@@ -30,7 +29,7 @@ public class ImpProject extends BaseImport{
             
             if(project == 0){
 
-                pDB.insert_project(this.getProjectID(),this.getProject());
+                pDB.insert_project(this.getProject());
                 project = pDB.check_project(this.getProject());
                 this.setProjectID(project);
                     

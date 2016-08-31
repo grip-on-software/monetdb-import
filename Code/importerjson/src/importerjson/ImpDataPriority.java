@@ -10,6 +10,8 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -26,6 +28,8 @@ public class ImpDataPriority extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
+        PriorityDb priorityDB;
+        int priority_id = 0;
         
         //JSONParser parser = new JSONParser();
  
@@ -45,16 +49,16 @@ public class ImpDataPriority extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
-                String sql = "insert into gros.priority values (?,?);";
+                priorityDB = new PriorityDb();
+                priority_id = priorityDB.check_priority(Integer.parseInt(id));
+            
+                if(priority_id == 0){
+
+                    priorityDB.insert_priority(name);
+                    
+                }
                 
-                pstmt = con.prepareStatement(sql);
-                
-                pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setString(2, name);
-                
-                pstmt.executeUpdate();
             }
-            //con.commit(); 
             
         }
             
@@ -62,6 +66,38 @@ public class ImpDataPriority extends BaseImport{
             e.printStackTrace();
         }
         
+    }
+    
+    public int check_priority(String name){
+
+        int idPriority = 0;
+        Connection con = null;
+        Statement st = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+
+            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            
+            st = con.createStatement();
+            String sql_var = "SELECT id FROM gros.priority WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            rs = st.executeQuery(sql_var);
+ 
+            while (rs.next()) {
+                idPriority = rs.getInt("id");
+            }
+            
+            con.close();
+            
+        }
+            
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return idPriority;
     }
         
 

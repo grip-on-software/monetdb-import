@@ -26,6 +26,8 @@ public class ImpDataRelationshipType extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
+        RelationshipTypeDb relTypeDB;
+        int rel_id = 0;
         
         //JSONParser parser = new JSONParser();
  
@@ -45,16 +47,15 @@ public class ImpDataRelationshipType extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
-                String sql = "insert into gros.relationshiptype values (?,?);";
-                
-                pstmt = con.prepareStatement(sql);
-                
-                pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setString(2, name);
-                
-                pstmt.executeUpdate();
+                relTypeDB = new RelationshipTypeDb();
+                rel_id = relTypeDB.check_relType(Integer.parseInt(id));
+            
+                if(rel_id == 0){
+
+                    relTypeDB.insert_relType(name);
+                    
+                }
             }
-            //con.commit(); 
             
         }
             

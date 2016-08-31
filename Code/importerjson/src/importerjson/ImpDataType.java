@@ -26,6 +26,8 @@ public class ImpDataType extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
+        DataTypeDb dataTypeDb;
+        int type_id = 0;
         
         //JSONParser parser = new JSONParser();
  
@@ -46,15 +48,14 @@ public class ImpDataType extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
-                String sql = "insert into gros.issuetype values (?,?,?);";
-                
-                pstmt = con.prepareStatement(sql);
-                
-                pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setString(2, name);
-                pstmt.setString(3, description);
-                
-                pstmt.executeUpdate();
+                dataTypeDb = new DataTypeDb();
+                type_id = dataTypeDb.check_issueType(Integer.parseInt(id));
+            
+                if(type_id == 0){
+
+                    dataTypeDb.insert_issueType(name,description);
+                    
+                }
             }
             
         }
