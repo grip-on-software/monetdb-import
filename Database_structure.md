@@ -101,4 +101,8 @@ Relationship tables:
 
 Prikkel work on it.
 
--   sprint_id
+-   Sprint
+    -   sprint_id
+    -   feature_name
+    -   user_id
+    -   feature_value
