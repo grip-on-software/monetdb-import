@@ -99,7 +99,7 @@ Relationship tables:
 
 ## Gitlab
 
-Prikkel work on it.
+Prikkel working on it.
 
 -   Sprint
     -   sprint_id
