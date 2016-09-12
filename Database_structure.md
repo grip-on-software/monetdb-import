@@ -83,6 +83,14 @@ Context tables:
     -   name
     -   description
 
+
+-   sprints
+    -   sprint_id
+    -   project_id
+    -   name
+    -   start_date
+    -   end_date
+
 Relationship tables:
 
 -   issueLinks
