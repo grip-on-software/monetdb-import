@@ -107,10 +107,10 @@ Relationship tables:
 
 ## Gitlab
 
-Prikkel working on it.
-
--   Sprint
-    -   sprint_id
+-   git_features
+    -   feature_id
     -   feature_name
-    -   user_id
     -   feature_value
+    -   sprint_id
+    -   user_id
+    -   user_name
