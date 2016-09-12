@@ -96,3 +96,9 @@ Relationship tables:
     -   id_subtask
 
 ## History file
+
+## Gitlab
+
+Prikkel work on it.
+
+-   sprint_id
