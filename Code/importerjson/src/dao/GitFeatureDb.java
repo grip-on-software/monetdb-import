@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package dao;
 
+import util.BaseImport;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,9 +19,9 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class DataTypeDb extends BaseImport{
+public class GitFeatureDb extends BaseImport{
     
-    public void insert_issueType(String name, String desc){
+    public void insert_feature(String name, Double value, int sprint, String user){
         
         Connection con = null;
         Statement st = null;
@@ -31,56 +32,51 @@ public class DataTypeDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.issuetype(name,description) values ('"+name+"','"+desc+"');";
+            sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_name) values ('"+name+"',"+value+","+sprint+"'"+user+"'');";
                     
             st.executeUpdate(sql);
             
             con.close();
             
         } catch (SQLException ex) {
-            Logger.getLogger(DataTypeDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DataTypeDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
     }
    
-    public int check_issueType(String name){
-
-        int idType = 0;
+    public void insert_feature(String name, Double value, int sprint, int userId, String user){
+        
         Connection con = null;
         Statement st = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        
+        String sql="";
+    
         try {
-
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
-            
+       
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.issuetype WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idType = rs.getInt("id");
-            }
+            sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_id,user_name) values ('"+name+"',"+value+","+sprint+","+userId+",'"+user+"'');";
+                    
+            st.executeUpdate(sql);
             
             con.close();
             
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return idType;
+    
     }
     
-    public int check_issueType(int id){
+    
+    public int check_username(String name){
 
-        int idType = 0;
+        int idUser = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -92,11 +88,11 @@ public class DataTypeDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT count(id) FROM gros.issuetype WHERE id = " + id;
+            String sql_var = "SELECT id FROM gros.developer WHERE UPPER(display_name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idType = rs.getInt(1);
+                idUser = rs.getInt("id");
             }
             
             con.close();
@@ -107,7 +103,7 @@ public class DataTypeDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idType;
+        return idUser;
     }
         
 }

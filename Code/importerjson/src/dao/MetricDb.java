@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package dao;
 
+import util.BaseImport;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,9 +19,9 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class ResolutionDb extends BaseImport{
+public class MetricDb extends BaseImport{
     
-    public void insert_resolution(String name, String desc){
+    public void insert_metric(String name){
         
         Connection con = null;
         Statement st = null;
@@ -31,24 +32,49 @@ public class ResolutionDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.resolution (name,description) values ('"+name+"','"+desc+"');";
+            sql = "insert into gros.metric(name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
             
             con.close();
             
         } catch (SQLException ex) {
-            Logger.getLogger(ResolutionDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ResolutionDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    
+    }
+    
+    public void insert_metricValue(int id, String value, String date, int project){
+        
+        Connection con = null;
+        Statement st = null;
+        String sql="";
+    
+        try {
+            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());       
+            st = con.createStatement();
+            sql = "insert into gros.metric_value values ("+id+", '"+value+"','"+date+"'"+","+project+");";
+                    
+            st.executeUpdate(sql);
+            
+            con.close();
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
     }
    
-    public int check_resolution(String name){
+    public int check_metric(String name){
 
-        int idResol = 0;
+        int idMetric = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -60,11 +86,11 @@ public class ResolutionDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.resolution WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idResol = rs.getInt("id");
+                idMetric = rs.getInt("metric_id");
             }
             
             con.close();
@@ -75,40 +101,9 @@ public class ResolutionDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idResol;
-    }
-    
-    public int check_resolution(int id){
-
-        int idResol = 0;
-        Connection con = null;
-        Statement st = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        
-        try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
-            
-            st = con.createStatement();
-            String sql_var = "SELECT count(id) FROM gros.resolution WHERE id = " + id;
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idResol = rs.getInt(1);
-            }
-            
-            con.close();
-            
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return idResol;
+        return idMetric;
     }
         
+
 }
     

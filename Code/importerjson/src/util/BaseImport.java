@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package util;
 
 /**
  *
@@ -27,7 +27,7 @@ public abstract class BaseImport {
     private int projectID = 0;
     
     public BaseImport() {
-        ResourceBundle bundle = ResourceBundle.getBundle("importerjson.import");
+        ResourceBundle bundle = ResourceBundle.getBundle("util.import");
         url = bundle.getString("url").trim();
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();

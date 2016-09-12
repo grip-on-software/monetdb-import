@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package importer;
 
+import util.BaseImport;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -20,7 +21,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpData extends BaseImport{
+public class ImpDataIssue extends BaseImport{
     
     public void parser(){
 
@@ -29,7 +30,8 @@ public class ImpData extends BaseImport{
         Connection con = null;
         Statement st = null;
         JSONParser parser = new JSONParser();
- 
+        String new_description = "";
+        
         try {
             
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
@@ -124,8 +126,9 @@ public class ImpData extends BaseImport{
                     //ts_updated = null;
                     pstmt.setNull(11, java.sql.Types.TIMESTAMP);
                 }
-                           
-                pstmt.setString(12, description);
+                 
+                new_description = description.replace("'","\\'");
+                pstmt.setString(12, new_description);
                 
                 Timestamp ts_duedate;              
                 if (duedate !=null){

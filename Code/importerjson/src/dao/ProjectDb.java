@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package dao;
 
+import util.BaseImport;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,9 +19,9 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class PriorityDb extends BaseImport{
+public class ProjectDb extends BaseImport{
     
-    public void insert_priority(String name){
+    public void insert_project(String name){
         
         Connection con = null;
         Statement st = null;
@@ -31,24 +32,24 @@ public class PriorityDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.priority(name) values ('"+name+"');";
+            sql = "insert into gros.project(name) values ('"+getProject()+"');";
                     
             st.executeUpdate(sql);
             
             con.close();
             
         } catch (SQLException ex) {
-            Logger.getLogger(PriorityDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(PriorityDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
     }
    
-    public int check_priority(String name){
+    public int check_project(String name){
 
-        int idPriority = 0;
+        int idProject = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -60,11 +61,11 @@ public class PriorityDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.priority WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT project_id FROM gros.project WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idPriority = rs.getInt("id");
+                idProject = rs.getInt("project_id");
             }
             
             con.close();
@@ -75,40 +76,9 @@ public class PriorityDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idPriority;
-    }
-    
-    public int check_priority(int id){
-
-        int idPriority = 0;
-        Connection con = null;
-        Statement st = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        
-        try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
-            
-            st = con.createStatement();
-            String sql_var = "SELECT count(id) FROM gros.priority WHERE id = " + id;
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idPriority = rs.getInt(1);
-            }
-            
-            con.close();
-            
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return idPriority;
+        return idProject;
     }
         
+
 }
     

@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package dao;
 
+import util.BaseImport;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,9 +19,9 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class StatusDb extends BaseImport{
+public class PriorityDb extends BaseImport{
     
-    public void insert_status(String name, String desc){
+    public void insert_priority(String name){
         
         Connection con = null;
         Statement st = null;
@@ -31,24 +32,24 @@ public class StatusDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.status(name,description) values ('"+name+"','"+desc+"');";
+            sql = "insert into gros.priority(name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
             
             con.close();
             
         } catch (SQLException ex) {
-            Logger.getLogger(StatusDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PriorityDb.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(StatusDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PriorityDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
     }
    
-    public int check_status(String name){
+    public int check_priority(String name){
 
-        int idStatus = 0;
+        int idPriority = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -60,11 +61,11 @@ public class StatusDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.status WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT id FROM gros.priority WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idStatus = rs.getInt("id");
+                idPriority = rs.getInt("id");
             }
             
             con.close();
@@ -75,12 +76,12 @@ public class StatusDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idStatus;
+        return idPriority;
     }
     
-    public int check_status(int id){
+    public int check_priority(int id){
 
-        int idStatus = 0;
+        int idPriority = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -92,11 +93,11 @@ public class StatusDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT count(id) FROM gros.status WHERE id = " + id;
+            String sql_var = "SELECT count(id) FROM gros.priority WHERE id = " + id;
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idStatus = rs.getInt(1);
+                idPriority = rs.getInt(1);
             }
             
             con.close();
@@ -107,7 +108,7 @@ public class StatusDb extends BaseImport{
             e.printStackTrace();
         }
         
-        return idStatus;
+        return idPriority;
     }
         
 }

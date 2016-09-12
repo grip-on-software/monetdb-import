@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package importer;
 /**
  *
  * @author Enrique
@@ -15,7 +15,7 @@ public class Importerjson {
 
         int projectID = 0;
         
-        ImpData data = new ImpData();
+        ImpDataIssue data = new ImpDataIssue();
         data.parser();
         
         ImpProject impProject = new ImpProject();

@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package importer;
 
+import util.BaseImport;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -18,7 +19,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpDataRelationshipType extends BaseImport{
+public class ImpDataIssueLink extends BaseImport{
     
     public void parser(){
 
@@ -26,8 +27,6 @@ public class ImpDataRelationshipType extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
-        RelationshipTypeDb relTypeDB;
-        int rel_id = 0;
         
         //JSONParser parser = new JSONParser();
  
@@ -37,25 +36,30 @@ public class ImpDataRelationshipType extends BaseImport{
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_relationshiptype.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_issuelinks.json"));
             
             for (Object o : a)
             {
       
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String id = (String) jsonObject.get("id");
-                String name = (String) jsonObject.get("name");
+                String to_id = (String) jsonObject.get("to_id");
+                String relationshiptype = (String) jsonObject.get("relationshiptype");
+                String from_id = (String) jsonObject.get("from_id");
                 
-                relTypeDB = new RelationshipTypeDb();
-                rel_id = relTypeDB.check_relType(Integer.parseInt(id));
-            
-                if(rel_id == 0){
-
-                    relTypeDB.insert_relType(name);
-                    
-                }
+                String sql = "insert into gros.issuelink values (?,?,?);";
+                
+                pstmt = con.prepareStatement(sql);
+                
+                pstmt.setInt(1, Integer.parseInt(from_id));
+                pstmt.setInt(2, Integer.parseInt(to_id));
+                pstmt.setInt(3, Integer.parseInt(relationshiptype));
+                
+                
+              
+                pstmt.executeUpdate();
             }
+            //con.commit(); 
             
         }
             

@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package importer;
 
+import util.BaseImport;
+import dao.RelationshipTypeDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -18,7 +20,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpDataResolution extends BaseImport{
+public class ImpDataRelationshipType extends BaseImport{
     
     public void parser(){
 
@@ -26,8 +28,8 @@ public class ImpDataResolution extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
-        ResolutionDb resolDb;
-        int resol_id=0;
+        RelationshipTypeDb relTypeDB;
+        int rel_id = 0;
         
         //JSONParser parser = new JSONParser();
  
@@ -37,27 +39,25 @@ public class ImpDataResolution extends BaseImport{
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_resolution.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_relationshiptype.json"));
             
             for (Object o : a)
             {
       
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String description = (String) jsonObject.get("description");
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
-                resolDb = new ResolutionDb();
-                resol_id = resolDb.check_resolution(Integer.parseInt(id));
+                relTypeDB = new RelationshipTypeDb();
+                rel_id = relTypeDB.check_relType(Integer.parseInt(id));
             
-                if(resol_id == 0){
+                if(rel_id == 0){
 
-                    resolDb.insert_resolution(name,description);
+                    relTypeDB.insert_relType(name);
                     
                 }
             }
-            //con.commit(); 
             
         }
             

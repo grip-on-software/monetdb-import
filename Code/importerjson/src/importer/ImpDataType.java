@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package importerjson;
+package importer;
 
+import util.BaseImport;
+import dao.DataTypeDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
