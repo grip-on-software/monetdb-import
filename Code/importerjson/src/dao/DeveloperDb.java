@@ -5,7 +5,6 @@
  */
 package dao;
 
-import util.BaseImport;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -14,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import util.BaseImport;
 
 /**
  *
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  */
 public class DeveloperDb extends BaseImport{
     
-    public void insert_developer(String name, String display){
+    public void insert_developer(String name, String display_name){
         
         Connection con = null;
         Statement st = null;
@@ -32,7 +32,7 @@ public class DeveloperDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.developer(name,display_name) values ('"+name+"','"+ display+"');";
+            sql = "insert into gros.developer (name,display_name) values ('"+name+"','"+display_name+"');";
                     
             st.executeUpdate(sql);
             
@@ -47,7 +47,7 @@ public class DeveloperDb extends BaseImport{
     
     }
    
-    public int check_developer(String name){
+    public int check_developer(String display_name){
 
         int idDeveloper = 0;
         Connection con = null;
@@ -61,7 +61,7 @@ public class DeveloperDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.developer WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT id FROM gros.developer WHERE UPPER(display_name) = '" + display_name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
@@ -77,8 +77,6 @@ public class DeveloperDb extends BaseImport{
         }
         
         return idDeveloper;
-    }
-        
-
+    }   
 }
     

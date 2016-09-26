@@ -15,12 +15,13 @@ public class Importerjson {
 
         int projectID = 0;
         
-        ImpProject impProject = new ImpProject();
-        projectID = impProject.parser();
-        
+        /*
         ImpDataIssue data = new ImpDataIssue();
         data.parser();
-           
+        
+        ImpProject impProject = new ImpProject();
+        projectID = impProject.parser();
+   
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser();
         
@@ -46,7 +47,15 @@ public class Importerjson {
         //impmetricvalue.parser();
         
         ImpSprint impsprint = new ImpSprint();
-        impsprint.parser(projectID);
+        impsprint.parser(projectID); */
+        
+        ImpDeveloper impDeveloper = new ImpDeveloper();
+        impDeveloper.parser();
+        System.out.println("Developer updated.");
+
+        ImpCommit impCommit = new ImpCommit();
+        impCommit.parser();
+        System.out.println("Commits updated.");
     
     }
 
