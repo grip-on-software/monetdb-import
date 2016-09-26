@@ -22,7 +22,7 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataStatus extends BaseImport{
     
-    public void parser(){
+    public void parser(String projectN){
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
@@ -37,7 +37,7 @@ public class ImpDataStatus extends BaseImport{
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_status.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_status.json"));
             
             for (Object o : a)
             {

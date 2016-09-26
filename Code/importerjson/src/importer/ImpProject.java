@@ -20,19 +20,19 @@ public class ImpProject extends BaseImport{
     JSONParser parser = new JSONParser();
     ProjectDb pDB;
 
-    public int parser(){
+    public int parser(String projectN){
 
         int project = 0;
          
         try {
             
             pDB = new ProjectDb();
-            project = pDB.check_project(this.getProject());
+            project = pDB.check_project(projectN);
             
             if(project == 0){
 
-                pDB.insert_project(this.getProject());
-                project = pDB.check_project(this.getProject());
+                pDB.insert_project(projectN);
+                project = pDB.check_project(projectN);
                     
             }
             

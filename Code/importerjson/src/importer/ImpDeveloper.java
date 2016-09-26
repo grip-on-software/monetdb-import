@@ -12,7 +12,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -24,7 +23,7 @@ import util.BaseImport;
  */
 public class ImpDeveloper extends BaseImport{
     
-    public void parser(){
+    public void parser(String projectN){
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
@@ -38,7 +37,7 @@ public class ImpDeveloper extends BaseImport{
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_developer.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_developer.json"));
             String project_id = "";
             
             for (Object o : a)

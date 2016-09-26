@@ -22,14 +22,14 @@ public class ImpMetricValue extends BaseImport{
     BufferedReader br = null;
     JSONParser parser = new JSONParser();
 
-    public void parser(){
+    public void parser(String projectN){
 
         int metric_id = 0;
         MetricDb mDB;
         
         try {
                  
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_metrics.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_metrics.json"));
      
             for (Object o : a)
             {

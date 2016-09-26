@@ -14,48 +14,48 @@ public class Importerjson {
     public static void main(String[] args) {
 
         int projectID = 0;
+        String projectName="";
         
-        /*
+        projectName = args[0].trim();
+       
         ImpDataIssue data = new ImpDataIssue();
-        data.parser();
+        data.parser(projectName);
         
         ImpProject impProject = new ImpProject();
-        projectID = impProject.parser();
+        projectID = impProject.parser(projectName);
    
         ImpDataType impDataType = new ImpDataType();
-        impDataType.parser();
+        impDataType.parser(projectName);
         
         ImpDataStatus impDataStatus = new ImpDataStatus();
-        impDataStatus.parser();
+        impDataStatus.parser(projectName);
         
         ImpDataResolution impDataResolution = new ImpDataResolution();
-        impDataResolution.parser();
+        impDataResolution.parser(projectName);
          
         ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
-        impDataRelationshipType.parser();
+        impDataRelationshipType.parser(projectName);
         
         ImpDataPriority impDataPriority = new ImpDataPriority();
-        impDataPriority.parser();
+        impDataPriority.parser(projectName);
         
         ImpDataFixVersion impDataFixVersion = new ImpDataFixVersion();
-        impDataFixVersion.parser();
+        impDataFixVersion.parser(projectName);
          
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
-        impDataIssueLink.parser();
+        impDataIssueLink.parser(projectName);
       
-        //ImpMetricValue impmetricvalue = new ImpMetricValue();
-        //impmetricvalue.parser();
+        ImpMetricValue impmetricvalue = new ImpMetricValue();
+        impmetricvalue.parser(projectName);
         
         ImpSprint impsprint = new ImpSprint();
-        impsprint.parser(projectID); */
+        impsprint.parser(projectID,projectName); 
         
         ImpDeveloper impDeveloper = new ImpDeveloper();
-        impDeveloper.parser();
-        //System.out.println("Developer updated.");
+        impDeveloper.parser(projectName);
 
         ImpCommit impCommit = new ImpCommit();
-        impCommit.parser(projectID);
-        //System.out.println("Commits updated.");
+        impCommit.parser(projectID,projectName);
     
     }
 

@@ -23,7 +23,7 @@ public abstract class BaseImport {
     private String user;
     private String password;
     private String path;
-    private String project;
+    //private String project;
     private int projectID = 0;
     
     public BaseImport() {
@@ -32,7 +32,7 @@ public abstract class BaseImport {
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();
         path = bundle.getString("path").trim();
-        project = bundle.getString("project").trim(); 
+        //project = bundle.getString("project").trim(); 
         //projectID = this.getProjectId(project);
      
     }
@@ -126,20 +126,6 @@ public abstract class BaseImport {
      */
     public void setPath(String path) {
         this.path = path;
-    }
-
-    /**
-     * @return the project
-     */
-    public String getProject() {
-        return project;
-    }
-
-    /**
-     * @param project the project to set
-     */
-    public void setProject(String project) {
-        this.project = project;
     }
 
     /**

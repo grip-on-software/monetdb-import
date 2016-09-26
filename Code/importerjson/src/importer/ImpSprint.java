@@ -22,7 +22,7 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpSprint extends BaseImport{
     
-    public void parser(int project){
+    public void parser(int project, String projectN){
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
@@ -34,7 +34,7 @@ public class ImpSprint extends BaseImport{
             Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_sprint.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_sprint.json"));
             
             for (Object o : a)
             {

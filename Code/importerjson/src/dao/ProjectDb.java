@@ -32,7 +32,7 @@ public class ProjectDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
        
             st = con.createStatement();
-            sql = "insert into gros.project(name) values ('"+getProject()+"');";
+            sql = "insert into gros.project(name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
             
