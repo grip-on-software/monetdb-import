@@ -107,14 +107,15 @@ Relationship tables:
 
 ## Gitlab
 
--   git_Commit
-    -   
-
-
--   git_features
-    -   feature_id
-    -   feature_name
-    -   feature_value
+-   commits
+    -   commit_id
+    -   commit_date
     -   sprint_id
-    -   user_id
-    -   user_name
+    -   developer_id
+    -   message
+    -   size_of_commit
+    -   insertions
+    -   deletions
+    -   number_of_files
+    -   number_of_lines
+    -   type
