@@ -55,7 +55,8 @@ public class ImpDataIssue extends BaseImport{
                 String type = (String) jsonObject.get("type");
                 String duedate = (String) jsonObject.get("duedate");
                 String status = (String) jsonObject.get("status");
-                String updated = (String) jsonObject.get("updated");           
+                String updated = (String) jsonObject.get("updated");
+                String updated_by = (String) jsonObject.get("updated_by");
                 String description = (String) jsonObject.get("description");
                 String reporter = (String) jsonObject.get("reporter");
                 String key = (String) jsonObject.get("key");
@@ -95,7 +96,7 @@ public class ImpDataIssue extends BaseImport{
                     bugfix = "0";
                 }
                 
-                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
@@ -126,7 +127,7 @@ public class ImpDataIssue extends BaseImport{
                     //ts_updated = null;
                     pstmt.setNull(11, java.sql.Types.TIMESTAMP);
                 }
-                 
+                                 
                 new_description = description.replace("'","\\'");
                 pstmt.setString(12, new_description);
                 
@@ -161,7 +162,13 @@ public class ImpDataIssue extends BaseImport{
                 }
 
                 pstmt.setInt(24, Integer.parseInt(sprint));                
-                                
+                
+                if (updated_by == "") {
+                    updated_by = reporter;
+                }
+                
+                pstmt.setString(25, updated_by);
+                
                 pstmt.executeUpdate();
             }
             
