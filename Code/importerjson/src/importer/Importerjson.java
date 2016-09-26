@@ -63,6 +63,8 @@ public class Importerjson {
     
         int bla = 5;
         System.out.println(bla);
+        
+        System.out.println("Thomas is een baas");
     }
 
 }
