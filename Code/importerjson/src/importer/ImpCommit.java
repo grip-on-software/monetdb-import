@@ -24,7 +24,7 @@ import util.BaseImport;
  */
 public class ImpCommit extends BaseImport{
     
-    public void parser(){
+    public void parser(int projectID){
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
@@ -71,34 +71,35 @@ public class ImpCommit extends BaseImport{
 
 	        //con.close();
                 
-                String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?);";
+                String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
                 pstmt.setString(1, commit_id);
+                pstmt.setInt(2, projectID);
 
                 Timestamp ts_created;              
                 if (commit_date != null){
                     ts_created = Timestamp.valueOf(commit_date); 
-                    pstmt.setTimestamp(2,ts_created);
+                    pstmt.setTimestamp(3,ts_created);
                 } else{
                     //ts_created = null;
-                    pstmt.setNull(2, java.sql.Types.TIMESTAMP);
+                    pstmt.setNull(3, java.sql.Types.TIMESTAMP);
                 }
 
-                pstmt.setInt(3, Integer.parseInt(sprint_id));
+                pstmt.setInt(4, Integer.parseInt(sprint_id));
 
                 // Calculate developerid Int or String?
-                pstmt.setInt(4, developer_id);
+                pstmt.setInt(5, developer_id);
                 message = this.addSlashes(message);
                 String new_message = message.replace("'", "\\'");
-                pstmt.setString(5, new_message);
-                pstmt.setInt(6, Integer.parseInt(size_of_commit));
-                pstmt.setInt(7, Integer.parseInt(insertions));
-                pstmt.setInt(8, Integer.parseInt(deletions));
-                pstmt.setInt(9, Integer.parseInt(number_of_files));
-                pstmt.setInt(10, Integer.parseInt(number_of_lines));
-                pstmt.setString(11, type);
+                pstmt.setString(6, new_message);
+                pstmt.setInt(7, Integer.parseInt(size_of_commit));
+                pstmt.setInt(8, Integer.parseInt(insertions));
+                pstmt.setInt(9, Integer.parseInt(deletions));
+                pstmt.setInt(10, Integer.parseInt(number_of_files));
+                pstmt.setInt(11, Integer.parseInt(number_of_lines));
+                pstmt.setString(12, type);
 
                 pstmt.executeUpdate();
             }

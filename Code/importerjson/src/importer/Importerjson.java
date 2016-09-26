@@ -51,11 +51,11 @@ public class Importerjson {
         
         ImpDeveloper impDeveloper = new ImpDeveloper();
         impDeveloper.parser();
-        System.out.println("Developer updated.");
+        //System.out.println("Developer updated.");
 
         ImpCommit impCommit = new ImpCommit();
-        impCommit.parser();
-        System.out.println("Commits updated.");
+        impCommit.parser(projectID);
+        //System.out.println("Commits updated.");
     
     }
 
