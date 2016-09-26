@@ -130,3 +130,10 @@ CREATE TABLE "gros"."commits" (
     "type"              VARCHAR(100)  NOT NULL
 );
 
+CREATE TABLE "gros"."comment" (
+    "comment_id"     INTEGER        NOT NULL AUTO_INCREMENT,
+    "issue_id"       INTEGER        NOT NULL,
+    "message"        TEXT           NULL,
+    "author"         VARCHAR(200)   NOT NULL,
+    "date"           TIMESTAMP      NULL
+);

@@ -56,6 +56,9 @@ public class Importerjson {
 
         ImpCommit impCommit = new ImpCommit();
         impCommit.parser(projectID,projectName);
+        
+        ImpComment impComment = new ImpComment();
+        impComment.parser(projectName);
     
     }
 
