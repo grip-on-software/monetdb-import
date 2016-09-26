@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.DeveloperDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -32,6 +33,7 @@ public class ImpCommit extends BaseImport{
         Statement st = null;
         JSONParser parser = new JSONParser();
         ResultSet rs = null;
+        DeveloperDb devDb = new DeveloperDb();
  
         try {
             
@@ -39,7 +41,6 @@ public class ImpCommit extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_commits.json"));
-            String project_id = "";
             
             for (Object o : a)
             {
@@ -61,13 +62,13 @@ public class ImpCommit extends BaseImport{
                     sprint_id = "0";
                 }
 
-                st = con.createStatement();
-                String sql_var = "SELECT id FROM gros.developer WHERE UPPER(display_name) = '" + developer.toUpperCase().trim()+ "'";
-                rs = st.executeQuery(sql_var);
-                int developer_id = 0;
-                while (rs.next()) {
-                    developer_id = rs.getInt("id");
+                int developer_id = devDb.check_developer(developer);
+                
+                if (developer_id == 0) { // in case developer id does not exist, create developer with new id and _git behind name
+                    devDb.insert_developer("None",developer);
                 }
+                
+                developer_id = devDb.check_developer(developer);
 
 	        //con.close();
                 
@@ -105,7 +106,7 @@ public class ImpCommit extends BaseImport{
             }
             
             //Used for creating Project if it didn't exist
-            this.setProjectID(Integer.parseInt(project_id));
+            this.setProjectID(projectID);
                   
         }
             
