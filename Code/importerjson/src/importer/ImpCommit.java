@@ -104,7 +104,7 @@ public class ImpCommit extends BaseImport{
             }
             
             //Used for creating Project if it didn't exist
-            this.setProjectID(Integer.parseInt(project_id));
+            this.setProjectID(projectID);
                   
         }
             
