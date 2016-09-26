@@ -92,9 +92,9 @@ public class ImpCommit extends BaseImport{
 
                 // Calculate developerid Int or String?
                 pstmt.setInt(5, developer_id);
-                message = this.addSlashes(message);
-                String new_message = message.replace("'", "\\'");
-                pstmt.setString(6, new_message);
+                /* message = this.addSlashes(message);
+                String new_message = message.replace("'", "\\'"); */
+                pstmt.setString(6, message);
                 pstmt.setInt(7, Integer.parseInt(size_of_commit));
                 pstmt.setInt(8, Integer.parseInt(insertions));
                 pstmt.setInt(9, Integer.parseInt(deletions));
