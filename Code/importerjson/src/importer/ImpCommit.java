@@ -39,7 +39,6 @@ public class ImpCommit extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_commits.json"));
-            String project_id = "";
             
             for (Object o : a)
             {

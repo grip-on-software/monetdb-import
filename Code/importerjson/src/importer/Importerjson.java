@@ -18,12 +18,13 @@ public class Importerjson {
         
         projectName = args[0].trim();
        
+        /*
         ImpDataIssue data = new ImpDataIssue();
         data.parser(projectName);
-        
+        */
         ImpProject impProject = new ImpProject();
         projectID = impProject.parser(projectName);
-   
+        /*
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser(projectName);
         
@@ -50,7 +51,7 @@ public class Importerjson {
         
         ImpSprint impsprint = new ImpSprint();
         impsprint.parser(projectID,projectName); 
-        
+        */
         ImpDeveloper impDeveloper = new ImpDeveloper();
         impDeveloper.parser(projectName);
 
