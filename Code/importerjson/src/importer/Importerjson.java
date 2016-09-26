@@ -15,12 +15,12 @@ public class Importerjson {
 
         int projectID = 0;
         
-        ImpDataIssue data = new ImpDataIssue();
-        data.parser();
-        
         ImpProject impProject = new ImpProject();
         projectID = impProject.parser();
-   
+        
+        ImpDataIssue data = new ImpDataIssue();
+        data.parser();
+           
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser();
         
