@@ -63,6 +63,9 @@ public class Importerjson {
     
         int bla = 5;
         System.out.println(bla);
+        
+        int blalba = 10;
+        System.out.println(blalba);
     }
 
 }
