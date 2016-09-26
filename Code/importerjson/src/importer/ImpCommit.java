@@ -1,0 +1,128 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package importer;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import util.BaseImport;
+
+/**
+ *
+ * @author Thomas and Enrique
+ */
+public class ImpCommit extends BaseImport{
+    
+    public void parser(){
+
+        BufferedReader br = null;
+        PreparedStatement pstmt = null;
+        Connection con = null;
+        Statement st = null;
+        JSONParser parser = new JSONParser();
+        ResultSet rs = null;
+ 
+        try {
+            
+            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProject()+"/data_commits.json"));
+            String project_id = "";
+            
+            for (Object o : a)
+            {
+                JSONObject jsonObject = (JSONObject) o;
+                
+                String commit_id = (String) jsonObject.get("commit_id");
+                String commit_date = (String) jsonObject.get("commit_date");
+                String sprint_id = (String) jsonObject.get("sprint_id");
+                String developer = (String) jsonObject.get("developer");
+                String message = (String) jsonObject.get("message");
+                String size_of_commit = (String) jsonObject.get("size_of_commit");
+                String insertions = (String) jsonObject.get("insertions");
+                String deletions = (String) jsonObject.get("deletions");
+                String number_of_files = (String) jsonObject.get("number_of_files");
+                String number_of_lines = (String) jsonObject.get("number_of_lines");
+                String type = (String) jsonObject.get("type");
+                
+                if ((sprint_id.trim()).equals("null") ){ // In case not in between dates of sprint
+                    sprint_id = "0";
+                }
+
+                st = con.createStatement();
+                String sql_var = "SELECT id FROM gros.developer WHERE UPPER(display_name) = '" + developer.toUpperCase().trim()+ "'";
+                rs = st.executeQuery(sql_var);
+                int developer_id = 0;
+                while (rs.next()) {
+                    developer_id = rs.getInt("id");
+                }
+
+	        //con.close();
+                
+                String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?);";
+                
+                pstmt = con.prepareStatement(sql);
+                
+                pstmt.setString(1, commit_id);
+
+                Timestamp ts_created;              
+                if (commit_date != null){
+                    ts_created = Timestamp.valueOf(commit_date); 
+                    pstmt.setTimestamp(2,ts_created);
+                } else{
+                    //ts_created = null;
+                    pstmt.setNull(2, java.sql.Types.TIMESTAMP);
+                }
+
+                pstmt.setInt(3, Integer.parseInt(sprint_id));
+
+                // Calculate developerid Int or String?
+                pstmt.setInt(4, developer_id);
+                message = this.addSlashes(message);
+                String new_message = message.replace("'", "\\'");
+                pstmt.setString(5, new_message);
+                pstmt.setInt(6, Integer.parseInt(size_of_commit));
+                pstmt.setInt(7, Integer.parseInt(insertions));
+                pstmt.setInt(8, Integer.parseInt(deletions));
+                pstmt.setInt(9, Integer.parseInt(number_of_files));
+                pstmt.setInt(10, Integer.parseInt(number_of_lines));
+                pstmt.setString(11, type);
+
+                pstmt.executeUpdate();
+            }
+            
+            //Used for creating Project if it didn't exist
+            this.setProjectID(Integer.parseInt(project_id));
+                  
+        }
+            
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+    }
+    
+    public static String addSlashes(String s) {
+        s = s.replaceAll("\\\\", "\\\\\\\\");
+        s = s.replaceAll("\\n", "\\\\n");
+        s = s.replaceAll("\\r", "\\\\r");
+        s = s.replaceAll("\\00", "\\\\0");
+        s = s.replaceAll("'", "\\\\'");
+    return s;
+}
+        
+
+}
+    

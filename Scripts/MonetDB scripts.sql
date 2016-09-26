@@ -99,3 +99,17 @@ CREATE TABLE "gros"."metric_value" (
         "date"            TIMESTAMP  NULL,
         "project_id"      INTEGER     NOT NULL   
 );
+
+CREATE TABLE "gros"."commits" (
+    "commit_id"     VARCHAR(100)     NOT NULL,
+    "commit_date"   TIMESTAMP       NOT NULL,
+    "sprint_id"     INTEGER         NOT NULL,
+    "developer_id"  INTEGER         NOT NULL,
+    "message"       TEXT            NOT NULL,
+    "size_of_commit" INTEGER        NOT NULL,
+    "insertions"    INTEGER         NOT NULL,
+    "deletions"     INTEGER         NOT NULL,
+    "number_of_files"   INTEGER     NOT NULL,
+    "number_of_lines"   INTEGER     NOT NULL,
+    "type"              VARCHAR(100)  NOT NULL
+);
