@@ -61,6 +61,8 @@ public class Importerjson {
         ImpComment impComment = new ImpComment();
         impComment.parser(projectName);
     
+        int bla = 5;
+        System.out.println(bla);
     }
 
 }
