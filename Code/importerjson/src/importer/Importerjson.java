@@ -17,8 +17,7 @@ public class Importerjson {
         String projectName="";
         
         projectName = args[0].trim();
-       
-        /*
+       /*
         ImpDataIssue data = new ImpDataIssue();
         data.parser(projectName);
         */
@@ -45,22 +44,28 @@ public class Importerjson {
          
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
         impDataIssueLink.parser(projectName);
-      
+        
         ImpMetricValue impmetricvalue = new ImpMetricValue();
         impmetricvalue.parser(projectName);
         
         ImpSprint impsprint = new ImpSprint();
         impsprint.parser(projectID,projectName); 
-        */
+        
         ImpDeveloper impDeveloper = new ImpDeveloper();
         impDeveloper.parser(projectName);
-
+        
         ImpCommit impCommit = new ImpCommit();
         impCommit.parser(projectID,projectName);
+        // We still have to fix the developer part.
+        */
+        // fixing developer linking
         
+        
+        
+        /*
         ImpComment impComment = new ImpComment();
         impComment.parser(projectName);
-    
+        */
         int bla = 5;
         System.out.println(bla);
         

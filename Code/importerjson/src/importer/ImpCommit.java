@@ -48,7 +48,7 @@ public class ImpCommit extends BaseImport{
                 
                 String commit_id = (String) jsonObject.get("commit_id");
                 String commit_date = (String) jsonObject.get("commit_date");
-                String sprint_id = (String) jsonObject.get("sprint_id");
+                String sprint_id = (String) jsonObject.get("sprint_id").toString();
                 String developer = (String) jsonObject.get("developer");
                 String message = (String) jsonObject.get("message");
                 String size_of_commit = (String) jsonObject.get("size_of_commit");
@@ -62,13 +62,13 @@ public class ImpCommit extends BaseImport{
                     sprint_id = "0";
                 }
 
-                int developer_id = devDb.check_developer(developer);
+                int developer_id = devDb.check_developer_git(developer);
                 
-                if (developer_id == 0) { // in case developer id does not exist, create developer with new id and _git behind name
-                    devDb.insert_developer("None",developer);
+                if (developer_id == 0) { // if developer id does not exist, create developer with new id and _git behind name
+                    int dev_id = devDb.check_developer(developer); // Check if developer already exists in developer table      
+                    devDb.insert_developer_git(dev_id, developer); // if dev id = 0 then link later.
+                    developer_id = devDb.check_developer_git(developer); // set new id of dev
                 }
-                
-                developer_id = devDb.check_developer(developer);
 
 	        //con.close();
                 

@@ -37,6 +37,7 @@ public class ImpComment extends BaseImport{
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String comment = (String) jsonObject.get("comment");
+                comment = comment.replace("'", "\\'"); 
                 String created = (String) jsonObject.get("created_at");
                 String issue_id = (String) jsonObject.get("issue_id");
                 String id = (String) jsonObject.get("id");
