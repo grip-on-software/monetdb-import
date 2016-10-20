@@ -54,13 +54,10 @@ public class Importerjson {
         ImpDeveloper impDeveloper = new ImpDeveloper();
         impDeveloper.parser(projectName);
         
-        ImpCommit impCommit = new ImpCommit();
-        impCommit.parser(projectID,projectName);
-        // We still have to fix the developer part.
         */
-        // fixing developer linking
-        
-        
+        ImpCommit impCommit = new ImpCommit();
+        //impCommit.parser(projectID,projectName);
+        impCommit.updateJiraID(projectID, projectName); // fix developer linking manually (out of json file).        
         
         /*
         ImpComment impComment = new ImpComment();

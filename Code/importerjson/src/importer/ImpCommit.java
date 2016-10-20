@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.DataSource;
 import dao.DeveloperDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -50,6 +51,7 @@ public class ImpCommit extends BaseImport{
                 String commit_date = (String) jsonObject.get("commit_date");
                 String sprint_id = (String) jsonObject.get("sprint_id").toString();
                 String developer = (String) jsonObject.get("developer");
+                String developer_email = (String) jsonObject.get("developer_email");
                 String message = (String) jsonObject.get("message");
                 String size_of_commit = (String) jsonObject.get("size_of_commit");
                 String insertions = (String) jsonObject.get("insertions");
@@ -60,6 +62,9 @@ public class ImpCommit extends BaseImport{
                 
                 if ((sprint_id.trim()).equals("null") ){ // In case not in between dates of sprint
                     sprint_id = "0";
+                }
+                if (developer.equals("unknown")) {
+                    developer = developer_email;
                 }
 
                 int developer_id = devDb.check_developer_git(developer);
@@ -114,6 +119,57 @@ public class ImpCommit extends BaseImport{
             e.printStackTrace();
         }
         
+    }
+    
+    public void updateJiraID(int projectID, String projectN) {
+        BufferedReader br = null;
+        PreparedStatement pstmt = null;
+        Connection con = null;
+        Statement st = null;
+        JSONParser parser = new JSONParser();
+        ResultSet rs = null;
+        //DeveloperDb devDb = new DeveloperDb();
+ 
+        try {
+            con = DataSource.getInstance().getConnection();
+            
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_gitdev_to_dev.json"));
+            
+            for (Object o : a)
+            {
+                JSONObject jsonObject = (JSONObject) o;
+                
+                String display_name = (String) jsonObject.get("display_name");
+                String jira_dev_id = (String) jsonObject.get("jira_dev_id");
+
+                
+                System.out.println(display_name + " " + jira_dev_id);
+	        //con.close();
+                
+                String sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
+                
+                pstmt = con.prepareStatement(sql);
+                
+                pstmt.setInt(1, Integer.parseInt(jira_dev_id));
+                pstmt.setString(2, display_name);
+
+                pstmt.executeUpdate();
+            }
+            
+            //Used for creating Project if it didn't exist
+            this.setProjectID(projectID);
+                  
+        }
+            
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void updateDevelopers(int projectID, String projectN) {
+        DeveloperDb devDb = new DeveloperDb();
+ 
+        devDb.updateCommits();
     }
     
     public static String addSlashes(String s) {
