@@ -9,8 +9,8 @@ package util;
  * @author Enrique
  */
 
+import dao.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -46,9 +46,7 @@ public abstract class BaseImport {
         ResultSet rs = null;
         
         try{
-            
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             st = con.createStatement();
             
             String sql_var = "SELECT project_id FROM gros.project WHERE UPPER(name) = '" + projectName.toUpperCase().trim()+ "'";
@@ -57,11 +55,6 @@ public abstract class BaseImport {
             while (rs.next()) {
                 idProject = rs.getInt("project_id");
             }
-            
-            
-            
-            con.close();
-            
         }
             
         catch (Exception e) {
