@@ -10,7 +10,6 @@ import dao.DeveloperDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -74,8 +73,6 @@ public class ImpCommit extends BaseImport{
                     developer_id = devDb.check_developer_git(developer); // set new id of dev
                 }
 
-	        //con.close();
-                
                 String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
@@ -140,10 +137,6 @@ public class ImpCommit extends BaseImport{
                 
                 String display_name = (String) jsonObject.get("display_name");
                 String jira_dev_id = (String) jsonObject.get("jira_dev_id");
-
-                
-                System.out.println(display_name + " " + jira_dev_id);
-	        //con.close();
                 
                 String sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
                 

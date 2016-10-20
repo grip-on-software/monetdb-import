@@ -5,11 +5,11 @@
  */
 package importer;
 
+import dao.DataSource;
 import util.BaseImport;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
@@ -30,9 +30,7 @@ public class ImpSprint extends BaseImport{
         JSONParser parser = new JSONParser();
  
         try {
-         
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_sprint.json"));
             

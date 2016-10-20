@@ -6,7 +6,7 @@
 package importer;
 /**
  *
- * @author Enrique
+ * @author Enrique & Thomas Helling
  */
 public class Importerjson {
     
@@ -63,10 +63,6 @@ public class Importerjson {
         ImpComment impComment = new ImpComment();
         impComment.parser(projectName);
         */
-        int bla = 5;
-        System.out.println(bla);
-        
-        System.out.println("Thomas is een baas");
     }
 
 }

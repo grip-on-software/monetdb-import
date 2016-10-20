@@ -5,12 +5,12 @@
  */
 package importer;
 
+import dao.DataSource;
 import util.BaseImport;
 import dao.PriorityDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -36,10 +36,7 @@ public class ImpDataPriority extends BaseImport{
         //JSONParser parser = new JSONParser();
  
         try {
- 
-            
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_priority.json"));
             
@@ -79,9 +76,7 @@ public class ImpDataPriority extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT id FROM gros.priority WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
@@ -90,9 +85,7 @@ public class ImpDataPriority extends BaseImport{
             while (rs.next()) {
                 idPriority = rs.getInt("id");
             }
-            
-            con.close();
-            
+
         }
             
         catch (Exception e) {
