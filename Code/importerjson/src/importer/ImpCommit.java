@@ -38,8 +38,7 @@ public class ImpCommit extends BaseImport{
  
         try {
             
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_commits.json"));
             

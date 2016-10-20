@@ -5,9 +5,10 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,21 +29,16 @@ public class DataTypeDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.issuetype(name,description) values ('"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
+
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(DataTypeDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DataTypeDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
         
     
     }
@@ -57,8 +53,7 @@ public class DataTypeDb extends BaseImport{
         
         try {
 
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT id FROM gros.issuetype WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
@@ -67,9 +62,6 @@ public class DataTypeDb extends BaseImport{
             while (rs.next()) {
                 idType = rs.getInt("id");
             }
-            
-            con.close();
-            
         }
             
         catch (Exception e) {
@@ -89,8 +81,7 @@ public class DataTypeDb extends BaseImport{
         
         try {
 
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT count(id) FROM gros.issuetype WHERE id = " + id;
@@ -99,9 +90,6 @@ public class DataTypeDb extends BaseImport{
             while (rs.next()) {
                 idType = rs.getInt(1);
             }
-            
-            con.close();
-            
         }
             
         catch (Exception e) {

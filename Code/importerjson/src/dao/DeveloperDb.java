@@ -5,6 +5,8 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -28,19 +30,14 @@ public class DeveloperDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.developer (name,display_name) values ('"+name+"','"+display_name+"');";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(DeveloperDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(DeveloperDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
@@ -67,9 +64,7 @@ public class DeveloperDb extends BaseImport{
             while (rs.next()) {
                 idDeveloper = rs.getInt("id");
             }
-            
-            con.close();
-            
+
         }
             
         catch (Exception e) {
@@ -86,21 +81,16 @@ public class DeveloperDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.git_developer (jira_dev_id, display_name) values ("+dev_id+",'"+display_name+"');";
                     
             st.executeUpdate(sql);
             
-            con.close();
-            
-        } catch (SQLException ex) {
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(DeveloperDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DeveloperDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
         
     
     }
@@ -114,9 +104,7 @@ public class DeveloperDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT alias_id FROM gros.git_developer WHERE UPPER(display_name) = '" + display_name.toUpperCase().trim()+ "'";
@@ -125,9 +113,7 @@ public class DeveloperDb extends BaseImport{
             while (rs.next()) {
                 idDeveloper = rs.getInt("alias_id");
             }
-            
-            con.close();
-            
+
         }
             
         catch (Exception e) {
@@ -146,9 +132,7 @@ public class DeveloperDb extends BaseImport{
         ResultSet rs2 = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT c.commit_id, c.developer_id, g.alias_id, g.jira_dev_id" +
@@ -163,9 +147,6 @@ public class DeveloperDb extends BaseImport{
                 String sql = "UPDATE gros.commits SET developer_id="+jira_id+" WHERE commit_id="+commit_id+";";
                 st2.executeQuery(sql);
             }
-            
-            con.close();
-            
         }
             
         catch (Exception e) {

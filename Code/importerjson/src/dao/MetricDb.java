@@ -5,9 +5,10 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,19 +29,14 @@ public class MetricDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.metric(name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+     
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
@@ -54,20 +50,15 @@ public class MetricDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());       
+            con = DataSource.getInstance().getConnection();       
             st = con.createStatement();
             sql = "insert into gros.metric_value values ("+id+", '"+value+"','"+date+"'"+","+project+");";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
+
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
         
     
     }
@@ -81,9 +72,7 @@ public class MetricDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
@@ -92,8 +81,7 @@ public class MetricDb extends BaseImport{
             while (rs.next()) {
                 idMetric = rs.getInt("metric_id");
             }
-            
-            con.close();
+
             
         }
             

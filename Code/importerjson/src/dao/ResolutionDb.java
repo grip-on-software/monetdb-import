@@ -5,9 +5,10 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,23 +29,16 @@ public class ResolutionDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.resolution (name,description) values ('"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
             
-            con.close();
-            
-        } catch (SQLException ex) {
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(ResolutionDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ResolutionDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-    
+        } 
     }
    
     public int check_resolution(String name){
@@ -56,9 +50,7 @@ public class ResolutionDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT id FROM gros.resolution WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
@@ -67,9 +59,7 @@ public class ResolutionDb extends BaseImport{
             while (rs.next()) {
                 idResol = rs.getInt("id");
             }
-            
-            con.close();
-            
+
         }
             
         catch (Exception e) {
@@ -88,9 +78,7 @@ public class ResolutionDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT count(id) FROM gros.resolution WHERE id = " + id;
@@ -99,9 +87,7 @@ public class ResolutionDb extends BaseImport{
             while (rs.next()) {
                 idResol = rs.getInt(1);
             }
-            
-            con.close();
-            
+
         }
             
         catch (Exception e) {

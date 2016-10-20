@@ -5,9 +5,10 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,19 +29,14 @@ public class GitFeatureDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_name) values ('"+name+"',"+value+","+sprint+"'"+user+"'');";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
         }
         
@@ -54,21 +50,16 @@ public class GitFeatureDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_id,user_name) values ('"+name+"',"+value+","+sprint+","+userId+",'"+user+"'');";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
+
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
         
     
     }
@@ -83,9 +74,7 @@ public class GitFeatureDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT id FROM gros.developer WHERE UPPER(display_name) = '" + name.toUpperCase().trim()+ "'";
@@ -94,8 +83,6 @@ public class GitFeatureDb extends BaseImport{
             while (rs.next()) {
                 idUser = rs.getInt("id");
             }
-            
-            con.close();
             
         }
             

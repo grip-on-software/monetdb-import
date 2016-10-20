@@ -5,9 +5,10 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
@@ -19,31 +20,23 @@ import java.util.logging.Logger;
  */
 public class CommentDb extends BaseImport{
     
-    public void insert_comment(String issue, String message, String author, String sdate){
+    public void insert_comment(String issue, String message, String author, String sdate) throws PropertyVetoException{
         
         Connection con = null;
         Statement st = null;
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
-       
+            con = DataSource.getInstance().getConnection();
             st = con.createStatement();
             
             sql = "insert into gros.comment(issue_id,message,author,date) values ('"+issue+"','"+message+"','"+author+"','"+sdate+"');";
                     
             st.executeUpdate(sql);
             
-            con.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(CommentDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (SQLException | IOException ex) {
             Logger.getLogger(CommentDb.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-    
     }
         
 }

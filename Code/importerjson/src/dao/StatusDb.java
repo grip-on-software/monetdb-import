@@ -5,6 +5,8 @@
  */
 package dao;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -28,21 +30,16 @@ public class StatusDb extends BaseImport{
         String sql="";
     
         try {
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
             sql = "insert into gros.status(name,description) values ('"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
-            
-            con.close();
-            
-        } catch (SQLException ex) {
+
+        } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(StatusDb.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(StatusDb.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
         
     
     }
@@ -56,9 +53,7 @@ public class StatusDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT id FROM gros.status WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
@@ -67,9 +62,6 @@ public class StatusDb extends BaseImport{
             while (rs.next()) {
                 idStatus = rs.getInt("id");
             }
-            
-            con.close();
-            
         }
             
         catch (Exception e) {
@@ -88,9 +80,7 @@ public class StatusDb extends BaseImport{
         ResultSet rs = null;
         
         try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
+            con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
             String sql_var = "SELECT count(id) FROM gros.status WHERE id = " + id;
@@ -99,9 +89,6 @@ public class StatusDb extends BaseImport{
             while (rs.next()) {
                 idStatus = rs.getInt(1);
             }
-            
-            con.close();
-            
         }
             
         catch (Exception e) {
