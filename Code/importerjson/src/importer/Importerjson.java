@@ -12,18 +12,18 @@ public class Importerjson {
     
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-
+        
         int projectID = 0;
         String projectName="";
         
         projectName = args[0].trim();
-       /*
+       
         ImpDataIssue data = new ImpDataIssue();
         data.parser(projectName);
-        */
+        
         ImpProject impProject = new ImpProject();
         projectID = impProject.parser(projectName);
-        /*
+        
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser(projectName);
         
@@ -32,7 +32,7 @@ public class Importerjson {
         
         ImpDataResolution impDataResolution = new ImpDataResolution();
         impDataResolution.parser(projectName);
-         
+        
         ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
         impDataRelationshipType.parser(projectName);
         
@@ -49,20 +49,19 @@ public class Importerjson {
         impmetricvalue.parser(projectName);
         
         ImpSprint impsprint = new ImpSprint();
-        impsprint.parser(projectID,projectName); 
+        impsprint.parser(projectID,projectName);
+        
+        ImpComment impComment = new ImpComment();
+        impComment.parser(projectName);
         
         ImpDeveloper impDeveloper = new ImpDeveloper();
         impDeveloper.parser(projectName);
         
-        */
         ImpCommit impCommit = new ImpCommit();
-        //impCommit.parser(projectID,projectName);
-        impCommit.updateJiraID(projectID, projectName); // fix developer linking manually (out of json file).        
+        impCommit.parser(projectID,projectName);
+        //impCommit.updateJiraID(projectID, projectName); // fix developer linking manually (out of json file) after all projects are checked.        
         
-        /*
-        ImpComment impComment = new ImpComment();
-        impComment.parser(projectName);
-        */
+        
     }
 
 }
