@@ -7,16 +7,20 @@ package importer;
 
 import dao.DataSource;
 import dao.DeveloperDb;
+import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import util.BaseImport;
 
 /**
@@ -111,12 +115,19 @@ public class ImpCommit extends BaseImport{
                   
         }
             
-        catch (Exception e) {
+        catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
         }
         
     }
     
+    /**
+     * Updates the JiraID's of the git developer table. It uses a json file to read
+     * all the aliases found on Git and then links them to the JiraID's. Best is to do this
+     * after collecting all the records of all the projects.
+     * @param projectID
+     * @param projectN 
+     */
     public void updateJiraID(int projectID, String projectN) {
         BufferedReader br = null;
         PreparedStatement pstmt = null;
@@ -153,11 +164,17 @@ public class ImpCommit extends BaseImport{
                   
         }
             
-        catch (Exception e) {
+        catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
         }
     }
     
+    /**
+     * Updates the entire commit table with the right jira dev id's instead of
+     * the alias ids. ONLY RUN THIS IF THE GIT DEVELOPER TABLE IS COMPLETELY UPDATED!
+     * @param projectID Project ID
+     * @param ProjectN Project name
+     */
     public void updateDevelopers(int projectID, String projectN) {
         DeveloperDb devDb = new DeveloperDb();
  

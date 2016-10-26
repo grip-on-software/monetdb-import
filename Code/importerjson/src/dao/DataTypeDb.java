@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Class is created to manage database connection for the DataType table.
  * @author Enrique
  */
 public class DataTypeDb extends BaseImport{

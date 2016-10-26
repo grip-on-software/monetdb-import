@@ -17,6 +17,11 @@ import java.sql.SQLException;
 import util.BaseImport;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+/**
+ * THe class is created for managing your database connection and having only
+ * one database connection at the time.
+ * @author Thomas
+ */
 public class DataSource extends BaseImport {
 
     private static DataSource     datasource;
@@ -34,6 +39,11 @@ public class DataSource extends BaseImport {
 
     }
 
+    /**
+     * Returns the database object for the application. In case a database 
+     * object is not yet created, it will create the object. 
+     * @return Instance of Database connection
+     */
     public static DataSource getInstance() throws IOException, SQLException, PropertyVetoException {
         if (datasource == null) {
             datasource = new DataSource();
@@ -43,6 +53,10 @@ public class DataSource extends BaseImport {
         }
     }
 
+    /**
+     * Returns the connection with the database. 
+     * @return Database connection
+     */
     public Connection getConnection() throws SQLException {
         return this.cpds.getConnection();
     }

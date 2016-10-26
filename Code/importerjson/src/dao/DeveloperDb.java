@@ -18,11 +18,16 @@ import java.util.logging.Logger;
 import util.BaseImport;
 
 /**
- *
- * @author Enrique
+ * Class is created to manage the developer table of the database.
+ * @author Enrique & Thomas
  */
 public class DeveloperDb extends BaseImport{
     
+    /**
+     * Inserts developer in the developer table. 
+     * @param name the username in Jira
+     * @param display_name The complete name of the user
+     */
     public void insert_developer(String name, String display_name){
         
         Connection con = null;
@@ -43,9 +48,13 @@ public class DeveloperDb extends BaseImport{
         
     
     }
-   
+   /**
+    * Returns the developer ID if the developer already exists in the developer 
+    * table of the database. Else returns 0.
+    * @param display_name the complete name of the developer in Jira.
+    * @return the Developer ID if found, otherwise 0.
+    */
     public int check_developer(String display_name){
-
         int idDeveloper = 0;
         Connection con = null;
         Statement st = null;
@@ -74,6 +83,13 @@ public class DeveloperDb extends BaseImport{
         return idDeveloper;
     } 
     
+    /**
+     * Inserts developers in the git developer table of the database. In case developer
+     * id is not set, the developer id from Jira will be 0. The alias id's are initialized
+     * incremental by the database.
+     * @param dev_id the corresponding developer id in Jira 
+     * @param display_name the full name of the user on Git.
+     */
     public void insert_developer_git(int dev_id, String display_name){
         
         Connection con = null;
@@ -95,6 +111,12 @@ public class DeveloperDb extends BaseImport{
     
     }
    
+    /**
+    * Returns the Alias ID if the developer already exists in the git developer 
+    * table of the database. Else returns 0.
+    * @param display_name the complete name of the developer in GIT.
+    * @return the Developer ID if found, otherwise 0.
+    */
     public int check_developer_git(String display_name){
 
         int idDeveloper = 0;
@@ -123,6 +145,10 @@ public class DeveloperDb extends BaseImport{
         return idDeveloper;
     }   
     
+    /**
+     * Updates the entire commit table with the right jira dev id's instead of
+     * the alias ids. ONLY RUN THIS IF THE GIT DEVELOPER TABLE IS COMPLETELY UPDATED!
+     */
     public void updateCommits() {
         Connection con = null;
         Statement st = null;
