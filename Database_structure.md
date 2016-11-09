@@ -17,11 +17,10 @@ The structure will be shown as follows:
 ## Jira
 
 -   issues
-    -   id - INT
+    -   issue_id - INT
     -   key - VARCHAR (10)
     -   title - VARCHAR(250)
     -   type - INT
-    -   sprint - INT
     -   priority - INT
     -   resolution - INT
     -   fixVersion - INT
@@ -39,6 +38,10 @@ The structure will be shown as follows:
     -   attachments - INT
     -   additional_information - VARCHAR
     -   review_comments - VARCHAR
+    -   story_points - INT
+    -   resolution_date - DATE
+    -   sprint_id - INT
+    -   updated_by - VARCHAR
 
 Context tables:
 
@@ -91,6 +94,19 @@ Context tables:
     -   start_date
     -   end_date
 
+
+-   project
+    -   project_id
+    -   name
+
+
+-   Comments
+    -   comment_id
+    -   issue_id
+    -   message
+    -   author
+    -   date
+
 Relationship tables:
 
 -   issueLinks
@@ -102,6 +118,36 @@ Relationship tables:
 -   subtasks
     -   id_parent
     -   id_subtask
+
+## Gitlab
+
+-   Commits
+    -   commit_id
+    -   project_id
+    -   commit_date
+    -   sprint_id
+    -   developer_id
+    -   message
+    -   size_of_commit
+    -   message
+    -   insertions
+    -   deletions
+    -   number_of_files
+    -   number_of_lines
+    -   type
+
+## History Files (Jenkins)
+
+-   Metrics
+    -   metric_id
+    -   metric_name
+
+
+-   Metric_values
+    -   metric_id
+    -   value
+    -   date
+    -   project_id
 
 ## History file
 
