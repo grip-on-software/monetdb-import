@@ -37,8 +37,11 @@ public class PriorityDb extends BaseImport{
             st.executeUpdate(sql);
         } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(PriorityDb.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
-    }
+    } 
    
     public int check_priority(String name){
 
@@ -62,6 +65,10 @@ public class PriorityDb extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idPriority;
@@ -89,6 +96,10 @@ public class PriorityDb extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idPriority;

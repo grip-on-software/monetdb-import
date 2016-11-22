@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class ResolutionDb extends BaseImport{
     
-    public void insert_resolution(String name, String desc){
+    public void insert_resolution(int id, String name, String desc){
         
         Connection con = null;
         Statement st = null;
@@ -32,13 +32,16 @@ public class ResolutionDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.resolution (name,description) values ('"+name+"','"+desc+"');";
+            sql = "insert into gros.resolution (id,name,description) values ('"+id+"' ,'"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
             
         } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(ResolutionDb.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+        }
     }
    
     public int check_resolution(String name){
@@ -64,6 +67,10 @@ public class ResolutionDb extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idResol;

@@ -38,8 +38,11 @@ public class GitFeatureDb extends BaseImport{
 
         } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
-        
+         
     
     }
    
@@ -59,7 +62,10 @@ public class GitFeatureDb extends BaseImport{
 
         } catch (SQLException | IOException | PropertyVetoException ex) {
             Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+        }
         
     
     }
@@ -88,6 +94,10 @@ public class GitFeatureDb extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idUser;

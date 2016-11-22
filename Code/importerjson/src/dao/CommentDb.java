@@ -36,8 +36,12 @@ public class CommentDb extends BaseImport{
             
         } catch (SQLException | IOException ex) {
             Logger.getLogger(CommentDb.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
     }
+    
         
 }
     

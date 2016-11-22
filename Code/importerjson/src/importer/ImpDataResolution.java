@@ -50,13 +50,14 @@ public class ImpDataResolution extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 
                 resolDb = new ResolutionDb();
-                resol_id = resolDb.check_resolution(Integer.parseInt(id));
-            
+                int identifier = Integer.parseInt(id);
+                resol_id = resolDb.check_resolution(identifier);
+                System.out.println(id + ", " + name + ", " + description);
                 if(resol_id == 0){
 
                     new_name = name.replace("'","\\'");
                     new_description = description.replace("'","\\'");
-                    resolDb.insert_resolution(new_name,new_description);
+                    resolDb.insert_resolution(identifier,new_name,new_description);
                     
                 }
             }

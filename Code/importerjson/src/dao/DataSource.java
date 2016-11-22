@@ -28,15 +28,17 @@ public class DataSource extends BaseImport {
     private ComboPooledDataSource cpds;
 
     private DataSource() throws IOException, SQLException, PropertyVetoException {
-        System.setProperty("com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "WARNING");
-        System.setProperty("com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog");
+        //System.setProperty("com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "WARNING");
+        //System.setProperty("com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog");
         
         cpds = new ComboPooledDataSource();
         cpds.setDriverClass("nl.cwi.monetdb.jdbc.MonetDriver"); //loads the jdbc driver
         cpds.setJdbcUrl(getUrl());
         cpds.setUser(getUser());
         cpds.setPassword(getPassword());
-
+        
+        cpds.setMaxPoolSize(50);
+        
     }
 
     /**
