@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -78,6 +79,9 @@ public class ImpDataFixVersion extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
     }

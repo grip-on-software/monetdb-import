@@ -85,6 +85,7 @@ public class DeveloperDb extends BaseImport{
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idDeveloper;
@@ -154,6 +155,7 @@ public class DeveloperDb extends BaseImport{
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idDeveloper;
@@ -167,7 +169,6 @@ public class DeveloperDb extends BaseImport{
         Connection con = null;
         Statement st = null;
         Statement st2 = null;
-        PreparedStatement pstmt = null;
         ResultSet rs = null;
         ResultSet rs2 = null;
         

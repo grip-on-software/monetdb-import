@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
@@ -177,6 +178,10 @@ public class ImpDataIssue extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
     }

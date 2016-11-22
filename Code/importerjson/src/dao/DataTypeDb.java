@@ -51,7 +51,6 @@ public class DataTypeDb extends BaseImport{
         int idType = 0;
         Connection con = null;
         Statement st = null;
-        PreparedStatement pstmt = null;
         ResultSet rs = null;
         
         try {
@@ -83,7 +82,6 @@ public class DataTypeDb extends BaseImport{
         int idType = 0;
         Connection con = null;
         Statement st = null;
-        PreparedStatement pstmt = null;
         ResultSet rs = null;
         
         try {

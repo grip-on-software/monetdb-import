@@ -117,6 +117,11 @@ public class ImpCommit extends BaseImport{
             
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
     }
@@ -166,6 +171,10 @@ public class ImpCommit extends BaseImport{
             
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
     }
     
