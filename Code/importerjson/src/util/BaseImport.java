@@ -10,6 +10,7 @@ package util;
  */
 
 import dao.DataSource;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +24,7 @@ public abstract class BaseImport {
     private String user;
     private String password;
     private String path;
-    //private String project;
+    private String project;
     private int projectID = 0;
     
     public BaseImport() {
@@ -31,7 +32,9 @@ public abstract class BaseImport {
         url = bundle.getString("url").trim();
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();
-        path = bundle.getString("path").trim();
+        File f = new File(System.getProperty("java.class.path"));
+        File dir = f.getAbsoluteFile().getParentFile();
+        path = dir.toString();
         //project = bundle.getString("project").trim(); 
         //projectID = this.getProjectId(project);
      

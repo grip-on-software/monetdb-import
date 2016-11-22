@@ -4,6 +4,9 @@
  * and open the template in the editor.
  */
 package importer;
+
+import java.io.File;
+
 /**
  *
  * @author Enrique & Thomas Helling
@@ -60,8 +63,6 @@ public class Importerjson {
         ImpCommit impCommit = new ImpCommit();
         impCommit.parser(projectID,projectName);
         //impCommit.updateJiraID(projectID, projectName); // fix developer linking manually (out of json file) after all projects are checked.        
-        
-        
     }
 
 }
