@@ -25,14 +25,11 @@ public class ImpGitFeatures extends BaseImport{
     public void parser(String projectN){
 
         BufferedReader br = null;
-        PreparedStatement pstmt = null;
-        Connection con = null;
         JSONParser parser = new JSONParser();
         GitFeatureDb gitFeatureDb;
         int user_id = 0;
  
         try {
-            con = DataSource.getInstance().getConnection();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_features.json"));
             

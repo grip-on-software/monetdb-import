@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -85,6 +86,9 @@ public class ImpSprint extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
     }

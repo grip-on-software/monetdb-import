@@ -69,7 +69,6 @@ public class ImpDataPriority extends BaseImport{
         int idPriority = 0;
         Connection con = null;
         Statement st = null;
-        PreparedStatement pstmt = null;
         ResultSet rs = null;
         
         try {
@@ -87,6 +86,9 @@ public class ImpDataPriority extends BaseImport{
             
         catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idPriority;

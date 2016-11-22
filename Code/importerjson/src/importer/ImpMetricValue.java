@@ -62,11 +62,6 @@ public class ImpMetricValue extends BaseImport{
             e.printStackTrace();
         }
         
-        finally{
-      
-            
-        }
-        
     }
         
 

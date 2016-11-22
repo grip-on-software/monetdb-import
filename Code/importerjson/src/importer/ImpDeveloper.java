@@ -26,17 +26,11 @@ public class ImpDeveloper extends BaseImport{
     public void parser(String projectN){
 
         BufferedReader br = null;
-        PreparedStatement pstmt = null;
-        Connection con = null;
-        Statement st = null;
         JSONParser parser = new JSONParser();
         DeveloperDb devDb;
  
         try {
-            con = DataSource.getInstance().getConnection();
-            
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_developer.json"));
-            String project_id = "";
             
             for (Object o : a)
             {

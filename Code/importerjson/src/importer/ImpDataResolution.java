@@ -25,8 +25,6 @@ public class ImpDataResolution extends BaseImport{
     public void parser(String projectN){
 
         BufferedReader br = null;
-        PreparedStatement pstmt = null;
-        Connection con = null;
         JSONParser parser = new JSONParser();
         ResolutionDb resolDb;
         int resol_id=0;
@@ -36,7 +34,6 @@ public class ImpDataResolution extends BaseImport{
         //JSONParser parser = new JSONParser();
  
         try {
-            con = DataSource.getInstance().getConnection();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_resolution.json"));
             
