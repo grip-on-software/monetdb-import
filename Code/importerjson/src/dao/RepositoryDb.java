@@ -7,22 +7,27 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import util.BaseImport;
 
 /**
- * Class is created to manage database connection for the DataType table.
- * @author Enrique
+ * Class is created to manage the developer table of the database.
+ * @author Enrique & Thomas
  */
-public class DataTypeDb extends BaseImport{
+public class RepositoryDb extends BaseImport{
     
-    public void insert_issueType(int id, String name, String desc){
+    /**
+     * Inserts repository in the developer table. 
+     * @param name The complete name of the repository.
+     */
+    public void insert_repo(String name){
         
         Connection con = null;
         Statement st = null;
@@ -32,12 +37,12 @@ public class DataTypeDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.issuetype(id, name,description) values ("+id+",'"+name+"','"+desc+"');";
+            sql = "insert into gros.git_repo (name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
 
         } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(DataTypeDb.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(RepositoryDb.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
@@ -45,25 +50,32 @@ public class DataTypeDb extends BaseImport{
         
     
     }
-   
-    public int check_issueType(String name){
-
-        int idType = 0;
+   /**
+    * Returns the developer ID if the developer already exists in the developer 
+    * table of the database. Else returns 0.
+    * @param name the complete name of the repository.
+    * @return the Developer ID if found, otherwise 0.
+    */
+    public int check_repo(String name){
+        int idDeveloper = 0;
         Connection con = null;
         Statement st = null;
+        PreparedStatement pstmt = null;
         ResultSet rs = null;
         
         try {
 
-            con = DataSource.getInstance().getConnection();
+            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
+            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.issuetype WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT id FROM gros.git_repo WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idType = rs.getInt("id");
+                idDeveloper = rs.getInt("id");
             }
+
         }
             
         catch (Exception e) {
@@ -72,41 +84,11 @@ public class DataTypeDb extends BaseImport{
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
-        return idType;
-    }
+        return idDeveloper;
+    } 
     
-    public int check_issueType(int id){
-
-        int idType = 0;
-        Connection con = null;
-        Statement st = null;
-        ResultSet rs = null;
-        
-        try {
-
-            con = DataSource.getInstance().getConnection();
-            
-            st = con.createStatement();
-            String sql_var = "SELECT count(id) FROM gros.issuetype WHERE id = " + id;
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idType = rs.getInt(1);
-            }
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
-        
-        return idType;
-    }
-        
 }
     

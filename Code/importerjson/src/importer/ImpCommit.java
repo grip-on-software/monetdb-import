@@ -7,6 +7,7 @@ package importer;
 
 import dao.DataSource;
 import dao.DeveloperDb;
+import dao.RepositoryDb;
 import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -38,6 +39,7 @@ public class ImpCommit extends BaseImport{
         JSONParser parser = new JSONParser();
         ResultSet rs = null;
         DeveloperDb devDb = new DeveloperDb();
+        RepositoryDb repoDb = new RepositoryDb();
  
         try {
             
@@ -61,6 +63,7 @@ public class ImpCommit extends BaseImport{
                 String number_of_files = (String) jsonObject.get("number_of_files");
                 String number_of_lines = (String) jsonObject.get("number_of_lines");
                 String type = (String) jsonObject.get("type");
+                String git_repo = (String) jsonObject.get("git_repo");
                 
                 if ((sprint_id.trim()).equals("null") ){ // In case not in between dates of sprint
                     sprint_id = "0";
@@ -76,8 +79,15 @@ public class ImpCommit extends BaseImport{
                     devDb.insert_developer_git(dev_id, developer); // if dev id = 0 then link later.
                     developer_id = devDb.check_developer_git(developer); // set new id of dev
                 }
+                
+                int repo_id = repoDb.check_repo(git_repo);
+                
+                if (developer_id == 0) { // if developer id does not exist, create developer with new id and _git behind name  
+                    repoDb.insert_repo(git_repo); // if dev id = 0 then link later.
+                    repo_id = devDb.check_developer_git(git_repo); // set new id of dev
+                }
 
-                String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?);";
+                String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
@@ -106,6 +116,7 @@ public class ImpCommit extends BaseImport{
                 pstmt.setInt(10, Integer.parseInt(number_of_files));
                 pstmt.setInt(11, Integer.parseInt(number_of_lines));
                 pstmt.setString(12, type);
+                pstmt.setInt(13, repo_id);
 
                 pstmt.executeUpdate();
             }

@@ -44,12 +44,14 @@ public class ImpDataType extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
+                int identifier = Integer.parseInt(id);
+                
                 dataTypeDb = new DataTypeDb();
-                type_id = dataTypeDb.check_issueType(Integer.parseInt(id));
+                type_id = dataTypeDb.check_issueType(identifier);
             
                 if(type_id == 0){
 
-                    dataTypeDb.insert_issueType(name,description);
+                    dataTypeDb.insert_issueType(identifier, name,description);
                     
                 }
             }

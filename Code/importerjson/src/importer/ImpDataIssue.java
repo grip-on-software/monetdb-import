@@ -76,6 +76,15 @@ public class ImpDataIssue extends BaseImport{
                 if ((resolution.trim()).equals("None") ){
                     resolution = "0";
                 }
+                if ((assignee.trim()).equals("0") || (assignee.trim()).equals("None")){
+                    assignee = "None";
+                }
+                if ((reporter.trim()).equals("0") || (reporter.trim()).equals("None")){
+                    reporter = "None";
+                }
+                if ((assignee.trim()).equals("0") || (assignee.trim()).equals("None")){
+                    assignee = "None";
+                }
                 if ((created.trim()).equals("0") || (created.trim()).equals("None") ){
                     created = null;
                 }

@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class PriorityDb extends BaseImport{
     
-    public void insert_priority(String name){
+    public void insert_priority(int id, String name){
         
         Connection con = null;
         Statement st = null;
@@ -32,7 +32,7 @@ public class PriorityDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.priority(name) values ('"+name+"');";
+            sql = "insert into gros.priority(id, name) values ("+id+", '"+name+"');";
                     
             st.executeUpdate(sql);
         } catch (SQLException | IOException | PropertyVetoException ex) {

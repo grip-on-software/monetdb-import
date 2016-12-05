@@ -46,11 +46,12 @@ public class ImpDataPriority extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 
                 priorityDB = new PriorityDb();
-                priority_id = priorityDB.check_priority(Integer.parseInt(id));
+                int identifier = Integer.parseInt(id);
+                priority_id = priorityDB.check_priority(identifier);
             
                 if(priority_id == 0){
 
-                    priorityDB.insert_priority(name);
+                    priorityDB.insert_priority(identifier, name);
                     
                 }
                 
