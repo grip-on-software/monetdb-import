@@ -67,9 +67,9 @@ public class Importerjson {
         
         //System.out.println("Imported Issuelink");
         
-        ImpMetricValue impmetricvalue = new ImpMetricValue();
+        /*ImpMetricValue impmetricvalue = new ImpMetricValue();
         impmetricvalue.parser(projectName);
-        
+        */
         //System.out.println("Imported Projectname");
         
         ImpSprint impsprint = new ImpSprint();

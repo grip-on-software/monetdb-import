@@ -12,7 +12,9 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -29,6 +31,8 @@ public class ImpDataFixVersion extends BaseImport{
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
+        Statement st = null;
+        ResultSet rs = null;
         
         //JSONParser parser = new JSONParser();
  
@@ -47,34 +51,42 @@ public class ImpDataFixVersion extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 String release_date = (String) jsonObject.get("release_date");
                 
-                String sql = "insert into gros.fixversion values (?,?,?,?);";
                 
-                pstmt = con.prepareStatement(sql);
-                
-                pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setString(2, name);
-                pstmt.setString(3, description);
-                
-                if ((release_date.trim()).equals("0")){
-                    release_date = null;
+                st = con.createStatement();
+                String sql = "SELECT * FROM gros.fixversion WHERE id=" + Integer.parseInt(id);
+                rs = st.executeQuery(sql);
+                boolean exists = false;
+                while (rs.next()) {
+                    exists=true;
                 }
                 
                 
-                Date d_rdate;              
-                if (release_date !=null){
-                    d_rdate = Date.valueOf(release_date); 
-                    pstmt.setDate(4, d_rdate);
-                } else{
-                    //release_date = null;
-                    pstmt.setNull(4, java.sql.Types.DATE);
+                if(!exists) {
+                    sql = "insert into gros.fixversion values (?,?,?,?);";
+
+                    pstmt = con.prepareStatement(sql);
+
+                    pstmt.setInt(1, Integer.parseInt(id));
+                    pstmt.setString(2, name);
+                    pstmt.setString(3, description);
+
+                    if ((release_date.trim()).equals("0")){
+                        release_date = null;
+                    }
+
+
+                    Date d_rdate;              
+                    if (release_date !=null){
+                        d_rdate = Date.valueOf(release_date); 
+                        pstmt.setDate(4, d_rdate);
+                    } else{
+                        //release_date = null;
+                        pstmt.setNull(4, java.sql.Types.DATE);
+                    }
+
+                    pstmt.executeUpdate();
                 }
-                
-                
-                
-                pstmt.executeUpdate();
             }
-            //con.commit(); 
-            
         }
             
         catch (Exception e) {
@@ -82,6 +94,8 @@ public class ImpDataFixVersion extends BaseImport{
         } finally {
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
     }

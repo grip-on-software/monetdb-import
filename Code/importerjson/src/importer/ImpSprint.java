@@ -11,7 +11,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -27,7 +29,9 @@ public class ImpSprint extends BaseImport{
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
+        Statement st = null;
         Connection con = null;
+        ResultSet rs = null;
         JSONParser parser = new JSONParser();
  
         try {
@@ -53,33 +57,44 @@ public class ImpSprint extends BaseImport{
                     end = null;
                 }
                 
-                String sql = "insert into gros.sprint values (?,?,?,?,?);";
-                
-                pstmt = con.prepareStatement(sql);
-                
-                pstmt.setInt(1, Integer.parseInt(id));
-                pstmt.setInt(2, project);
-                pstmt.setString(3, name);
-                
-                Timestamp ts_start;              
-                if (start !=null){
-                    ts_start = Timestamp.valueOf(start); 
-                    pstmt.setTimestamp(4,ts_start);
-                } else{
-                    //start = null;
-                    pstmt.setNull(3, java.sql.Types.TIMESTAMP);
+                st = con.createStatement();
+                String sql = "SELECT * FROM gros.sprint WHERE sprint_id=" + Integer.parseInt(id);
+                rs = st.executeQuery(sql);
+                boolean exists = false;
+                while (rs.next()) {
+                    exists=true;
                 }
                 
-                Timestamp ts_end;              
-                if (end !=null){
-                    ts_end = Timestamp.valueOf(end); 
-                    pstmt.setTimestamp(5,ts_end);
-                } else{
-                    //end = null;
-                    pstmt.setNull(4, java.sql.Types.TIMESTAMP);
-                }
                 
-                pstmt.executeUpdate();
+                if(!exists) {
+                    sql = "insert into gros.sprint values (?,?,?,?,?);";
+
+                    pstmt = con.prepareStatement(sql);
+
+                    pstmt.setInt(1, Integer.parseInt(id));
+                    pstmt.setInt(2, project);
+                    pstmt.setString(3, name);
+
+                    Timestamp ts_start;              
+                    if (start !=null){
+                        ts_start = Timestamp.valueOf(start); 
+                        pstmt.setTimestamp(4,ts_start);
+                    } else{
+                        //start = null;
+                        pstmt.setNull(3, java.sql.Types.TIMESTAMP);
+                    }
+
+                    Timestamp ts_end;              
+                    if (end !=null){
+                        ts_end = Timestamp.valueOf(end); 
+                        pstmt.setTimestamp(5,ts_end);
+                    } else{
+                        //end = null;
+                        pstmt.setNull(4, java.sql.Types.TIMESTAMP);
+                    }
+
+                    pstmt.executeUpdate();
+                }
             }
             
         }
@@ -89,6 +104,8 @@ public class ImpSprint extends BaseImport{
         } finally {
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
     }

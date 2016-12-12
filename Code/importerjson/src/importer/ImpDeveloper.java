@@ -5,13 +5,9 @@
  */
 package importer;
 
-import dao.DataSource;
 import dao.DeveloperDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -38,6 +34,8 @@ public class ImpDeveloper extends BaseImport{
                 
                 String display_name = (String) jsonObject.get("display_name");
                 String name = (String) jsonObject.get("name");
+                name = addSlashes(name);
+                display_name = addSlashes(display_name);
                 
                 devDb = new DeveloperDb();
                 int dev_id = devDb.check_developer(display_name);
@@ -55,6 +53,15 @@ public class ImpDeveloper extends BaseImport{
         }
         
     }
+    
+    public static String addSlashes(String s) {
+        s = s.replaceAll("\\\\", "\\\\\\\\");
+        s = s.replaceAll("\\n", "\\\\n");
+        s = s.replaceAll("\\r", "\\\\r");
+        s = s.replaceAll("\\00", "\\\\0");
+        s = s.replaceAll("'", "\\\\'");
+    return s;
+}
         
 
 }

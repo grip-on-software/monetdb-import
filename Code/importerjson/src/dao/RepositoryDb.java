@@ -37,7 +37,7 @@ public class RepositoryDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.git_repo (name) values ('"+name+"');";
+            sql = "insert into gros.git_repo (git_name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
 
@@ -57,7 +57,7 @@ public class RepositoryDb extends BaseImport{
     * @return the Developer ID if found, otherwise 0.
     */
     public int check_repo(String name){
-        int idDeveloper = 0;
+        int idRepo = 0;
         Connection con = null;
         Statement st = null;
         PreparedStatement pstmt = null;
@@ -69,11 +69,11 @@ public class RepositoryDb extends BaseImport{
             con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.git_repo WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT id FROM gros.git_repo WHERE UPPER(git_name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
-                idDeveloper = rs.getInt("id");
+                idRepo = rs.getInt("id");
             }
 
         }
@@ -87,7 +87,7 @@ public class RepositoryDb extends BaseImport{
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
-        return idDeveloper;
+        return idRepo;
     } 
     
 }

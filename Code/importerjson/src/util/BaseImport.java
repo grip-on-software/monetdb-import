@@ -32,10 +32,10 @@ public abstract class BaseImport {
         url = bundle.getString("url").trim();
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();
-        path = bundle.getString("path");
-        //File f = new File(System.getProperty("java.class.path"));
-        //File dir = f.getAbsoluteFile().getParentFile();
-        //path = dir.toString();
+        //path = bundle.getString("path");
+        File f = new File(System.getProperty("java.class.path"));
+        File dir = f.getAbsoluteFile().getParentFile();
+        path = dir.toString() + "/";
         //project = bundle.getString("project").trim(); 
         //projectID = this.getProjectId(project);
      

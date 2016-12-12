@@ -71,7 +71,7 @@ public class ImpCommit extends BaseImport{
                 if (developer.equals("unknown")) {
                     developer = developer_email;
                 }
-
+                developer = addSlashes(developer);
                 int developer_id = devDb.check_developer_git(developer);
                 
                 if (developer_id == 0) { // if developer id does not exist, create developer with new id and _git behind name
