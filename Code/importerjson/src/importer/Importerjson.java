@@ -20,7 +20,6 @@ public class Importerjson {
         String projectName="";
         
         projectName = args[0].trim();
-       
         
         ImpProject impProject = new ImpProject();
         projectID = impProject.parser(projectName);
@@ -67,9 +66,9 @@ public class Importerjson {
         
         //System.out.println("Imported Issuelink");
         
-        /*ImpMetricValue impmetricvalue = new ImpMetricValue();
-        impmetricvalue.parser(projectName);
-        */
+        //ImpMetricValue impmetricvalue = new ImpMetricValue();
+        //impmetricvalue.parser(projectName);
+        
         //System.out.println("Imported Projectname");
         
         ImpSprint impsprint = new ImpSprint();
@@ -86,7 +85,10 @@ public class Importerjson {
         ImpCommit impCommit = new ImpCommit();
         impCommit.parser(projectID,projectName);
         
-        //impCommit.updateJiraID(projectID, projectName); // fix developer linking manually (out of json file) after all projects are checked.        
+        //impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
+       // impCommit.printUnknownDevs();
+        
+        //impCommit.hashNames();
     }
 
 }

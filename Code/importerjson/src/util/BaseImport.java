@@ -33,6 +33,8 @@ public abstract class BaseImport {
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();
         //path = bundle.getString("path");
+        
+        // Get system file path from Java jar location.
         File f = new File(System.getProperty("java.class.path"));
         File dir = f.getAbsoluteFile().getParentFile();
         path = dir.toString() + "/";

@@ -12,6 +12,7 @@ import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,6 +24,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
+import java.security.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -144,7 +148,7 @@ public class ImpCommit extends BaseImport{
      * @param projectID
      * @param projectN 
      */
-    public void updateJiraID(int projectID, String projectN) {
+    public void updateJiraID() {
         BufferedReader br = null;
         PreparedStatement pstmt = null;
         Connection con = null;
@@ -156,27 +160,34 @@ public class ImpCommit extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_gitdev_to_dev.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+"/data_gitdev_to_dev.json"));
             
             for (Object o : a)
             {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String display_name = (String) jsonObject.get("display_name");
-                String jira_dev_id = (String) jsonObject.get("jira_dev_id");
+                String jira_user_name = (String) jsonObject.get("jira_user_name");
+                display_name = addSlashes(display_name);                
                 
-                String sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
+                String sql = "SELECT id FROM gros.developer WHERE name = '" + jira_user_name + "'";
+                st = con.createStatement();
+                rs = st.executeQuery(sql);
+                int jira_id = 0;
+                while (rs.next()) {
+                    jira_id = (rs.getInt("id"));
+                }
+                
+                sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
                 
                 pstmt = con.prepareStatement(sql);
                 
-                pstmt.setInt(1, Integer.parseInt(jira_dev_id));
+                pstmt.setInt(1, jira_id);
                 pstmt.setString(2, display_name);
 
                 pstmt.executeUpdate();
             }
             
-            //Used for creating Project if it didn't exist
-            this.setProjectID(projectID);
                   
         }
             
@@ -186,7 +197,148 @@ public class ImpCommit extends BaseImport{
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
+    }
+    
+    public void printUnknownDevs() {
+        Connection con = null;
+        Statement st = null;
+        ResultSet rs = null;
+        
+        try {
+            con = DataSource.getInstance().getConnection();
+
+            String sql = "SELECT display_name FROM gros.git_developer WHERE jira_dev_id=0";
+
+            System.out.println("These developers should be linked in to Jira. Add them to the file data_gitdev_to_dev.json: ");
+            
+            st = con.createStatement();
+            rs = st.executeQuery(sql);
+            while (rs.next()) {
+                System.out.println("Unknown Git Developer: " + rs.getString("display_name"));
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+        }
+    }
+    
+    private static String sha256(String base) {
+        try{
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(base.getBytes("UTF-8"));
+            StringBuffer hexString = new StringBuffer();
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if(hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch(Exception ex){
+           throw new RuntimeException(ex);
+        }
+    }
+    
+    public void hashNames() {
+        Connection con = null;
+        Statement st = null;
+        ResultSet rs = null;
+        String salt = "YOUR_SECURE_SALT_HERE";
+        String pepper = "YOUR_SECURE_PEPPER_HERE";
+        
+        try {
+            con = DataSource.getInstance().getConnection();
+
+            /* Hash Git developers */
+            String sql = "SELECT * FROM gros.git_developer";
+            st = con.createStatement();
+            rs = st.executeQuery(sql);
+            while (rs.next()) {
+                int alias_id = rs.getInt("alias_id");
+                String dev_name = rs.getString("display_name");
+                dev_name = sha256(salt + dev_name + pepper);
+                
+                String sql2 = "UPDATE gros.git_developer SET display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
+                Statement st2 = con.createStatement();
+                st2.executeQuery(sql2);
+                
+            }
+            
+            /* Hash Jira Developers */
+            sql = "SELECT * FROM gros.developer";
+            st = con.createStatement();
+            rs = st.executeQuery(sql);
+            while (rs.next()) {
+                int alias_id = rs.getInt("alias_id");
+                String dev_name = rs.getString("display_name");
+                String user_name = rs.getString("name");
+                
+                dev_name = sha256(salt + dev_name + pepper);
+                user_name = sha256(salt + user_name + pepper);
+                
+                String sql2 = "UPDATE gros.developer SET name='" + user_name + "', display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
+                Statement st2 = con.createStatement();
+                st2.executeQuery(sql2);
+            }
+            
+            /* Hash Developers in Issue */
+            sql = "SELECT * FROM gros.issue";
+            st = con.createStatement();
+            rs = st.executeQuery(sql);
+            while (rs.next()) {
+                int issue_id = rs.getInt("issue_id");
+                Timestamp ts = rs.getTimestamp("updated_by");
+                String reporter = rs.getString("reporter");
+                String assignee = rs.getString("assignee");
+                String updated_by = rs.getString("updated_by");
+                
+                if(!reporter.equals("None")) { 
+                    reporter = sha256(salt + reporter + pepper);
+                }
+                if(!assignee.equals("None")) { 
+                    assignee = sha256(salt + reporter + pepper);
+                }
+                if(!updated_by.equals("None")) { 
+                    updated_by = sha256(salt + reporter + pepper);
+                }
+                
+                String sql2 = "UPDATE gros.issue SET reporter='" + reporter + "', assignee='" + assignee + "', '" + updated_by + "' WHERE issue_id=" + issue_id + " AND updated='" + ts + "'";
+                Statement st2 = con.createStatement();
+                st2.executeQuery(sql2);
+            }
+            
+            /* Hash Developers in Comment*/
+            sql = "SELECT * FROM gros.comment";
+            st = con.createStatement();
+            rs = st.executeQuery(sql);
+            while (rs.next()) {
+                int comment_id = rs.getInt("comment_id");
+                String author = rs.getString("author");
+                
+                author = sha256(salt + author + pepper);
+                
+                String sql2 = "UPDATE gros.issue SET author='" + author + "' WHERE comment_id=" + comment_id;
+                Statement st2 = con.createStatement();
+                st2.executeQuery(sql2);
+            }
+            
+            System.out.println("Developers hashed.");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+        }
+        
     }
     
     /**

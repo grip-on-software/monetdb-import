@@ -76,7 +76,6 @@ public class DeveloperDb extends BaseImport{
             while (rs.next()) {
                 idDeveloper = rs.getInt("id");
             }
-
         }
             
         catch (Exception e) {
