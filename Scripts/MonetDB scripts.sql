@@ -24,7 +24,7 @@ CREATE TABLE "gros"."issue" (
 	"story_points"   INTEGER    NULL,
 	"resolution_date"        TIMESTAMP,
 	"sprint_id"      INTEGER    NOT NULL,
-	"updated_by"     VARCHAR(100)    NOT NULL
+	"updated_by"     VARCHAR(100)    NOT NULL,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 
@@ -131,7 +131,8 @@ CREATE TABLE "gros"."commits" (
 	"deletions"     INTEGER         NOT NULL,
 	"number_of_files"   INTEGER     NOT NULL,
 	"number_of_lines"   INTEGER     NOT NULL,
-	"type"              VARCHAR(100)  NOT NULL
+	"type"              VARCHAR(100)  NOT NULL,
+	"repo_id"       INTEGER         NOT NULL
 );
 
 CREATE TABLE "gros"."comment" (
@@ -139,5 +140,19 @@ CREATE TABLE "gros"."comment" (
 	"issue_id"       INTEGER        NOT NULL,
 	"message"        TEXT           NULL,
 	"author"         VARCHAR(200)   NOT NULL,
-	"date"           TIMESTAMP      NULL
+	"date"           TIMESTAMP      NULL,
+        CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
+);
+
+CREATE TABLE "gros"."git_developer" (
+	"alias_id"     INTEGER       NOT NULL AUTO_INCREMENT,
+	"jira_dev_id"  INTEGER,
+	"display_name" VARCHAR(500),
+        CONSTRAINT "pk_alias_id" PRIMARY KEY ("alias_id")
+);
+
+CREATE TABLE "gros"."git_repo" (
+	"id"       INTEGER       NOT NULL AUTO_INCREMENT,
+	"git_name" VARCHAR(1000) NOT NULL,
+        CONSTRAINT "pk_repo_id" PRIMARY KEY ("id")
 );
