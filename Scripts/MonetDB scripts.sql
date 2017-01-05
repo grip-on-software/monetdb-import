@@ -1,5 +1,6 @@
 CREATE TABLE "gros"."issue" (
 	"issue_id"       INTEGER     NOT NULL,
+	"changelog_id"   INTEGER     NOT NULL,
 	"key"            VARCHAR(10)   NOT NULL,
 	"title"          TEXT   NOT NULL,
 	"type"           INTEGER    NULL,
@@ -20,10 +21,11 @@ CREATE TABLE "gros"."issue" (
 	"attachments"    INTEGER    NULL,
 	"additional_information" TEXT  NULL,
 	"review_comments" TEXT  NULL,
-    "story_points"   INTEGER    NULL,
-    "resolution_date"        TIMESTAMP,
-    "sprint_id"      INTEGER    NOT NULL, 
-    "updated_by"	VARCHAR(100)	NOT NULL
+	"story_points"   INTEGER    NULL,
+	"resolution_date"        TIMESTAMP,
+	"sprint_id"      INTEGER    NOT NULL,
+	"updated_by"     VARCHAR(100)    NOT NULL
+        CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 
 CREATE TABLE "gros"."issuetype" (
@@ -87,7 +89,7 @@ CREATE TABLE "gros"."subtask" (
 	"id_parent"             INTEGER   NOT NULL,
 	"id_subtask"            INTEGER   NOT NULL,
         CONSTRAINT "pk_subtask_id" PRIMARY KEY ("id_parent","id_subtask")
-); 
+);
 
 CREATE TABLE "gros"."metric" (
 	"metric_id"       INTEGER     NOT NULL AUTO_INCREMENT,
@@ -97,44 +99,44 @@ CREATE TABLE "gros"."metric" (
 CREATE TABLE "gros"."metric_value" (
 	"metric_id"       INTEGER     NOT NULL,
 	"value"           VARCHAR(500)   NOT NULL,
-        "date"            TIMESTAMP  NULL,
-        "project_id"      INTEGER     NOT NULL   
+	"date"            TIMESTAMP  NULL,
+	"project_id"      INTEGER     NOT NULL
 );
 
 CREATE TABLE "gros"."sprint" (
 	"sprint_id"      INTEGER     NOT NULL,
-        "project_id"     INTEGER     NOT NULL,
+	"project_id"     INTEGER     NOT NULL,
 	"name"           VARCHAR(500)   NOT NULL,
-        "start_date"     TIMESTAMP      NULL,
-        "end_date"       TIMESTAMP      NULL,
-        CONSTRAINT "pk_sprint_id" PRIMARY KEY ("sprint_id")   
+	"start_date"     TIMESTAMP      NULL,
+	"end_date"       TIMESTAMP      NULL,
+        CONSTRAINT "pk_sprint_id" PRIMARY KEY ("sprint_id")
 );
 
 CREATE TABLE "gros"."project" (
 	"project_id"      INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL,
-        CONSTRAINT "pk_project_id" PRIMARY KEY ("project_id")    
+        CONSTRAINT "pk_project_id" PRIMARY KEY ("project_id")
 );
 
 CREATE TABLE "gros"."commits" (
-    "commit_id"     VARCHAR(100)     NOT NULL,
-    "project_id"    INTEGER         NOT NULL,
-    "commit_date"   TIMESTAMP       NOT NULL,
-    "sprint_id"     INTEGER         NOT NULL,
-    "developer_id"  INTEGER         NOT NULL,
-    "message"       TEXT            NOT NULL,
-    "size_of_commit" INTEGER        NOT NULL,
-    "insertions"    INTEGER         NOT NULL,
-    "deletions"     INTEGER         NOT NULL,
-    "number_of_files"   INTEGER     NOT NULL,
-    "number_of_lines"   INTEGER     NOT NULL,
-    "type"              VARCHAR(100)  NOT NULL
+	"commit_id"     VARCHAR(100)     NOT NULL,
+	"project_id"    INTEGER         NOT NULL,
+	"commit_date"   TIMESTAMP       NOT NULL,
+	"sprint_id"     INTEGER         NOT NULL,
+	"developer_id"  INTEGER         NOT NULL,
+	"message"       TEXT            NOT NULL,
+	"size_of_commit" INTEGER        NOT NULL,
+	"insertions"    INTEGER         NOT NULL,
+	"deletions"     INTEGER         NOT NULL,
+	"number_of_files"   INTEGER     NOT NULL,
+	"number_of_lines"   INTEGER     NOT NULL,
+	"type"              VARCHAR(100)  NOT NULL
 );
 
 CREATE TABLE "gros"."comment" (
-    "comment_id"     INTEGER        NOT NULL AUTO_INCREMENT,
-    "issue_id"       INTEGER        NOT NULL,
-    "message"        TEXT           NULL,
-    "author"         VARCHAR(200)   NOT NULL,
-    "date"           TIMESTAMP      NULL
+	"comment_id"     INTEGER        NOT NULL AUTO_INCREMENT,
+	"issue_id"       INTEGER        NOT NULL,
+	"message"        TEXT           NULL,
+	"author"         VARCHAR(200)   NOT NULL,
+	"date"           TIMESTAMP      NULL
 );

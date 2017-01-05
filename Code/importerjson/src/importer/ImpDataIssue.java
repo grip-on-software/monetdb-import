@@ -68,12 +68,13 @@ public class ImpDataIssue extends BaseImport{
                 String issue_id = (String) jsonObject.get("issue_id");
                 String resolution = (String) jsonObject.get("resolution");
                 String sprint = (String) jsonObject.get("sprint");
+                String changelog_id = (String) jsonObject.get("changelog_id");
                 
-                if ((sprint.trim()).equals("null") ){
+                if ((sprint.trim()).equals("null")){
                     sprint = "0";
                 }
                 
-                if ((resolution.trim()).equals("None") ){
+                if ((resolution.trim()).equals("None")){
                     resolution = "0";
                 }
                 if ((assignee.trim()).equals("0") || (assignee.trim()).equals("None")){
@@ -100,82 +101,83 @@ public class ImpDataIssue extends BaseImport{
                 if ((storypoint.trim()).equals("None")){
                     storypoint = "0";
                 }
-                if ((bugfix.trim()).equals("None") ){
+                if ((bugfix.trim()).equals("None")){
                     bugfix = "0";
                 }
                 
-                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
                 
                 pstmt = con.prepareStatement(sql);
                 
                 pstmt.setInt(1, Integer.parseInt(issue_id));
-                pstmt.setString(2, key);
-                pstmt.setString(3, title);
-                pstmt.setInt(4, Integer.parseInt(type));
-                pstmt.setInt(5, Integer.parseInt(priority));
-                pstmt.setInt(6, Integer.parseInt(resolution));
-                pstmt.setInt(7, Integer.parseInt(fixVersions));
-                pstmt.setInt(8, Integer.parseInt(bugfix));
-                pstmt.setInt(9, Integer.parseInt(watchers));
+                pstmt.setInt(2, Integer.parseInt(changelog_id));
+                pstmt.setString(3, key);
+                pstmt.setString(4, title);
+                pstmt.setInt(5, Integer.parseInt(type));
+                pstmt.setInt(6, Integer.parseInt(priority));
+                pstmt.setInt(7, Integer.parseInt(resolution));
+                pstmt.setInt(8, Integer.parseInt(fixVersions));
+                pstmt.setInt(9, Integer.parseInt(bugfix));
+                pstmt.setInt(10, Integer.parseInt(watchers));
 
                 Timestamp ts_created;              
-                if (created !=null){
+                if (created != null){
                     ts_created = Timestamp.valueOf(created); 
-                    pstmt.setTimestamp(10,ts_created);
+                    pstmt.setTimestamp(11, ts_created);
                 } else{
                     //ts_created = null;
-                    pstmt.setNull(10, java.sql.Types.TIMESTAMP);
+                    pstmt.setNull(11, java.sql.Types.TIMESTAMP);
                 }
                        
                 Timestamp ts_updated;              
-                if (updated !=null){
+                if (updated != null){
                     ts_updated = Timestamp.valueOf(updated); 
-                    pstmt.setTimestamp(11,ts_updated);
+                    pstmt.setTimestamp(12, ts_updated);
                 } else{
                     //ts_updated = null;
-                    pstmt.setNull(11, java.sql.Types.TIMESTAMP);
+                    pstmt.setNull(12, java.sql.Types.TIMESTAMP);
                 }
                                  
                 new_description = description.replace("'","\\'");
-                pstmt.setString(12, new_description);
+                pstmt.setString(13, new_description);
                 
                 Timestamp ts_duedate;              
-                if (duedate !=null){
+                if (duedate != null){
                     ts_duedate = Timestamp.valueOf(duedate); 
-                    pstmt.setTimestamp(13,ts_duedate);
+                    pstmt.setTimestamp(14, ts_duedate);
                 } else{
                     //ts_duedate = null;
-                    pstmt.setNull(13, java.sql.Types.TIMESTAMP);
+                    pstmt.setNull(14, java.sql.Types.TIMESTAMP);
                 }
                 
-                pstmt.setInt(14, Integer.parseInt(project_id));
-                pstmt.setInt(15, Integer.parseInt(status));
-                pstmt.setString(16, "");
-                pstmt.setString(17, reporter);
-                pstmt.setString(18, assignee);
-                pstmt.setInt(19, Integer.parseInt(attachment));
-                pstmt.setString(20, additional_information);
-                pstmt.setString(21, review_comments);
-                pstmt.setInt(22, Integer.parseInt(storypoint));
+                pstmt.setInt(15, Integer.parseInt(project_id));
+                pstmt.setInt(16, Integer.parseInt(status));
+                pstmt.setString(17, "");
+                pstmt.setString(18, reporter);
+                pstmt.setString(19, assignee);
+                pstmt.setInt(20, Integer.parseInt(attachment));
+                pstmt.setString(21, additional_information);
+                pstmt.setString(22, review_comments);
+                pstmt.setInt(23, Integer.parseInt(storypoint));
                 
                 Timestamp ts_resolution_date;              
-                if (resolution_date !=null){
+                if (resolution_date != null){
                     
                     ts_resolution_date = Timestamp.valueOf(resolution_date); 
                     
-                    pstmt.setTimestamp(23,ts_resolution_date);
+                    pstmt.setTimestamp(24, ts_resolution_date);
                 } else{
                     //ts_resolution_date = null;
-                    pstmt.setNull(23, java.sql.Types.TIMESTAMP);
+                    pstmt.setNull(24, java.sql.Types.TIMESTAMP);
                 }
 
-                pstmt.setInt(24, Integer.parseInt(sprint));                
+                pstmt.setInt(25, Integer.parseInt(sprint));                
                 
                 if (updated_by == "") {
                     updated_by = reporter;
                 }
                 
-                pstmt.setString(25, updated_by);
+                pstmt.setString(26, updated_by);
                 
                 pstmt.executeUpdate();
             }
