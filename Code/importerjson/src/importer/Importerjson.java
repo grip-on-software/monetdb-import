@@ -66,13 +66,13 @@ public class Importerjson {
         
         //System.out.println("Imported Issuelink");
         
-        //ImpMetricValue impmetricvalue = new ImpMetricValue();
-        //impmetricvalue.parser(projectName);
+        ImpMetricValue impmetricvalue = new ImpMetricValue();
+        impmetricvalue.parser(projectID, projectName);
         
         //System.out.println("Imported Projectname");
         
         ImpSprint impsprint = new ImpSprint();
-        impsprint.parser(projectID,projectName);
+        impsprint.parser(projectID, projectName);
         
         //System.out.println("Imported Sprint");
          
@@ -83,7 +83,7 @@ public class Importerjson {
         impDeveloper.parser(projectName);
         
         ImpCommit impCommit = new ImpCommit();
-        impCommit.parser(projectID,projectName);
+        impCommit.parser(projectID, projectName);
         
         //impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
        // impCommit.printUnknownDevs();

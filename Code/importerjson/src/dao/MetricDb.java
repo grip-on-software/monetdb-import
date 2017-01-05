@@ -46,7 +46,7 @@ public class MetricDb extends BaseImport{
     
     }
     
-    public void insert_metricValue(int id, String value, String date, int project){
+    public void insert_metricValue(int id, Integer value, String category, String date, int project){
         
         Connection con = null;
         Statement st = null;
@@ -55,7 +55,7 @@ public class MetricDb extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();       
             st = con.createStatement();
-            sql = "insert into gros.metric_value values ("+id+", '"+value+"','"+date+"'"+","+project+");";
+            sql = "insert into gros.metric_value values ("+id+", "+value+", '"+category+"', '"+date+"'"+","+project+");";
                     
             st.executeUpdate(sql);
 

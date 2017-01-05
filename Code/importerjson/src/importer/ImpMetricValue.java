@@ -22,7 +22,7 @@ public class ImpMetricValue extends BaseImport{
     BufferedReader br = null;
     JSONParser parser = new JSONParser();
 
-    public void parser(String projectN){
+    public void parser(Integer projectID, String projectN){
 
         int metric_id = 0;
         MetricDb mDB;
@@ -38,6 +38,7 @@ public class ImpMetricValue extends BaseImport{
                 
                 String metric_name = (String) jsonObject.get("name");
                 String value = (String) jsonObject.get("value");
+                String category = (String) jsonObject.get("category");
                 String sdate = (String) jsonObject.get("date");
                 
                 //with the metric name check if the metric was already stored
@@ -51,8 +52,7 @@ public class ImpMetricValue extends BaseImport{
                     
                 }
                 
-                mDB.insert_metricValue(metric_id, value, sdate, 1);
-                          
+                mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, sdate, projectID);
             }
        
             
