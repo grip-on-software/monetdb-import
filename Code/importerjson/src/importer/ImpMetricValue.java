@@ -25,6 +25,7 @@ public class ImpMetricValue extends BaseImport{
     public void parser(Integer projectID, String projectN){
 
         int metric_id = 0;
+        int i = 0;
         MetricDb mDB;
         
         try {
@@ -53,6 +54,10 @@ public class ImpMetricValue extends BaseImport{
                 }
                 
                 mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, sdate, projectID);
+                i++;
+                if (i % 1000 == 0) {
+                    mDB.execute_metricValue();
+                }
             }
        
             

@@ -28,6 +28,7 @@ public class ImpDataIssueLink extends BaseImport{
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
+        PreparedStatement existsStmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
         Statement st = null;
@@ -36,6 +37,8 @@ public class ImpDataIssueLink extends BaseImport{
  
         try {
             con = DataSource.getInstance().getConnection();
+            String sql = "SELECT * FROM gros.issuelink WHERE id_from=? AND id_to=? AND relationship_type=?";
+            existsStmt = con.prepareStatement(sql);
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_issuelinks.json"));
             
@@ -48,16 +51,14 @@ public class ImpDataIssueLink extends BaseImport{
                 String relationshiptype = (String) jsonObject.get("relationshiptype");
                 String from_id = (String) jsonObject.get("from_id");
                 
-                st = con.createStatement();
-                String sql = "SELECT * FROM gros.issuelink WHERE id_from=" + Integer.parseInt(from_id) + " AND "
-                        + "id_to=" + Integer.parseInt(to_id) + " AND relationship_type=" + Integer.parseInt(relationshiptype);
-                rs = st.executeQuery(sql);
-                boolean exists = false;
-                while (rs.next()) {
-                    exists=true;
-                }
+                existsStmt.setInt(1, Integer.parseInt(from_id));
+                existsStmt.setInt(2, Integer.parseInt(to_id));
+                existsStmt.setInt(3, Integer.parseInt(relationshiptype));
                 
-                if(!exists) {
+                rs = existsStmt.executeQuery();
+                
+                // check if the link does not already exist in the database
+                if(!rs.next()) {
                     sql = "insert into gros.issuelink values (?,?,?);";
 
                     pstmt = con.prepareStatement(sql);
@@ -78,6 +79,7 @@ public class ImpDataIssueLink extends BaseImport{
         } finally {
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
         }

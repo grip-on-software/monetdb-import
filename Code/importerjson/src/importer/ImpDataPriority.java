@@ -64,37 +64,6 @@ public class ImpDataPriority extends BaseImport{
         }
         
     }
-    
-    public int check_priority(String name){
-
-        int idPriority = 0;
-        Connection con = null;
-        Statement st = null;
-        ResultSet rs = null;
-        
-        try {
-            con = DataSource.getInstance().getConnection();
-            
-            st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.priority WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idPriority = rs.getInt("id");
-            }
-
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
-        
-        return idPriority;
-    }
-        
 
 }
     

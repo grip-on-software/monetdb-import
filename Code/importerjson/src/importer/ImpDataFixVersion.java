@@ -28,22 +28,24 @@ public class ImpDataFixVersion extends BaseImport{
     public void parser(String projectN){
 
         BufferedReader br = null;
+        PreparedStatement existsStmt = null;
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
         Statement st = null;
         ResultSet rs = null;
-        
-        //JSONParser parser = new JSONParser();
- 
+        String sql = "";
+         
         try {
             con = DataSource.getInstance().getConnection();
+
+            sql = "SELECT * FROM gros.fixversion WHERE id=?;";
+            existsStmt = con.prepareStatement(sql);
 
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_fixVersion.json"));
             
             for (Object o : a)
             {
-      
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String description = (String) jsonObject.get("description");
@@ -51,21 +53,10 @@ public class ImpDataFixVersion extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 String release_date = (String) jsonObject.get("release_date");
                 
-                
-                st = con.createStatement();
-                String sql = "SELECT * FROM gros.fixversion WHERE id=" + Integer.parseInt(id);
-                rs = st.executeQuery(sql);
-                boolean exists = false;
-                while (rs.next()) {
-                    exists=true;
-                }
-                
-                
-                if(!exists) {
-                    sql = "insert into gros.fixversion values (?,?,?,?);";
-
-                    pstmt = con.prepareStatement(sql);
-
+                existsStmt.setInt(1, Integer.parseInt(id));
+                rs = existsStmt.executeQuery();
+                // check whether a row with the given ID does not already exist
+                if (!rs.next()) {
                     pstmt.setInt(1, Integer.parseInt(id));
                     pstmt.setString(2, name);
                     pstmt.setString(3, description);
@@ -73,7 +64,6 @@ public class ImpDataFixVersion extends BaseImport{
                     if ((release_date.trim()).equals("0")){
                         release_date = null;
                     }
-
 
                     Date d_rdate;              
                     if (release_date !=null){
@@ -94,6 +84,7 @@ public class ImpDataFixVersion extends BaseImport{
         } finally {
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
         }
