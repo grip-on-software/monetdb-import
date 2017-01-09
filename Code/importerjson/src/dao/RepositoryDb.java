@@ -8,13 +8,9 @@ package dao;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import util.BaseImport;
 
 /**
@@ -23,70 +19,64 @@ import util.BaseImport;
  */
 public class RepositoryDb extends BaseImport{
     
+    BatchedStatement bstmt = null;
+    PreparedStatement checkRepoStmt = null;
+    
+    public RepositoryDb() {
+        String sql = "insert into gros.git_repo (git_name) values (?);";
+        bstmt = new BatchedStatement(sql);
+    }
+    
+    public void close() throws SQLException {
+        // All statements are already executed
+        bstmt.close();
+        
+        if (checkRepoStmt != null) {
+            checkRepoStmt.close();
+            checkRepoStmt = null;
+        }
+    }
+    
     /**
      * Inserts repository in the developer table. 
      * @param name The complete name of the repository.
      */
-    public void insert_repo(String name){
+    public void insert_repo(String name) throws SQLException, IOException, PropertyVetoException{
+        PreparedStatement pstmt = bstmt.getPreparedStatement();
         
-        Connection con = null;
-        Statement st = null;
-        String sql="";
+        pstmt.setString(1, name);
+        
+        // Insert immediately because we need to have the row available
+        bstmt.execute();
+    }
     
-        try {
-            con = DataSource.getInstance().getConnection();
-       
-            st = con.createStatement();
-            sql = "insert into gros.git_repo (git_name) values ('"+name+"');";
-                    
-            st.executeUpdate(sql);
-
-        } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(RepositoryDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+    private void getCheckRepoStmt() throws SQLException, IOException, PropertyVetoException {
+        if (checkRepoStmt == null) {
+            Connection con = bstmt.getConnection();
+            String sql = "SELECT id FROM gros.git_repo WHERE UPPER(git_name) = ?";
+            checkRepoStmt = con.prepareStatement(sql);
         }
-        
     
     }
-   /**
-    * Returns the developer ID if the developer already exists in the developer 
-    * table of the database. Else returns 0.
-    * @param name the complete name of the repository.
-    * @return the Developer ID if found, otherwise 0.
-    */
-    public int check_repo(String name){
+    
+    /**
+     * Returns the developer ID if the developer already exists in the developer 
+     * table of the database. Else returns 0.
+     * @param name the complete name of the repository.
+     * @return the Developer ID if found, otherwise 0.
+     */
+    public int check_repo(String name) throws SQLException, IOException, PropertyVetoException{
         int idRepo = 0;
-        Connection con = null;
-        Statement st = null;
-        PreparedStatement pstmt = null;
+        getCheckRepoStmt();
         ResultSet rs = null;
         
-        try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
-            
-            st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.git_repo WHERE UPPER(git_name) = '" + name.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
+        checkRepoStmt.setString(1, name);
+        rs = checkRepoStmt.executeQuery();
  
-            while (rs.next()) {
-                idRepo = rs.getInt("id");
-            }
+        while (rs.next()) {
+            idRepo = rs.getInt("id");
+        }
 
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
-        
         return idRepo;
     } 
     

@@ -5,97 +5,136 @@
  */
 package importer;
 
-import java.io.File;
-
 /**
  *
  * @author Enrique & Thomas Helling
  */
 public class Importerjson {
+        
+    private static void showCompleteTask(String taskName, long startTime) {
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        
+        String line = taskName + " in " + (elapsedTime / 1000) + " seconds";
+        System.out.println(line);
+    }
     
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         
-        int projectID = 0;
-        String projectName="";
+        int projectID;
+        String projectName;
+        long startTime;
         
         projectName = args[0].trim();
+        
+        startTime = System.currentTimeMillis();
         
         ImpProject impProject = new ImpProject();
         projectID = impProject.parser(projectName);
         
-        System.out.println("Imported project");
+        showCompleteTask("Imported project", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpDataIssue data = new ImpDataIssue();
         data.parser(projectName);
         
-        System.out.println("Imported Issues");
+        showCompleteTask("Imported issues", startTime);
         
+        startTime = System.currentTimeMillis();
+                
         ImpDataType impDataType = new ImpDataType();
         impDataType.parser(projectName);
         
-        System.out.println("Imported issue types");
-
+        showCompleteTask("Imported issue types", startTime);
+        
+        startTime = System.currentTimeMillis();
+        
         ImpDataStatus impDataStatus = new ImpDataStatus();
         impDataStatus.parser(projectName);
         
-        System.out.println("Imported status types");
+        showCompleteTask("Imported status types", startTime);
         
+        startTime = System.currentTimeMillis();
+                
         ImpDataResolution impDataResolution = new ImpDataResolution();
         impDataResolution.parser(projectName);
         
-        System.out.println("Imported resolution types");
+        showCompleteTask("Imported resolution types", startTime);
         
+        startTime = System.currentTimeMillis();
+                
         ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
         impDataRelationshipType.parser(projectName);
         
-        System.out.println("Imported relationship types");
+        showCompleteTask("Imported relationship types", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpDataPriority impDataPriority = new ImpDataPriority();
         impDataPriority.parser(projectName);
         
-        System.out.println("Imported priority types");
+        showCompleteTask("Imported priortity types", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpDataFixVersion impDataFixVersion = new ImpDataFixVersion();
         impDataFixVersion.parser(projectName);
         
-        System.out.println("Imported fixVersions");
+        showCompleteTask("Imported fixVersions", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
         impDataIssueLink.parser(projectName);
         
-        System.out.println("Imported Issue links");
+        showCompleteTask("Imported issue links", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpMetricValue impmetricvalue = new ImpMetricValue();
         impmetricvalue.parser(projectID, projectName);
         
-        System.out.println("Imported metric values");
+        showCompleteTask("Imported metric values", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpSprint impsprint = new ImpSprint();
         impsprint.parser(projectID, projectName);
         
-        System.out.println("Imported Sprints");
+        showCompleteTask("Imported sprints", startTime);
+        
+        startTime = System.currentTimeMillis();
          
         ImpComment impComment = new ImpComment();
         impComment.parser(projectName);
 
-        System.out.println("Imported comments");
+        showCompleteTask("Imported comments", startTime);
+        
+        startTime = System.currentTimeMillis();
         
         ImpDeveloper impDeveloper = new ImpDeveloper();
         impDeveloper.parser(projectName);
         
-        System.out.println("Imported developers");
+        showCompleteTask("Imported developers", startTime);
+        
+        startTime = System.currentTimeMillis();
  
         ImpCommit impCommit = new ImpCommit();
         impCommit.parser(projectID, projectName);
         
-        System.out.println("Imported commits");
+        showCompleteTask("Imported commits", startTime);
+        
+        //startTime = System.currentTimeMillis();
         
         //impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
         //impCommit.printUnknownDevs();
         
         // Encryption
         //impCommit.hashNames();
+        
+        //showCompleteTask("Sanitized data", startTime);
     }
 
 }

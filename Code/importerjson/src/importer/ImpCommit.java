@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.BatchedStatement;
 import dao.DataSource;
 import dao.DeveloperDb;
 import dao.RepositoryDb;
@@ -36,21 +37,17 @@ public class ImpCommit extends BaseImport{
     
     public void parser(int projectID, String projectN){
 
-        BufferedReader br = null;
+        BatchedStatement bstmt = null;
         PreparedStatement pstmt = null;
-        Connection con = null;
-        Statement st = null;
         JSONParser parser = new JSONParser();
-        ResultSet rs = null;
         DeveloperDb devDb = new DeveloperDb();
         RepositoryDb repoDb = new RepositoryDb();
  
         try {
-            con = DataSource.getInstance().getConnection();
-
             String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+            bstmt = new BatchedStatement(sql);
                 
-            pstmt = con.prepareStatement(sql);
+            pstmt = bstmt.getPreparedStatement();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_commits.json"));
             
@@ -121,21 +118,22 @@ public class ImpCommit extends BaseImport{
                 pstmt.setString(12, type);
                 pstmt.setInt(13, repo_id);
 
-                pstmt.executeUpdate();
+                bstmt.batch();
             }
+            
+            bstmt.execute();
             
             //Used for creating Project if it didn't exist
             this.setProjectID(projectID);
-                  
+            
+            devDb.close();
+            repoDb.close();
         }
             
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            bstmt.close();
         }
         
     }

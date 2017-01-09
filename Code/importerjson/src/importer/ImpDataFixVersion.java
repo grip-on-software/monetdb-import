@@ -42,6 +42,9 @@ public class ImpDataFixVersion extends BaseImport{
             sql = "SELECT * FROM gros.fixversion WHERE id=?;";
             existsStmt = con.prepareStatement(sql);
 
+            sql = "insert into gros.fixversion values (?,?,?,?);";
+            pstmt = con.prepareStatement(sql);
+            
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_fixVersion.json"));
             
             for (Object o : a)

@@ -23,72 +23,85 @@ import util.BaseImport;
  */
 public class DeveloperDb extends BaseImport{
     
+    PreparedStatement checkDeveloperStmt = null;
+    PreparedStatement checkDeveloperGitStmt = null;
+    PreparedStatement insertDeveloperGitStmt = null;
+    BatchedStatement bstmt = null;
+    
+    public DeveloperDb() {
+        String sql = "insert into gros.developer (name,display_name) values (?,?);";
+        bstmt = new BatchedStatement(sql);
+    }
+    
     /**
      * Inserts developer in the developer table. 
      * @param name the username in Jira
      * @param display_name The complete name of the user
      */
-    public void insert_developer(String name, String display_name){
+    public void insert_developer(String name, String display_name) throws SQLException, IOException, PropertyVetoException{
+        PreparedStatement pstmt = bstmt.getPreparedStatement();
         
-        Connection con = null;
-        Statement st = null;
-        String sql="";
-    
-        try {
-            con = DataSource.getInstance().getConnection();
-       
-            st = con.createStatement();
-            sql = "insert into gros.developer (name,display_name) values ('"+name+"','"+display_name+"');";
-                    
-            st.executeUpdate(sql);
-
-        } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(DeveloperDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
+        pstmt.setString(1, name);
+        pstmt.setString(2, display_name);
         
-    
+        // Insert immediately because we need to have the row available
+        bstmt.execute();
     }
-   /**
-    * Returns the developer ID if the developer already exists in the developer 
-    * table of the database. Else returns 0.
-    * @param display_name the complete name of the developer in Jira.
-    * @return the Developer ID if found, otherwise 0.
-    */
-    public int check_developer(String display_name){
+    
+    /**
+     * Commits changes to the developer table and closes the connection.
+     */
+    public void close() throws SQLException {
+        bstmt.execute();
+        bstmt.close();
+        
+        if (checkDeveloperStmt != null) {
+            checkDeveloperStmt.close();
+        }
+        if (insertDeveloperGitStmt != null) {
+            insertDeveloperGitStmt.close();
+        }
+        if (checkDeveloperGitStmt != null) {
+            checkDeveloperGitStmt.close();
+        }
+    }
+    
+    private void getCheckDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
+        if (checkDeveloperStmt == null) {
+            Connection con = bstmt.getConnection();
+            String sql = "SELECT id FROM gros.developer WHERE UPPER(display_name) = ?";
+            checkDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    /**
+     * Returns the developer ID if the developer already exists in the developer 
+     * table of the database. Else returns 0.
+     * @param display_name the complete name of the developer in Jira.
+     * @return the Developer ID if found, otherwise 0.
+     */
+    public int check_developer(String display_name) throws SQLException, IOException, PropertyVetoException {
         int idDeveloper = 0;
-        Connection con = null;
-        Statement st = null;
-        PreparedStatement pstmt = null;
+        getCheckDeveloperStmt();
         ResultSet rs = null;
         
-        try {
-
-            Class.forName("nl.cwi.monetdb.jdbc.MonetDriver");
-            con = DriverManager.getConnection(getUrl(), getUser(), getPassword());
-            
-            st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.developer WHERE UPPER(display_name) = '" + display_name.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
+        checkDeveloperStmt.setString(1, display_name);
+        rs = checkDeveloperStmt.executeQuery();
  
-            while (rs.next()) {
-                idDeveloper = rs.getInt("id");
-            }
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+        while (rs.next()) {
+            idDeveloper = rs.getInt("id");
         }
         
         return idDeveloper;
     } 
+    
+    private void getInsertDeveloperGitStmt() throws SQLException, IOException, PropertyVetoException {
+        if (insertDeveloperGitStmt == null) {
+            Connection con = bstmt.getConnection();
+            String sql = "insert into gros.git_developer (jira_dev_id, display_name) values (?,?);";
+            insertDeveloperGitStmt = con.prepareStatement(sql);
+        } 
+    }
     
     /**
      * Inserts developers in the git developer table of the database. In case developer
@@ -97,64 +110,40 @@ public class DeveloperDb extends BaseImport{
      * @param dev_id the corresponding developer id in Jira 
      * @param display_name the full name of the user on Git.
      */
-    public void insert_developer_git(int dev_id, String display_name){
+    public void insert_developer_git(int dev_id, String display_name) throws SQLException, IOException, PropertyVetoException{
+        getInsertDeveloperGitStmt();
         
-        Connection con = null;
-        Statement st = null;
-        String sql="";
+        insertDeveloperGitStmt.setInt(1, dev_id);
+        insertDeveloperGitStmt.setString(2, display_name);
     
-        try {
-            con = DataSource.getInstance().getConnection();
-       
-            st = con.createStatement();
-            sql = "insert into gros.git_developer (jira_dev_id, display_name) values ("+dev_id+",'"+display_name+"');";
-                    
-            st.executeUpdate(sql);
-            
-        } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(DeveloperDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
-        
-    
+        insertDeveloperGitStmt.execute();
     }
    
+    private void getCheckDeveloperGitStmt() throws SQLException, IOException, PropertyVetoException {
+        if (checkDeveloperGitStmt == null) {
+            Connection con = bstmt.getConnection();
+            String sql = "SELECT alias_id FROM gros.git_developer WHERE UPPER(display_name) = ?";
+            checkDeveloperGitStmt = con.prepareStatement(sql);
+        }
+    }
+    
     /**
     * Returns the Alias ID if the developer already exists in the git developer 
     * table of the database. Else returns 0.
     * @param display_name the complete name of the developer in GIT.
     * @return the Developer ID if found, otherwise 0.
     */
-    public int check_developer_git(String display_name){
-
+    public int check_developer_git(String display_name) throws SQLException, IOException, PropertyVetoException{
         int idDeveloper = 0;
-        Connection con = null;
-        Statement st = null;
-        PreparedStatement pstmt = null;
+        getCheckDeveloperGitStmt();
         ResultSet rs = null;
         
-        try {
-            con = DataSource.getInstance().getConnection();
-            
-            st = con.createStatement();
-            String sql_var = "SELECT alias_id FROM gros.git_developer WHERE UPPER(display_name) = '" + display_name.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idDeveloper = rs.getInt("alias_id");
-            }
-
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+        checkDeveloperGitStmt.setString(1, display_name);
+        
+        rs = checkDeveloperGitStmt.executeQuery();
+        
+        while (rs.next()) {
+            idDeveloper = rs.getInt("alias_id");
         }
         
         return idDeveloper;

@@ -23,7 +23,7 @@ public class ImpDeveloper extends BaseImport{
 
         BufferedReader br = null;
         JSONParser parser = new JSONParser();
-        DeveloperDb devDb;
+        DeveloperDb devDb = new DeveloperDb();
  
         try {
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_developer.json"));
@@ -37,14 +37,15 @@ public class ImpDeveloper extends BaseImport{
                 name = addSlashes(name);
                 display_name = addSlashes(display_name);
                 
-                devDb = new DeveloperDb();
                 int dev_id = devDb.check_developer(display_name);
-                // if already exists
+                // check whether the developer does not already exist
                 if(dev_id == 0) {
-                	devDb.insert_developer(name, display_name);
+                    devDb.insert_developer(name, display_name);
                 }
 
             }
+            
+            devDb.close();
                   
         }
             

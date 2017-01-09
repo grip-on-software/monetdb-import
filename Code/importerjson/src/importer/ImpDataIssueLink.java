@@ -39,6 +39,9 @@ public class ImpDataIssueLink extends BaseImport{
             con = DataSource.getInstance().getConnection();
             String sql = "SELECT * FROM gros.issuelink WHERE id_from=? AND id_to=? AND relationship_type=?";
             existsStmt = con.prepareStatement(sql);
+
+            sql = "insert into gros.issuelink values (?,?,?);";
+            pstmt = con.prepareStatement(sql);
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_issuelinks.json"));
             
@@ -59,10 +62,6 @@ public class ImpDataIssueLink extends BaseImport{
                 
                 // check if the link does not already exist in the database
                 if(!rs.next()) {
-                    sql = "insert into gros.issuelink values (?,?,?);";
-
-                    pstmt = con.prepareStatement(sql);
-
                     pstmt.setInt(1, Integer.parseInt(from_id));
                     pstmt.setInt(2, Integer.parseInt(to_id));
                     pstmt.setInt(3, Integer.parseInt(relationshiptype));

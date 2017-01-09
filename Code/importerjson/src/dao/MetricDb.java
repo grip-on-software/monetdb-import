@@ -12,116 +12,77 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author Enrique
  */
 public class MetricDb extends BaseImport{
-    PreparedStatement insertMetricValueStmt = null;
+    PreparedStatement checkMetricStmt = null;
+    BatchedStatement insertMetricStmt = null;
+    BatchedStatement insertMetricValueStmt = null;
     
-    public void insert_metric(String name){
+    public MetricDb() {
+        String sql = "insert into gros.metric(name) values (?);";
+        insertMetricStmt = new BatchedStatement(sql);
+        sql = "insert into gros.metric_value values (?,?,?,?,?);";
+        insertMetricValueStmt = new BatchedStatement(sql);
+    }
+    
+    public void insert_metric(String name) throws SQLException, IOException, PropertyVetoException{
+        PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
         
-        Connection con = null;
-        Statement st = null;
-        String sql="";
+        pstmt.setString(1, name);
+        
+        // Insert immediately
+        insertMetricStmt.execute();
+    }
     
-        try {
-            con = DataSource.getInstance().getConnection();
-       
-            st = con.createStatement();
-            sql = "insert into gros.metric(name) values ('"+name+"');";
+    public void insert_metricValue(int id, Integer value, String category, String date, int project) throws SQLException, IOException, PropertyVetoException{
+        PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
+        
+        pstmt.setInt(1, id);
+        pstmt.setInt(2, value);
+        pstmt.setString(3, category);
+        pstmt.setTimestamp(4, Timestamp.valueOf(date));
+        pstmt.setInt(5, project);
                     
-            st.executeUpdate(sql);
-     
-        } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
-        
-    
+        insertMetricValueStmt.batch();
     }
     
-    public void insert_metricValue(int id, Integer value, String category, String date, int project){
+    public void close() throws SQLException {
+        // All metric names are already commited
+        insertMetricStmt.close();
         
-        Connection con = null;
-        Statement st = null;
-        String sql="";
-    
-        try {
-            if (insertMetricValueStmt != null) {
-                con = DataSource.getInstance().getConnection();
-                sql = "insert into gros.metric_value values (?,?,?,?,?);";
-                insertMetricValueStmt = con.prepareStatement(sql);
-            }
-            
-            insertMetricValueStmt.setInt(1, id);
-            insertMetricValueStmt.setInt(2, value);
-            insertMetricValueStmt.setString(3, category);
-            insertMetricValueStmt.setTimestamp(4, Timestamp.valueOf(date));
-            insertMetricValueStmt.setInt(5, project);
-                    
-            insertMetricValueStmt.addBatch();
-
-        } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
+        insertMetricValueStmt.execute();
+        insertMetricValueStmt.close();
         
-    
-    }
-    
-    public void execute_metricValue() {
-        if (insertMetricValueStmt != null) {
-            try {
-                insertMetricValueStmt.executeBatch();
-            } catch (SQLException ex) {
-                Logger.getLogger(MetricDb.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            finally {
-               try {
-                   insertMetricValueStmt.close();
-               } catch (SQLException e) {e.printStackTrace();}
-               insertMetricValueStmt = null;
-            }
+        if (checkMetricStmt != null) {
+            checkMetricStmt.close();
+            checkMetricStmt = null;
         }
     }
-   
-    public int check_metric(String name){
+    
+    private void getCheckMetricStmt() throws SQLException, IOException, PropertyVetoException {
+        if (checkMetricStmt == null) {
+            Connection con = insertMetricStmt.getConnection();
+            String sql = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = ?";
+            checkMetricStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    public int check_metric(String name) throws SQLException, IOException, PropertyVetoException {
 
         int idMetric = 0;
-        Connection con = null;
-        Statement st = null;
-        PreparedStatement pstmt = null;
+        getCheckMetricStmt();
         ResultSet rs = null;
         
-        try {
-            con = DataSource.getInstance().getConnection();
-            
-            st = con.createStatement();
-            String sql_var = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idMetric = rs.getInt("metric_id");
-            }
-
-            
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+        checkMetricStmt.setString(1, name);
+        rs = checkMetricStmt.executeQuery();
+        
+        while (rs.next()) {
+            idMetric = rs.getInt("metric_id");
         }
         
         return idMetric;

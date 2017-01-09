@@ -21,7 +21,7 @@ public class ImpComment extends BaseImport{
     public void parser(String projectN){
 
         JSONParser parser = new JSONParser();
-        CommentDb commentDb;
+        CommentDb commentDb = new CommentDb();
  
         try {
             
@@ -39,17 +39,16 @@ public class ImpComment extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String author = (String) jsonObject.get("author");
             
-                commentDb = new CommentDb();
                 commentDb.insert_comment(issue_id, comment, author, created);
                 
             }
             
+            commentDb.close();
         }
             
         catch (Exception e) {
             e.printStackTrace();
-        } 
-        
+        }        
     }
         
 
