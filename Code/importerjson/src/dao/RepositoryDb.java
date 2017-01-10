@@ -45,10 +45,9 @@ public class RepositoryDb extends BaseImport{
         PreparedStatement pstmt = bstmt.getPreparedStatement();
         
         pstmt.setString(1, name);
-        pstmt.addBatch();
         
         // Insert immediately because we need to have the row available
-        bstmt.execute();
+        pstmt.execute();
     }
     
     private void getCheckRepoStmt() throws SQLException, IOException, PropertyVetoException {

@@ -34,10 +34,9 @@ public class MetricDb extends BaseImport{
         PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
-        pstmt.addBatch();
         
-        // Insert immediately
-        insertMetricStmt.execute();
+        // Insert immediately because we need to have the row available
+        pstmt.execute();
     }
     
     public void insert_metricValue(int id, Integer value, String category, String date, int project) throws SQLException, IOException, PropertyVetoException{

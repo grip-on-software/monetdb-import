@@ -43,10 +43,9 @@ public class DeveloperDb extends BaseImport{
         
         pstmt.setString(1, name);
         pstmt.setString(2, display_name);
-        pstmt.addBatch();
         
         // Insert immediately because we need to have the row available
-        bstmt.execute();
+        pstmt.execute();
     }
     
     /**
