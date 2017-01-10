@@ -29,6 +29,7 @@ public class ImpSprint extends BaseImport{
 
         BufferedReader br = null;
         PreparedStatement pstmt = null;
+        PreparedStatement existsStmt = null;
         Statement st = null;
         Connection con = null;
         ResultSet rs = null;
@@ -36,6 +37,12 @@ public class ImpSprint extends BaseImport{
  
         try {
             con = DataSource.getInstance().getConnection();
+
+            String sql = "SELECT * FROM gros.sprint WHERE sprint_id=?";
+            existsStmt = con.prepareStatement(sql);
+
+            sql = "insert into gros.sprint values (?,?,?,?,?);";
+            pstmt = con.prepareStatement(sql);
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_sprint.json"));
             
@@ -57,20 +64,11 @@ public class ImpSprint extends BaseImport{
                     end = null;
                 }
                 
-                st = con.createStatement();
-                String sql = "SELECT * FROM gros.sprint WHERE sprint_id=" + Integer.parseInt(id);
-                rs = st.executeQuery(sql);
-                boolean exists = false;
-                while (rs.next()) {
-                    exists=true;
-                }
+                existsStmt.setInt(1, Integer.parseInt(id));
+                rs = existsStmt.executeQuery();
                 
-                
-                if(!exists) {
-                    sql = "insert into gros.sprint values (?,?,?,?,?);";
-
-                    pstmt = con.prepareStatement(sql);
-
+                // check if the sprint id does not already exist
+                if(!rs.next()) {
                     pstmt.setInt(1, Integer.parseInt(id));
                     pstmt.setInt(2, project);
                     pstmt.setString(3, name);
@@ -104,6 +102,7 @@ public class ImpSprint extends BaseImport{
         } finally {
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
         }

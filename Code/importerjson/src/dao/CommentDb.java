@@ -9,8 +9,10 @@ import java.beans.PropertyVetoException;
 import java.io.IOException;
 import util.BaseImport;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,30 +20,28 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class CommentDb extends BaseImport{
+public class CommentDb extends BaseImport {
+    BatchedStatement bstmt = null;
     
-    public void insert_comment(String issue, String message, String author, String sdate) throws PropertyVetoException{
-        
-        Connection con = null;
-        Statement st = null;
-        String sql="";
-    
-        try {
-            con = DataSource.getInstance().getConnection();
-            st = con.createStatement();
-            
-            sql = "insert into gros.comment(issue_id,message,author,date) values ('"+issue+"','"+message+"','"+author+"','"+sdate+"');";
-                    
-            st.executeUpdate(sql);
-            
-        } catch (SQLException | IOException ex) {
-            Logger.getLogger(CommentDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
+    public CommentDb() {
+        String sql = "insert into gros.comment(issue_id,message,author,date) values (?,?,?,?);";
+        bstmt = new BatchedStatement(sql);
     }
     
+    public void insert_comment(String issue, String message, String author, String sdate) throws SQLException, IOException, PropertyVetoException{    
+        PreparedStatement pstmt = bstmt.getPreparedStatement();
+        pstmt.setInt(1, Integer.parseInt(issue));
+        pstmt.setString(2, message);
+        pstmt.setString(3, author);
+        pstmt.setTimestamp(4, Timestamp.valueOf(sdate));
+                             
+        bstmt.batch();
+    }
+    
+    public void close() throws SQLException {
+        bstmt.execute();
+        bstmt.close();
+    }
         
 }
     

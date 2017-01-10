@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.BatchedStatement;
 import dao.DataSource;
 import util.BaseImport;
 import java.io.BufferedReader;
@@ -27,15 +28,16 @@ public class ImpDataIssue extends BaseImport{
     public void parser(String projectN){
 
         BufferedReader br = null;
+        BatchedStatement bstmt = null;
         PreparedStatement pstmt = null;
-        Connection con = null;
-        Statement st = null;
         JSONParser parser = new JSONParser();
         String new_description = "";
         
-        try {
-            con = DataSource.getInstance().getConnection();
-            
+        try {                
+            String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";    
+            bstmt = new BatchedStatement(sql);
+            pstmt = bstmt.getPreparedStatement();
+                
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data.json"));
             String project_id = "";
             
@@ -104,10 +106,6 @@ public class ImpDataIssue extends BaseImport{
                 if ((bugfix.trim()).equals("None")){
                     bugfix = "0";
                 }
-                
-                String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
-                
-                pstmt = con.prepareStatement(sql);
                 
                 pstmt.setInt(1, Integer.parseInt(issue_id));
                 pstmt.setInt(2, Integer.parseInt(changelog_id));
@@ -179,8 +177,10 @@ public class ImpDataIssue extends BaseImport{
                 
                 pstmt.setString(26, updated_by);
                 
-                pstmt.executeUpdate();
+                bstmt.batch();
             }
+            
+            bstmt.execute();
             
             //Used for creating Project if it didn't exist
             this.setProjectID(Integer.parseInt(project_id));
@@ -190,13 +190,10 @@ public class ImpDataIssue extends BaseImport{
         catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            bstmt.close();
         }
         
     }
-        
 
 }
     

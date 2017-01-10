@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.BatchedStatement;
 import dao.DataSource;
 import dao.DeveloperDb;
 import dao.RepositoryDb;
@@ -36,18 +37,17 @@ public class ImpCommit extends BaseImport{
     
     public void parser(int projectID, String projectN){
 
-        BufferedReader br = null;
+        BatchedStatement bstmt = null;
         PreparedStatement pstmt = null;
-        Connection con = null;
-        Statement st = null;
         JSONParser parser = new JSONParser();
-        ResultSet rs = null;
         DeveloperDb devDb = new DeveloperDb();
         RepositoryDb repoDb = new RepositoryDb();
  
         try {
-            
-            con = DataSource.getInstance().getConnection();
+            String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+            bstmt = new BatchedStatement(sql);
+                
+            pstmt = bstmt.getPreparedStatement();
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_commits.json"));
             
@@ -90,10 +90,6 @@ public class ImpCommit extends BaseImport{
                     repoDb.insert_repo(git_repo); // if dev id = 0 then link later.
                     repo_id = devDb.check_developer_git(git_repo); // set new id of dev
                 }
-
-                String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
-                
-                pstmt = con.prepareStatement(sql);
                 
                 pstmt.setString(1, commit_id);
                 pstmt.setInt(2, projectID);
@@ -122,21 +118,22 @@ public class ImpCommit extends BaseImport{
                 pstmt.setString(12, type);
                 pstmt.setInt(13, repo_id);
 
-                pstmt.executeUpdate();
+                bstmt.batch();
             }
+            
+            bstmt.execute();
             
             //Used for creating Project if it didn't exist
             this.setProjectID(projectID);
-                  
+            
+            devDb.close();
+            repoDb.close();
         }
             
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            bstmt.close();
         }
         
     }
@@ -152,13 +149,19 @@ public class ImpCommit extends BaseImport{
         BufferedReader br = null;
         PreparedStatement pstmt = null;
         Connection con = null;
-        Statement st = null;
+        PreparedStatement selectStmt = null;
         JSONParser parser = new JSONParser();
         ResultSet rs = null;
         //DeveloperDb devDb = new DeveloperDb();
  
         try {
             con = DataSource.getInstance().getConnection();
+
+            String sql = "SELECT id FROM gros.developer WHERE name = ?;";
+            selectStmt = con.prepareStatement(sql);
+
+            sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
+            pstmt = con.prepareStatement(sql);
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+"/data_gitdev_to_dev.json"));
             
@@ -170,18 +173,13 @@ public class ImpCommit extends BaseImport{
                 String jira_user_name = (String) jsonObject.get("jira_user_name");
                 display_name = addSlashes(display_name);                
                 
-                String sql = "SELECT id FROM gros.developer WHERE name = '" + jira_user_name + "'";
-                st = con.createStatement();
-                rs = st.executeQuery(sql);
+                selectStmt.setString(1, jira_user_name);
+                rs = selectStmt.executeQuery();
                 int jira_id = 0;
                 while (rs.next()) {
                     jira_id = (rs.getInt("id"));
                 }
-                
-                sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
-                
-                pstmt = con.prepareStatement(sql);
-                
+                                
                 pstmt.setInt(1, jira_id);
                 pstmt.setString(2, display_name);
 
@@ -195,7 +193,7 @@ public class ImpCommit extends BaseImport{
             e.printStackTrace();
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (selectStmt != null) try { selectStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
         }
@@ -209,7 +207,7 @@ public class ImpCommit extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();
 
-            String sql = "SELECT display_name FROM gros.git_developer WHERE jira_dev_id=0";
+            String sql = "SELECT display_name FROM gros.git_developer WHERE jira_dev_id=0;";
 
             System.out.println("These developers should be linked in to Jira. Add them to the file data_gitdev_to_dev.json: ");
             
