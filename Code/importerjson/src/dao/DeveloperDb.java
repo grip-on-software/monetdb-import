@@ -43,6 +43,7 @@ public class DeveloperDb extends BaseImport{
         
         pstmt.setString(1, name);
         pstmt.setString(2, display_name);
+        pstmt.addBatch();
         
         // Insert immediately because we need to have the row available
         bstmt.execute();
@@ -85,7 +86,7 @@ public class DeveloperDb extends BaseImport{
         getCheckDeveloperStmt();
         ResultSet rs = null;
         
-        checkDeveloperStmt.setString(1, display_name);
+        checkDeveloperStmt.setString(1, display_name.toUpperCase().trim());
         rs = checkDeveloperStmt.executeQuery();
  
         while (rs.next()) {
@@ -138,7 +139,7 @@ public class DeveloperDb extends BaseImport{
         getCheckDeveloperGitStmt();
         ResultSet rs = null;
         
-        checkDeveloperGitStmt.setString(1, display_name);
+        checkDeveloperGitStmt.setString(1, display_name.toUpperCase().trim());
         
         rs = checkDeveloperGitStmt.executeQuery();
         

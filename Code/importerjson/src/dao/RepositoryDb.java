@@ -45,6 +45,7 @@ public class RepositoryDb extends BaseImport{
         PreparedStatement pstmt = bstmt.getPreparedStatement();
         
         pstmt.setString(1, name);
+        pstmt.addBatch();
         
         // Insert immediately because we need to have the row available
         bstmt.execute();
@@ -70,7 +71,7 @@ public class RepositoryDb extends BaseImport{
         getCheckRepoStmt();
         ResultSet rs = null;
         
-        checkRepoStmt.setString(1, name);
+        checkRepoStmt.setString(1, name.toUpperCase().trim());
         rs = checkRepoStmt.executeQuery();
  
         while (rs.next()) {

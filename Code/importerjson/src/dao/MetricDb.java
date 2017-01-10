@@ -34,6 +34,7 @@ public class MetricDb extends BaseImport{
         PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
+        pstmt.addBatch();
         
         // Insert immediately
         insertMetricStmt.execute();
@@ -78,7 +79,7 @@ public class MetricDb extends BaseImport{
         getCheckMetricStmt();
         ResultSet rs = null;
         
-        checkMetricStmt.setString(1, name);
+        checkMetricStmt.setString(1, name.toUpperCase().trim());
         rs = checkMetricStmt.executeQuery();
         
         while (rs.next()) {
