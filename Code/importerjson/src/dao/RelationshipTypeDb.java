@@ -62,6 +62,9 @@ public class RelationshipTypeDb extends BaseImport{
             }
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -94,6 +97,9 @@ public class RelationshipTypeDb extends BaseImport{
             }
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         } finally {

@@ -217,6 +217,8 @@ public class ImpCommit extends BaseImport{
                 System.out.println("Unknown Git Developer: " + rs.getString("display_name"));
             }
             
+        } catch (SQLException e) {
+            printSQLExceptionDetails(e);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -329,6 +331,8 @@ public class ImpCommit extends BaseImport{
             
             System.out.println("Developers hashed.");
             
+        } catch (SQLException e) {
+            printSQLExceptionDetails(e);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

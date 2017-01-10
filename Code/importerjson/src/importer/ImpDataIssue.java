@@ -185,12 +185,14 @@ public class ImpDataIssue extends BaseImport{
             //Used for creating Project if it didn't exist
             this.setProjectID(Integer.parseInt(project_id));
                   
+            bstmt.close();
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            bstmt.close();
         }
         
     }

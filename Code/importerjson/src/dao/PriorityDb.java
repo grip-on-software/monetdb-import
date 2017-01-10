@@ -63,6 +63,9 @@ public class PriorityDb extends BaseImport{
             }
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -95,6 +98,9 @@ public class PriorityDb extends BaseImport{
             }
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         } finally {

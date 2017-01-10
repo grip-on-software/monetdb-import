@@ -65,6 +65,9 @@ public class ResolutionDb extends BaseImport{
 
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -98,6 +101,9 @@ public class ResolutionDb extends BaseImport{
 
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         }

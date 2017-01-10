@@ -8,6 +8,7 @@ package importer;
 import dao.DeveloperDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.sql.SQLException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -49,6 +50,9 @@ public class ImpDeveloper extends BaseImport{
                   
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         }

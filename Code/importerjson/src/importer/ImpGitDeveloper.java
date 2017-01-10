@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -53,6 +54,9 @@ public class ImpGitDeveloper extends BaseImport{
                   
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         }

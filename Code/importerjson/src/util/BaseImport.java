@@ -10,10 +10,13 @@ package util;
  */
 
 import dao.DataSource;
+import java.beans.PropertyVetoException;
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ResourceBundle;
 
@@ -62,13 +65,24 @@ public abstract class BaseImport {
                 idProject = rs.getInt("project_id");
             }
         }
-            
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         }
         
         return idProject;
         
+    }
+    
+    public void printSQLExceptionDetails(SQLException e) {
+        e.printStackTrace();
+        SQLException ex = e.getNextException();
+        while (ex != null) {
+            ex.printStackTrace();
+            ex = ex.getNextException();
+        }
     }
 
     /**

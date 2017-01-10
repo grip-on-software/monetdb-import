@@ -73,6 +73,9 @@ public class ImpDataIssueLink extends BaseImport{
             
         }
             
+        catch (SQLException e) {
+            printSQLExceptionDetails(e);
+        }
         catch (Exception e) {
             e.printStackTrace();
         } finally {
