@@ -35,12 +35,10 @@ public class Importerjson {
         
         showCompleteTask("Imported project", startTime);
         
-        /*
-        
         startTime = System.currentTimeMillis();
         
-        ImpDataIssue data = new ImpDataIssue();
-        data.parser(projectName);
+        ImpDataIssue impIssue = new ImpDataIssue();
+        impIssue.parser(projectID, projectName);
         
         showCompleteTask("Imported issues", startTime);
         
@@ -93,16 +91,12 @@ public class Importerjson {
         
         showCompleteTask("Imported issue links", startTime);
 
-*/
-        
         startTime = System.currentTimeMillis();
         
         ImpMetricValue impmetricvalue = new ImpMetricValue();
         impmetricvalue.parser(projectID, projectName);
         
         showCompleteTask("Imported metric values", startTime);
-        
-        /*
         
         startTime = System.currentTimeMillis();
         
@@ -141,8 +135,6 @@ public class Importerjson {
         //impCommit.hashNames();
         
         //showCompleteTask("Sanitized data", startTime);
-
-*/
     }
 
 }

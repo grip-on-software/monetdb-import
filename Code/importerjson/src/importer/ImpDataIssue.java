@@ -25,7 +25,7 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataIssue extends BaseImport{
     
-    public void parser(String projectN){
+    public void parser(int projectId, String projectN){
 
         BufferedReader br = null;
         BatchedStatement bstmt = null;
@@ -39,7 +39,6 @@ public class ImpDataIssue extends BaseImport{
             pstmt = bstmt.getPreparedStatement();
                 
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data.json"));
-            String project_id = "";
             
             for (Object o : a)
             {
@@ -52,7 +51,6 @@ public class ImpDataIssue extends BaseImport{
                 String fixVersions = (String) jsonObject.get("fixVersions");
                 String priority = (String) jsonObject.get("priority");
                 String attachment = (String) jsonObject.get("attachment");
-                       project_id = (String) jsonObject.get("project_id");
                 String type = (String) jsonObject.get("type");
                 String duedate = (String) jsonObject.get("duedate");
                 String status = (String) jsonObject.get("status");
@@ -148,7 +146,7 @@ public class ImpDataIssue extends BaseImport{
                     pstmt.setNull(14, java.sql.Types.TIMESTAMP);
                 }
                 
-                pstmt.setInt(15, Integer.parseInt(project_id));
+                pstmt.setInt(15, projectId);
                 pstmt.setInt(16, Integer.parseInt(status));
                 pstmt.setString(17, "");
                 pstmt.setString(18, reporter);
@@ -182,9 +180,6 @@ public class ImpDataIssue extends BaseImport{
             
             bstmt.execute();
             
-            //Used for creating Project if it didn't exist
-            this.setProjectID(Integer.parseInt(project_id));
-                  
             bstmt.close();
         }
             
