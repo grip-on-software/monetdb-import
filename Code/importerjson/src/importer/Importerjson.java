@@ -35,6 +35,8 @@ public class Importerjson {
         
         showCompleteTask("Imported project", startTime);
         
+        /*
+        
         startTime = System.currentTimeMillis();
         
         ImpDataIssue data = new ImpDataIssue();
@@ -90,6 +92,8 @@ public class Importerjson {
         impDataIssueLink.parser(projectName);
         
         showCompleteTask("Imported issue links", startTime);
+
+*/
         
         startTime = System.currentTimeMillis();
         
@@ -97,6 +101,8 @@ public class Importerjson {
         impmetricvalue.parser(projectID, projectName);
         
         showCompleteTask("Imported metric values", startTime);
+        
+        /*
         
         startTime = System.currentTimeMillis();
         
@@ -135,6 +141,8 @@ public class Importerjson {
         //impCommit.hashNames();
         
         //showCompleteTask("Sanitized data", startTime);
+
+*/
     }
 
 }

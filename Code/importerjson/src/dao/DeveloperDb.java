@@ -92,6 +92,8 @@ public class DeveloperDb extends BaseImport{
             idDeveloper = rs.getInt("id");
         }
         
+        rs.close();
+        
         return idDeveloper;
     } 
     
@@ -145,6 +147,8 @@ public class DeveloperDb extends BaseImport{
         while (rs.next()) {
             idDeveloper = rs.getInt("alias_id");
         }
+        
+        rs.close();
         
         return idDeveloper;
     }   

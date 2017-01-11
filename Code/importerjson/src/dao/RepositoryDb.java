@@ -76,6 +76,8 @@ public class RepositoryDb extends BaseImport{
         while (rs.next()) {
             idRepo = rs.getInt("id");
         }
+        
+        rs.close();
 
         return idRepo;
     } 

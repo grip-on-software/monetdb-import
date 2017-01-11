@@ -85,6 +85,8 @@ public class MetricDb extends BaseImport{
             idMetric = rs.getInt("metric_id");
         }
         
+        rs.close();
+        
         return idMetric;
     }
         

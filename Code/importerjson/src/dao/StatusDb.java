@@ -84,7 +84,6 @@ public class StatusDb extends BaseImport{
         int idStatus = 0;
         Connection con = null;
         Statement st = null;
-        PreparedStatement pstmt = null;
         ResultSet rs = null;
         
         try {
