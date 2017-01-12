@@ -17,9 +17,10 @@ The structure will be shown as follows:
 ## Jira
 
 -   **issue**: Entries from the JIRA database. Each row is one changelog
-    item.
+    item. Primary key is (issue_id, changelog_id)
     -   **issue_id** - INT, **there may be multiple rows with the same
         issue_id**
+    -   **changelog_id** - INT
     -   **key** - VARCHAR (10)
     -   **title** - VARCHAR(250)
     -   **type** - INT - reference to issuetype.id
@@ -32,11 +33,11 @@ The structure will be shown as follows:
     -   **updated_at** - DATE
     -   **description** - VARCHAR
     -   **duedate** - DATE
-    -   **project_id** - INT
+    -   **project_id** - INT - reference to project.project_id
     -   **status** - INT - reference to status.id
     -   **delta_comments** - VARCHAR
-    -   **reporter** - INT
-    -   **assignee** - INT
+    -   **reporter** - VARCHAR - reference to developer.name
+    -   **assignee** - VARCHAR - reference to developer.name
     -   **attachments** - INT
     -   **additional_information** - VARCHAR
     -   **review_comments** - VARCHAR
@@ -100,8 +101,9 @@ Context tables:
     -   **end_date**
 
 
--   project
-    -   **project_id**
+-   project: The projects that were collected. The name is the JIRA key,
+    the project ID is unrelated to internal JIRA IDs.
+    -   **project_id** - primary key
     -   **name**
 
 
@@ -109,14 +111,15 @@ Context tables:
     -   **comment_id** - primary key
     -   **issue_id** - reference to issue.issue_id
     -   **message**
-    -   **author** - VARCHAR, reference to developer.name
+    -   **author** - VARCHAR - reference to developer.name
     -   **date**
 
 Relationship tables:
 
 -   **issuelink**: (Bi)directional links that exist between pairs of
     issues in JIRA. Only the links that exist when the data is collected
-    are stored here.
+    are stored here (no changelogs). Primary key consists of all
+    columns.
     -   **id_from** - reference to issue.issue_id
     -   **id_to** - reference to issue.issue_id
     -   **relationship_type** - reference to relationshiptype.id
@@ -161,13 +164,14 @@ Relationship tables:
 
 ## History Files (Jenkins)
 
--   metric: **Not yet filled**
+-   metric: Metric types
     -   **metric_id**
     -   **metric_name**
 
 
--   metric_value: **Not yet filled**
-    -   **metric_id**
+-   metric_value: Singular metric data from quality report
+    -   **metric_id** - reference to metric.metric_id
     -   **value**
+    -   **category** - red, yellow or green
     -   **date**
     -   **project_id**
