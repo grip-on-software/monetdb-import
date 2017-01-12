@@ -6,14 +6,11 @@
 package importer;
 
 import dao.BatchedStatement;
-import dao.DataSource;
 import util.BaseImport;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -179,8 +176,6 @@ public class ImpDataIssue extends BaseImport{
             }
             
             bstmt.execute();
-            
-            bstmt.close();
         }
             
         catch (SQLException e) {
@@ -188,6 +183,9 @@ public class ImpDataIssue extends BaseImport{
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+        finally {
+            bstmt.close();
         }
         
     }

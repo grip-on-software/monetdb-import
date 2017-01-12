@@ -5,16 +5,10 @@
  */
 package importer;
 
-import dao.DataSource;
 import util.BaseImport;
 import dao.PriorityDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -31,9 +25,7 @@ public class ImpDataPriority extends BaseImport{
         JSONParser parser = new JSONParser();
         PriorityDb priorityDB;
         int priority_id = 0;
-        
-        //JSONParser parser = new JSONParser();
- 
+         
         try {
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_priority.json"));
             

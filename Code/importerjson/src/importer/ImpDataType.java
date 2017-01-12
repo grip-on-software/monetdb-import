@@ -5,13 +5,10 @@
  */
 package importer;
 
-import dao.DataSource;
 import util.BaseImport;
 import dao.DataTypeDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -29,8 +26,6 @@ public class ImpDataType extends BaseImport{
         DataTypeDb dataTypeDb;
         int type_id = 0;
         
-        //JSONParser parser = new JSONParser();
- 
         try {
             
             JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_type.json"));

@@ -5,14 +5,10 @@
  */
 package importer;
 
-import dao.DataSource;
 import dao.DeveloperDb;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -45,7 +41,7 @@ public class ImpGitDeveloper extends BaseImport{
                 
                 devDb = new DeveloperDb();
                 int dev_id = devDb.check_developer(display_name);
-                // if already exists
+                // Check whether developer does not already exist
                 if(dev_id == 0) {
                 	devDb.insert_developer(name, display_name);
                 }

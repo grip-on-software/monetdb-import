@@ -13,7 +13,6 @@ import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,8 +25,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
 import java.security.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
