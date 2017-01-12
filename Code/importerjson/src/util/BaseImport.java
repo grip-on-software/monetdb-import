@@ -76,9 +76,11 @@ public abstract class BaseImport {
     
     public void printSQLExceptionDetails(SQLException e) {
         e.printStackTrace();
+        SQLException prev = e;
         SQLException ex = e.getNextException();
-        while (ex != null) {
+        while (ex != null && !ex.getMessage().equals(prev.getMessage())) {
             ex.printStackTrace();
+            prev = ex;
             ex = ex.getNextException();
         }
     }
