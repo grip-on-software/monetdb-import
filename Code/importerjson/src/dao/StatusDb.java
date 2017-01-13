@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class StatusDb extends BaseImport{
     
-    public void insert_status(String name, String desc){
+    public void insert_status(Integer id, String name, String desc){
         
         Connection con = null;
         Statement st = null;
@@ -32,7 +32,7 @@ public class StatusDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.status(name,description) values ('"+name+"','"+desc+"');";
+            sql = "insert into gros.status(id,name,description) values ("+id+",'"+name+"','"+desc+"');";
                     
             st.executeUpdate(sql);
 
@@ -73,36 +73,6 @@ public class StatusDb extends BaseImport{
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
-        }
-        
-        return idStatus;
-    }
-    
-    public int check_status(int id){
-
-        int idStatus = 0;
-        Connection con = null;
-        Statement st = null;
-        ResultSet rs = null;
-        
-        try {
-            con = DataSource.getInstance().getConnection();
-            
-            st = con.createStatement();
-            String sql_var = "SELECT count(id) FROM gros.status WHERE id = " + id;
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idStatus = rs.getInt(1);
-            }
-        }
-            
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
         }
         
         return idStatus;

@@ -43,7 +43,7 @@ public class ImpDataStatus extends BaseImport{
             
                 if(stat_id == 0){
 
-                    statusDB.insert_status(name,description);
+                    statusDB.insert_status(Integer.parseInt(id),name,description);
                     
                 }
             }
