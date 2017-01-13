@@ -39,7 +39,7 @@ public class ImpDataStatus extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 
                 statusDB = new StatusDb();
-                stat_id = statusDB.check_status(Integer.parseInt(id));
+                stat_id = statusDB.check_status(name);
             
                 if(stat_id == 0){
 

@@ -43,7 +43,7 @@ public class ImpDataResolution extends BaseImport{
                 
                 resolDb = new ResolutionDb();
                 int identifier = Integer.parseInt(id);
-                resol_id = resolDb.check_resolution(identifier);
+                resol_id = resolDb.check_resolution(name);
                 if(resol_id == 0){
                     new_name = name.replace("'","\\'");
                     new_description = description.replace("'","\\'");
