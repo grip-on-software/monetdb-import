@@ -66,8 +66,10 @@ public class MetricDb extends BaseImport{
             checkMetricStmt = null;
         }
         
-        nameMap.clear();
-        nameMap = null;
+        if (nameMap != null) {
+            nameMap.clear();
+            nameMap = null;
+        }
     }
     
     private void getCheckMetricStmt() throws SQLException, IOException, PropertyVetoException {
