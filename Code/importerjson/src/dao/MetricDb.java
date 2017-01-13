@@ -12,7 +12,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.HashMap;
 
 /**
  *
@@ -22,6 +24,7 @@ public class MetricDb extends BaseImport{
     PreparedStatement checkMetricStmt = null;
     BatchedStatement insertMetricStmt = null;
     BatchedStatement insertMetricValueStmt = null;
+    HashMap<String, Integer> nameMap = null;
     
     public MetricDb() {
         String sql = "insert into gros.metric(name) values (?);";
@@ -62,6 +65,9 @@ public class MetricDb extends BaseImport{
             checkMetricStmt.close();
             checkMetricStmt = null;
         }
+        
+        nameMap.clear();
+        nameMap = null;
     }
     
     private void getCheckMetricStmt() throws SQLException, IOException, PropertyVetoException {
@@ -72,13 +78,41 @@ public class MetricDb extends BaseImport{
         }
     }
     
+    private void fillNameCache() throws SQLException, IOException, PropertyVetoException {
+        if (nameMap != null) {
+            return;
+        }
+        nameMap = new HashMap<>();
+        
+        Connection con = insertMetricStmt.getConnection();
+        String sql = "SELECT UPPER(name), metric_id FROM gros.metric";
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+
+        while(rs.next()) {
+            String key = rs.getString(1);
+            Integer id = Integer.parseInt(rs.getString(2));
+            nameMap.put(key, id);
+        }
+
+        stmt.close();
+        rs.close();
+    }
+    
     public int check_metric(String name) throws SQLException, IOException, PropertyVetoException {
+        fillNameCache();
+        
+        String key = name.toUpperCase().trim();
+        Integer mapId = nameMap.get(key);
+        if (mapId != null) {
+            return mapId;
+        }
 
         int idMetric = 0;
         getCheckMetricStmt();
         ResultSet rs = null;
         
-        checkMetricStmt.setString(1, name.toUpperCase().trim());
+        checkMetricStmt.setString(1, key);
         rs = checkMetricStmt.executeQuery();
         
         while (rs.next()) {
@@ -86,6 +120,8 @@ public class MetricDb extends BaseImport{
         }
         
         rs.close();
+        
+        nameMap.put(key, mapId);
         
         return idMetric;
     }

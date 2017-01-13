@@ -21,8 +21,9 @@ public class ImpMetricValue extends BaseImport{
     
     BufferedReader br = null;
     JSONParser parser = new JSONParser();
+    MetricDb mDB = null;
     
-    private void handleObject(Integer projectID, MetricDb mDB, JSONObject jsonObject) throws Exception {
+    private void handleObject(JSONObject jsonObject) throws Exception {
         int metric_id = 0;
         
         String metric_name = (String) jsonObject.get("name");
@@ -42,12 +43,13 @@ public class ImpMetricValue extends BaseImport{
             }
         }
 
-        mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, sdate, projectID);
+        mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, sdate, this.getProjectID());
     }
 
     public void parser(Integer projectID, String projectN){
 
-        MetricDb mDB = new MetricDb();
+        mDB = new MetricDb();
+        this.setProjectID(projectID);
         
         try {
                  
@@ -66,7 +68,7 @@ public class ImpMetricValue extends BaseImport{
                     if (sb.substring(sb.length()-2).equals("},")) {
                         String json = sb.substring(0, sb.length()-1);
                         JSONObject jsonObject = (JSONObject) parser.parse(json);
-                        handleObject(projectID, mDB, jsonObject);
+                        handleObject(jsonObject);
                     
                         sb.setLength(0);
                     }
