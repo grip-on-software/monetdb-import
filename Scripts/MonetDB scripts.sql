@@ -101,6 +101,7 @@ CREATE TABLE "gros"."metric_value" (
 	"value"           INTEGER     NOT NULL,
 	"category"        VARCHAR(100) NOT NULL,
 	"date"            TIMESTAMP  NULL,
+	"since_date"      TIMESTAMP  NULL,
 	"project_id"      INTEGER     NOT NULL
 );
 

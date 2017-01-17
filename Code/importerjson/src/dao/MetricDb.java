@@ -29,7 +29,7 @@ public class MetricDb extends BaseImport{
     public MetricDb() {
         String sql = "insert into gros.metric(name) values (?);";
         insertMetricStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_value values (?,?,?,?,?);";
+        sql = "insert into gros.metric_value values (?,?,?,?,?,?);";
         insertMetricValueStmt = new BatchedStatement(sql);
     }
     
@@ -42,14 +42,15 @@ public class MetricDb extends BaseImport{
         pstmt.execute();
     }
     
-    public void insert_metricValue(int id, Integer value, String category, String date, int project) throws SQLException, IOException, PropertyVetoException{
+    public void insert_metricValue(int id, Integer value, String category, String date, String since_date, int project) throws SQLException, IOException, PropertyVetoException{
         PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
         
         pstmt.setInt(1, id);
         pstmt.setInt(2, value);
         pstmt.setString(3, category);
         pstmt.setTimestamp(4, Timestamp.valueOf(date));
-        pstmt.setInt(5, project);
+        pstmt.setTimestamp(5, Timestamp.valueOf(since_date));
+        pstmt.setInt(6, project);
                     
         insertMetricValueStmt.batch();
     }
