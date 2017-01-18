@@ -8,6 +8,7 @@ package importer;
 import util.BaseImport;
 import dao.MetricDb;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.SQLException;
 import org.json.simple.JSONObject;
@@ -78,7 +79,9 @@ public class ImpMetricValue extends BaseImport{
             
             mDB.close();
         }
-            
+        catch (FileNotFoundException e) {
+            System.out.println("Cannot import metrics: " + e.getMessage());
+        }
         catch (SQLException e) {
             printSQLExceptionDetails(e);
         }
