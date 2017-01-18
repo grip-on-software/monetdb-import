@@ -38,7 +38,7 @@ public class ImpSprint extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();
 
-            String sql = "SELECT * FROM gros.sprint WHERE sprint_id=?";
+            String sql = "SELECT * FROM gros.sprint WHERE sprint_id=? AND project_id=?";
             existsStmt = con.prepareStatement(sql);
 
             sql = "insert into gros.sprint values (?,?,?,?,?);";
@@ -65,6 +65,7 @@ public class ImpSprint extends BaseImport{
                 }
                 
                 existsStmt.setInt(1, Integer.parseInt(id));
+                existsStmt.setInt(2, project);
                 rs = existsStmt.executeQuery();
                 
                 // check if the sprint id does not already exist

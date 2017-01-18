@@ -6,7 +6,7 @@ CREATE TABLE "gros"."issue" (
 	"type"           INTEGER    NULL,
 	"priority"       INTEGER    NULL,
 	"resolution"     INTEGER    NULL,
-	"fixVersion"     INTEGER    NULL,
+	"fixversion"     INTEGER    NULL,
 	"bugfix"         INTEGER    NULL,
 	"watchers"       INTEGER    NULL,
 	"created"     TIMESTAMP  NULL,
@@ -25,6 +25,10 @@ CREATE TABLE "gros"."issue" (
 	"resolution_date"        TIMESTAMP,
 	"sprint_id"      INTEGER    NOT NULL,
 	"updated_by"     VARCHAR(100)    NOT NULL,
+	"rank_change"    BOOL    NULL,
+	"epic"           VARCHAR(10)    NULL,
+	"impediment"     BOOL     NOT NULL,
+	"ready_status"   INTEGER    NULL,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 
@@ -91,6 +95,12 @@ CREATE TABLE "gros"."subtask" (
         CONSTRAINT "pk_subtask_id" PRIMARY KEY ("id_parent","id_subtask")
 );
 
+CREATE TABLE "gros"."ready_status" (
+	"id"              INTEGER     NOT NULL AUTO_INCREMENT,
+	"name"            VARCHAR(100)   NOT NULL,
+        CONSTRAINT "pk_ready_status_id" PRIMARY KEY ("id")
+);
+
 CREATE TABLE "gros"."metric" (
 	"metric_id"       INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL
@@ -111,7 +121,7 @@ CREATE TABLE "gros"."sprint" (
 	"name"           VARCHAR(500)   NOT NULL,
 	"start_date"     TIMESTAMP      NULL,
 	"end_date"       TIMESTAMP      NULL,
-        CONSTRAINT "pk_sprint_id" PRIMARY KEY ("sprint_id")
+        CONSTRAINT "pk_sprint_id" PRIMARY KEY ("sprint_id", "project_id")
 );
 
 CREATE TABLE "gros"."project" (

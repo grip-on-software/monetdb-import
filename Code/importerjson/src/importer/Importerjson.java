@@ -86,6 +86,13 @@ public class Importerjson {
         
         startTime = System.currentTimeMillis();
         
+        ImpReadyStatus impReadyStatus = new ImpReadyStatus();
+        impReadyStatus.parser(projectName);
+        
+        showCompleteTask("Imported ready status names", startTime);
+        
+        startTime = System.currentTimeMillis();
+        
         ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
         impDataIssueLink.parser(projectName);
         

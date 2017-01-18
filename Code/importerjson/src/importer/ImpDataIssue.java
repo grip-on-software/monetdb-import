@@ -35,7 +35,7 @@ public class ImpDataIssue extends BaseImport{
         String new_description = "";
         
         try {
-            String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";    
+            String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
             bstmt = new BatchedStatement(sql);
             pstmt = bstmt.getPreparedStatement();
             
@@ -75,6 +75,10 @@ public class ImpDataIssue extends BaseImport{
                 String resolution = (String) jsonObject.get("resolution");
                 String sprint = (String) jsonObject.get("sprint");
                 String changelog_id = (String) jsonObject.get("changelog_id");
+                String rank_change = (String) jsonObject.get("rank_change");
+                String epic = (String) jsonObject.get("epic");
+                String flagged = (String) jsonObject.get("flagged");
+                String ready_status = (String) jsonObject.get("ready_status");
                 
                 existsStmt.setInt(1, Integer.parseInt(issue_id));
                 existsStmt.setInt(2, Integer.parseInt(changelog_id));
@@ -181,11 +185,21 @@ public class ImpDataIssue extends BaseImport{
 
                     pstmt.setInt(25, Integer.parseInt(sprint));                
 
-                    if (updated_by == "") {
+                    if (updated_by.isEmpty()) {
                         updated_by = reporter;
                     }
 
                     pstmt.setString(26, updated_by);
+                    if (rank_change.equals("0")) {
+                        pstmt.setNull(27, java.sql.Types.BOOLEAN);
+                    }
+                    else {
+                        pstmt.setBoolean(27, rank_change.equals("1"));
+                    }
+                    
+                    pstmt.setString(28, epic);
+                    pstmt.setBoolean(29, flagged.equals("1"));
+                    pstmt.setInt(30, Integer.parseInt(ready_status));
 
                     bstmt.batch();
                 }

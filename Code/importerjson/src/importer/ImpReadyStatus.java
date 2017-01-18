@@ -5,8 +5,8 @@
  */
 package importer;
 
+import dao.ReadyStatusDb;
 import util.BaseImport;
-import dao.StatusDb;
 import java.io.FileReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,34 +14,32 @@ import org.json.simple.parser.JSONParser;
 
 /**
  *
- * @author Enrique
+ * @author Enrique and Leon Helwerda
  */
-public class ImpDataStatus extends BaseImport{
+public class ImpReadyStatus extends BaseImport{
     
     public void parser(String projectN){
 
         JSONParser parser = new JSONParser();
-        StatusDb statusDB;
+        ReadyStatusDb readyStatusDB = new ReadyStatusDb();
         int stat_id = 0;
  
         try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_status.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_ready_status.json"));
             
             for (Object o : a)
             {
       
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String description = (String) jsonObject.get("description");
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 
-                statusDB = new StatusDb();
-                stat_id = statusDB.check_status(name);
+                stat_id = readyStatusDB.check_status(name);
             
                 if(stat_id == 0){
 
-                    statusDB.insert_status(Integer.parseInt(id),name,description);
+                    readyStatusDB.insert_status(Integer.parseInt(id),name);
                     
                 }
             }

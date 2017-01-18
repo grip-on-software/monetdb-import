@@ -17,11 +17,11 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Enrique
+ * @author Enrique and Leon Helwerda
  */
-public class StatusDb extends BaseImport{
+public class ReadyStatusDb extends BaseImport{
     
-    public void insert_status(Integer id, String name, String desc){
+    public void insert_status(Integer id, String name){
         
         Connection con = null;
         Statement st = null;
@@ -31,7 +31,7 @@ public class StatusDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.status(id,name,description) values ("+id+",'"+name+"','"+desc+"');";
+            sql = "insert into gros.ready_status(id,name) values ("+id+",'"+name+"');";
                     
             st.executeUpdate(sql);
 
@@ -56,7 +56,7 @@ public class StatusDb extends BaseImport{
             con = DataSource.getInstance().getConnection();
             
             st = con.createStatement();
-            String sql_var = "SELECT id FROM gros.status WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
+            String sql_var = "SELECT id FROM gros.ready_status WHERE UPPER(name) = '" + name.toUpperCase().trim()+ "'";
             rs = st.executeQuery(sql_var);
  
             while (rs.next()) {
