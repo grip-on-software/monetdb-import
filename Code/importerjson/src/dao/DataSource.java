@@ -14,7 +14,7 @@ import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import util.BaseImport;
+import util.BaseDb;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 /**
@@ -22,10 +22,10 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
  * one database connection at the time.
  * @author Thomas
  */
-public class DataSource extends BaseImport {
+public class DataSource extends BaseDb {
 
     private static DataSource     datasource;
-    private ComboPooledDataSource cpds;
+    private final ComboPooledDataSource cpds;
 
     private DataSource() throws IOException, SQLException, PropertyVetoException {
         //System.setProperty("com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "WARNING");
@@ -59,7 +59,7 @@ public class DataSource extends BaseImport {
      * Returns the connection with the database. 
      * @return Database connection
      */
-    public Connection getConnection() throws SQLException {
+    public final Connection getConnection() throws SQLException {
         return this.cpds.getConnection();
     }
 

@@ -25,7 +25,8 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataFixVersion extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser() {
 
         BufferedReader br = null;
         PreparedStatement existsStmt = null;
@@ -45,7 +46,7 @@ public class ImpDataFixVersion extends BaseImport{
             sql = "insert into gros.fixversion values (?,?,?,?);";
             pstmt = con.prepareStatement(sql);
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_fixVersion.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_fixVersion.json"));
             
             for (Object o : a)
             {

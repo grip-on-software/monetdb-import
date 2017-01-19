@@ -12,13 +12,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import util.BaseImport;
+import util.BaseDb;
 
 /**
  * Class is created to manage the developer table of the database.
  * @author Enrique & Thomas
  */
-public class DeveloperDb extends BaseImport{
+public class DeveloperDb extends BaseDb {
     
     PreparedStatement checkDeveloperStmt = null;
     PreparedStatement checkDeveloperGitStmt = null;

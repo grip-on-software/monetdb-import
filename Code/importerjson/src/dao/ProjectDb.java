@@ -7,7 +7,7 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
+import util.BaseDb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class ProjectDb extends BaseImport{
+public class ProjectDb extends BaseDb {
     
     public void insert_project(String name){
         

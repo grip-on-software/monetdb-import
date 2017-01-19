@@ -6,7 +6,6 @@
 package importer;
 
 import dao.DeveloperDb;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.SQLException;
 import org.json.simple.JSONArray;
@@ -20,15 +19,15 @@ import util.BaseImport;
  */
 public class ImpGitDeveloper extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         JSONParser parser = new JSONParser();
         DeveloperDb devDb;
  
         try {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_gitDeveloper.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_gitDeveloper.json"));
             
             for (Object o : a)
             {
@@ -60,11 +59,11 @@ public class ImpGitDeveloper extends BaseImport{
     }
         
     public static String addSlashes(String s) {
-            s = s.replaceAll("\\\\", "\\\\\\\\");
-            s = s.replaceAll("\\n", "\\\\n");
-            s = s.replaceAll("\\r", "\\\\r");
-            s = s.replaceAll("\\00", "\\\\0");
-            s = s.replaceAll("'", "\\\\'");
+        s = s.replaceAll("\\\\", "\\\\\\\\");
+        s = s.replaceAll("\\n", "\\\\n");
+        s = s.replaceAll("\\r", "\\\\r");
+        s = s.replaceAll("\\00", "\\\\0");
+        s = s.replaceAll("'", "\\\\'");
         return s;
     }
 }

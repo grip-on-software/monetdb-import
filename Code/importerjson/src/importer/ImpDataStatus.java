@@ -18,14 +18,15 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataStatus extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
         JSONParser parser = new JSONParser();
         StatusDb statusDB;
         int stat_id = 0;
  
         try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_status.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_status.json"));
             
             for (Object o : a)
             {

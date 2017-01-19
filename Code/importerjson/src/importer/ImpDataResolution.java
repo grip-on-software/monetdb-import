@@ -7,7 +7,6 @@ package importer;
 
 import util.BaseImport;
 import dao.ResolutionDb;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,9 +18,9 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataResolution extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         JSONParser parser = new JSONParser();
         ResolutionDb resolDb;
         int resol_id=0;
@@ -30,7 +29,7 @@ public class ImpDataResolution extends BaseImport{
         
         try {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_resolution.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_resolution.json"));
             
             for (Object o : a)
             {

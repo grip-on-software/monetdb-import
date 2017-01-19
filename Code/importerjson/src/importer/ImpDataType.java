@@ -7,7 +7,6 @@ package importer;
 
 import util.BaseImport;
 import dao.DataTypeDb;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,16 +18,16 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataType extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         JSONParser parser = new JSONParser();
         DataTypeDb dataTypeDb;
         int type_id = 0;
         
         try {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_type.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_type.json"));
             
             for (Object o : a)
             {
@@ -46,7 +45,7 @@ public class ImpDataType extends BaseImport{
             
                 if(type_id == 0){
 
-                    dataTypeDb.insert_issueType(identifier, name,description);
+                    dataTypeDb.insert_issueType(identifier, name, description);
                     
                 }
             }

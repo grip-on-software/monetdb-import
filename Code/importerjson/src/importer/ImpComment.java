@@ -19,14 +19,15 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpComment extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser() {
 
         JSONParser parser = new JSONParser();
         CommentDb commentDb = new CommentDb();
  
         try {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_comments.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_comments.json"));
             
             for (Object o : a)
             {

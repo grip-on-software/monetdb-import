@@ -6,7 +6,6 @@
 package importer;
 
 import dao.DeveloperDb;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.SQLException;
 import org.json.simple.JSONArray;
@@ -20,14 +19,14 @@ import util.BaseImport;
  */
 public class ImpDeveloper extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         JSONParser parser = new JSONParser();
         DeveloperDb devDb = new DeveloperDb();
  
         try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_developer.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_developer.json"));
             
             for (Object o : a)
             {
@@ -65,8 +64,8 @@ public class ImpDeveloper extends BaseImport{
         s = s.replaceAll("\\r", "\\\\r");
         s = s.replaceAll("\\00", "\\\\0");
         s = s.replaceAll("'", "\\\\'");
-    return s;
-}
+        return s;
+    }
         
 
 }

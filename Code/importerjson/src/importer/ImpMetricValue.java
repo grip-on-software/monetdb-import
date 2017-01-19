@@ -48,15 +48,15 @@ public class ImpMetricValue extends BaseImport{
         mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, date, since_date, this.getProjectID());
     }
 
-    public void parser(Integer projectID, String projectN){
+    @Override
+    public void parser(){
 
         mDB = new MetricDb();
-        this.setProjectID(projectID);
         
         try {
                  
             // Read metrics JSON using buffered readers so that Java does not run out of memory
-            br = new BufferedReader(new FileReader(getPath()+projectN+"/data_metrics.json"));
+            br = new BufferedReader(new FileReader(getPath()+getProjectName()+"/data_metrics.json"));
             
             StringBuilder sb = new StringBuilder();
             String line;

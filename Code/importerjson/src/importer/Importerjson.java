@@ -5,11 +5,39 @@
  */
 package importer;
 
+import java.util.Arrays;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import util.BaseImport;
+
 /**
  *
- * @author Enrique & Thomas Helling
+ * @author Enrique
+ * @author Thomas Helling
+ * @author Leon Helwerda
  */
 public class Importerjson {
+    private static String projectName = "";
+    private static int projectID = 0;
+    private final static SortedSet<String> defaultTasks = retrieveTasks(new String[]{
+        "issue", "issuetype", "status", "resolution", "relationshiptype",
+        "priority", "fixVersion", "ready_status", "issuelink", "metric_value",
+        "sprint", "comment", "developer", "commit",
+        // Additional tasks
+        //"developerlink", "encrypt"
+    });
+    
+    private static void performTask(BaseImport importer, String importType) {
+        long startTime;
+        
+        startTime = System.currentTimeMillis();
+        
+        importer.setProjectName(projectName);
+        importer.setProjectID(projectID);
+        importer.parser();
+        
+        showCompleteTask("Imported " + importType, startTime);
+    }
         
     private static void showCompleteTask(String taskName, long startTime) {
         long stopTime = System.currentTimeMillis();
@@ -19,129 +47,137 @@ public class Importerjson {
         System.out.println(line);
     }
     
-    @SuppressWarnings("unchecked")
+    private static SortedSet<String> retrieveTasks(String[] taskList) {
+        SortedSet<String> tasks = new TreeSet<>();
+        for (String task : taskList) {
+            if (task.equals("all")) {
+                tasks.addAll(defaultTasks);
+            }
+            else if (task.startsWith("-")) {
+                // Remove task from the list (overriding earlier additions).
+                // Also, if this is the first option in the list of tasks,
+                // then add all default tasks and remove it from there.
+                if (tasks.isEmpty()) {
+                    tasks.addAll(defaultTasks);
+                }
+                tasks.remove(task.substring(1));
+            }
+            else {
+                tasks.add(task);
+            }
+        }
+        return tasks;
+    }
+    
     public static void main(String[] args) {
-        
-        int projectID;
-        String projectName;
-        long startTime;
-        
+        if (args.length <= 0) {
+            throw new RuntimeException("Usage: java -jar importerjson <project> [tasks]");
+        }
         projectName = args[0].trim();
         
-        startTime = System.currentTimeMillis();
+        SortedSet<String> tasks;
+        if (args.length > 1) {
+            tasks = retrieveTasks(args[1].trim().split(","));
+        }
+        else {
+            tasks = defaultTasks;
+        }
         
+        System.out.println("Tasks to run: " + Arrays.toString(tasks.toArray()));
+        
+        // Always perform project import so that project ID is known to exist
         ImpProject impProject = new ImpProject();
-        projectID = impProject.parser(projectName);
-        
-        showCompleteTask("Imported project", startTime);
-        
-        startTime = System.currentTimeMillis();
-        
-        ImpDataIssue impIssue = new ImpDataIssue();
-        impIssue.parser(projectID, projectName);
-        
-        showCompleteTask("Imported issues", startTime);
-        
-        startTime = System.currentTimeMillis();
+        performTask(impProject, "project");
+        projectID = impProject.getProjectID();
+               
+        if (tasks.contains("issue")) {
+            ImpDataIssue impIssue = new ImpDataIssue();
+            performTask(impIssue, "issues");
+        }
                 
-        ImpDataType impDataType = new ImpDataType();
-        impDataType.parser(projectName);
-        
-        showCompleteTask("Imported issue types", startTime);
-        
-        startTime = System.currentTimeMillis();
-        
-        ImpDataStatus impDataStatus = new ImpDataStatus();
-        impDataStatus.parser(projectName);
-        
-        showCompleteTask("Imported status types", startTime);
-        
-        startTime = System.currentTimeMillis();
+        if (tasks.contains("issuetype")) {
+            ImpDataType impDataType = new ImpDataType();
+            performTask(impDataType, "issue types");
+        }
                 
-        ImpDataResolution impDataResolution = new ImpDataResolution();
-        impDataResolution.parser(projectName);
-        
-        showCompleteTask("Imported resolution types", startTime);
-        
-        startTime = System.currentTimeMillis();
+        if (tasks.contains("status")) {
+            ImpDataStatus impDataStatus = new ImpDataStatus();
+            performTask(impDataStatus, "status types");
+        }
                 
-        ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
-        impDataRelationshipType.parser(projectName);
+        if (tasks.contains("resolution")) {
+            ImpDataResolution impDataResolution = new ImpDataResolution();
+            performTask(impDataResolution, "resolution types");
+        }
         
-        showCompleteTask("Imported relationship types", startTime);
+        if (tasks.contains("relationshiptype")) {
+            ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
+            performTask(impDataRelationshipType, "relationship types");
+        }
         
-        startTime = System.currentTimeMillis();
+        if (tasks.contains("priority")) {
+            ImpDataPriority impDataPriority = new ImpDataPriority();
+            performTask(impDataPriority, "priority types");
+        }
         
-        ImpDataPriority impDataPriority = new ImpDataPriority();
-        impDataPriority.parser(projectName);
+        if (tasks.contains("fixVersion")) {
+            ImpDataFixVersion impDataFixVersion = new ImpDataFixVersion();
+            performTask(impDataFixVersion, "fixVersions");
+        }
         
-        showCompleteTask("Imported priortity types", startTime);
+        if (tasks.contains("ready_status")) {
+            ImpReadyStatus impReadyStatus = new ImpReadyStatus();
+            performTask(impReadyStatus, "ready status names");
+        }
         
-        startTime = System.currentTimeMillis();
+        if (tasks.contains("issuelink")) {
+            ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
+            performTask(impDataIssueLink, "issue links");
+        }
         
-        ImpDataFixVersion impDataFixVersion = new ImpDataFixVersion();
-        impDataFixVersion.parser(projectName);
+        if (tasks.contains("metric_value")) {
+            ImpMetricValue impMetricValue = new ImpMetricValue();
+            performTask(impMetricValue, "metric values");
+        }
         
-        showCompleteTask("Imported fixVersions", startTime);
+        if (tasks.contains("sprint")) {
+            ImpSprint impSprint = new ImpSprint();
+            performTask(impSprint, "sprints");
+        }
         
-        startTime = System.currentTimeMillis();
+        if (tasks.contains("comment")) {
+            ImpComment impComment = new ImpComment();
+            performTask(impComment, "comments");
+        }
         
-        ImpReadyStatus impReadyStatus = new ImpReadyStatus();
-        impReadyStatus.parser(projectName);
+        if (tasks.contains("developer")) {
+            ImpDeveloper impDeveloper = new ImpDeveloper();
+            performTask(impDeveloper, "developers");
+        }
         
-        showCompleteTask("Imported ready status names", startTime);
-        
-        startTime = System.currentTimeMillis();
-        
-        ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
-        impDataIssueLink.parser(projectName);
-        
-        showCompleteTask("Imported issue links", startTime);
-
-        startTime = System.currentTimeMillis();
-        
-        ImpMetricValue impmetricvalue = new ImpMetricValue();
-        impmetricvalue.parser(projectID, projectName);
-        
-        showCompleteTask("Imported metric values", startTime);
-        
-        startTime = System.currentTimeMillis();
-        
-        ImpSprint impsprint = new ImpSprint();
-        impsprint.parser(projectID, projectName);
-        
-        showCompleteTask("Imported sprints", startTime);
-        
-        startTime = System.currentTimeMillis();
-         
-        ImpComment impComment = new ImpComment();
-        impComment.parser(projectName);
-
-        showCompleteTask("Imported comments", startTime);
-        
-        startTime = System.currentTimeMillis();
-        
-        ImpDeveloper impDeveloper = new ImpDeveloper();
-        impDeveloper.parser(projectName);
-        
-        showCompleteTask("Imported developers", startTime);
-        
-        startTime = System.currentTimeMillis();
- 
         ImpCommit impCommit = new ImpCommit();
-        impCommit.parser(projectID, projectName);
+        impCommit.setProjectName(projectName);
+        impCommit.setProjectID(projectID);
+        if (tasks.contains("commit")) {
+            performTask(impCommit, "commits");
+        }
         
-        showCompleteTask("Imported commits", startTime);
+        if (tasks.contains("developerlink")) {
+            long startTime = System.currentTimeMillis();
+            
+            impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
+            impCommit.printUnknownDevs();
+            
+            showCompleteTask("Fixed JIRA and Git developer linking", startTime);
+        }
         
-        //startTime = System.currentTimeMillis();
-        
-        //impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
-        //impCommit.printUnknownDevs();
-        
-        // Encryption
-        //impCommit.hashNames();
-        
-        //showCompleteTask("Sanitized data", startTime);
+        if (tasks.contains("encrypt")) {        
+            long startTime = System.currentTimeMillis();
+            
+            impCommit.hashNames();
+
+            showCompleteTask("Encrypted personal information", startTime);
+        }
     }
 
 }

@@ -8,7 +8,6 @@ package importer;
 import dao.DataSource;
 import util.BaseImport;
 import dao.RelationshipTypeDb;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,9 +22,9 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataRelationshipType extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         PreparedStatement pstmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
@@ -37,7 +36,7 @@ public class ImpDataRelationshipType extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_relationshiptype.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_relationshiptype.json"));
             
             for (Object o : a)
             {

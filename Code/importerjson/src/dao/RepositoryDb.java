@@ -11,13 +11,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import util.BaseImport;
+import util.BaseDb;
 
 /**
  * Class is created to manage the developer table of the database.
  * @author Enrique & Thomas
  */
-public class RepositoryDb extends BaseImport{
+public class RepositoryDb extends BaseDb {
     
     BatchedStatement bstmt = null;
     PreparedStatement checkRepoStmt = null;

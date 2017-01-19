@@ -32,13 +32,15 @@ import java.security.*;
  */
 public class ImpCommit extends BaseImport{
     
-    public void parser(int projectID, String projectN){
+    @Override
+    public void parser() {
 
         BatchedStatement bstmt = null;
         PreparedStatement pstmt = null;
         JSONParser parser = new JSONParser();
         DeveloperDb devDb = new DeveloperDb();
         RepositoryDb repoDb = new RepositoryDb();
+        int projectID = getProjectID();
  
         try {
             String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
@@ -46,7 +48,7 @@ public class ImpCommit extends BaseImport{
                 
             pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_commits.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_commits.json"));
             
             for (Object o : a)
             {
@@ -139,8 +141,6 @@ public class ImpCommit extends BaseImport{
      * Updates the JiraID's of the git developer table. It uses a json file to read
      * all the aliases found on Git and then links them to the JiraID's. Best is to do this
      * after collecting all the records of all the projects.
-     * @param projectID
-     * @param projectN 
      */
     public void updateJiraID() {
         BufferedReader br = null;
@@ -343,10 +343,8 @@ public class ImpCommit extends BaseImport{
     /**
      * Updates the entire commit table with the right jira dev id's instead of
      * the alias ids. ONLY RUN THIS IF THE GIT DEVELOPER TABLE IS COMPLETELY UPDATED!
-     * @param projectID Project ID
-     * @param ProjectN Project name
      */
-    public void updateDevelopers(int projectID, String projectN) {
+    public void updateDevelopers() {
         DeveloperDb devDb = new DeveloperDb();
  
         devDb.updateCommits();

@@ -7,7 +7,7 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
+import util.BaseDb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,7 +20,7 @@ import java.util.HashMap;
  *
  * @author Enrique
  */
-public class MetricDb extends BaseImport{
+public class MetricDb extends BaseDb {
     PreparedStatement checkMetricStmt = null;
     BatchedStatement insertMetricStmt = null;
     BatchedStatement insertMetricValueStmt = null;

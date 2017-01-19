@@ -7,7 +7,7 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
+import util.BaseDb;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class StatusDb extends BaseImport{
+public class StatusDb extends BaseDb {
     
     public void insert_status(Integer id, String name, String desc){
         

@@ -7,7 +7,7 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
+import util.BaseDb;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  * Class is created to manage database connection for the DataType table.
  * @author Enrique
  */
-public class DataTypeDb extends BaseImport{
+public class DataTypeDb extends BaseDb {
     
     public void insert_issueType(int id, String name, String desc){
         

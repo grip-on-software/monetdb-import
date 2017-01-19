@@ -7,7 +7,7 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
+import util.BaseDb;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -16,7 +16,7 @@ import java.sql.Timestamp;
  *
  * @author Enrique
  */
-public class CommentDb extends BaseImport {
+public class CommentDb extends BaseDb {
     BatchedStatement bstmt = null;
     
     public CommentDb() {

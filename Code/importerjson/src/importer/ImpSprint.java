@@ -25,15 +25,16 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpSprint extends BaseImport{
     
-    public void parser(int project, String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         PreparedStatement pstmt = null;
         PreparedStatement existsStmt = null;
         Statement st = null;
         Connection con = null;
         ResultSet rs = null;
         JSONParser parser = new JSONParser();
+        int project = getProjectID();
  
         try {
             con = DataSource.getInstance().getConnection();
@@ -44,7 +45,7 @@ public class ImpSprint extends BaseImport{
             sql = "insert into gros.sprint values (?,?,?,?,?);";
             pstmt = con.prepareStatement(sql);
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_sprint.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_sprint.json"));
             
             for (Object o : a)
             {

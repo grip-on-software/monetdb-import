@@ -7,7 +7,6 @@ package importer;
 
 import util.BaseImport;
 import dao.GitFeatureDb;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,16 +18,16 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpGitFeatures extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         JSONParser parser = new JSONParser();
         GitFeatureDb gitFeatureDb;
         int user_id = 0;
  
         try {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_features.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_features.json"));
             
             for (Object o : a)
             {
@@ -41,7 +40,7 @@ public class ImpGitFeatures extends BaseImport{
                 String user_name = (String) jsonObject.get("user_name");
                 
                 gitFeatureDb = new GitFeatureDb();
-                user_id = gitFeatureDb.check_username(user_name.trim());
+                user_id = gitFeatureDb.check_username(user_name);
             
                 if(user_id == 0){
                     gitFeatureDb.insert_feature(feature_name,Double.parseDouble(feature_value),Integer.parseInt(sprint_id),user_name);                    

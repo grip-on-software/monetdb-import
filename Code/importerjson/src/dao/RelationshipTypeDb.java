@@ -7,7 +7,7 @@ package dao;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
-import util.BaseImport;
+import util.BaseDb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  *
  * @author Enrique
  */
-public class RelationshipTypeDb extends BaseImport{
+public class RelationshipTypeDb extends BaseDb {
     
     public void insert_relType(String name){
         
@@ -29,7 +29,7 @@ public class RelationshipTypeDb extends BaseImport{
         String sql="";
     
         try {
-            con = con = DataSource.getInstance().getConnection();
+            con = DataSource.getInstance().getConnection();
             st = con.createStatement();
             sql = "insert into gros.relationshiptype(name) values ('"+name+"');";
                     

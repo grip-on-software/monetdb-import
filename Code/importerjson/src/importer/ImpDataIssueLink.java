@@ -8,7 +8,6 @@ package importer;
 import dao.BatchedStatement;
 import dao.DataSource;
 import util.BaseImport;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,9 +24,9 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataIssueLink extends BaseImport{
     
-    public void parser(String projectN){
+    @Override
+    public void parser() {
 
-        BufferedReader br = null;
         BatchedStatement bstmt = null;
         PreparedStatement pstmt = null;
         PreparedStatement existsStmt = null;
@@ -46,7 +45,7 @@ public class ImpDataIssueLink extends BaseImport{
             bstmt = new BatchedStatement(sql);
             pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data_issuelinks.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_issuelinks.json"));
             
             for (Object o : a)
             {
@@ -81,7 +80,7 @@ public class ImpDataIssueLink extends BaseImport{
         catch (Exception e) {
             e.printStackTrace();
         } finally {
-            bstmt.close();
+            if (bstmt != null) { bstmt.close(); }
             if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}

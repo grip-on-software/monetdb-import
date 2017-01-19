@@ -7,7 +7,6 @@ package importer;
 
 import dao.BatchedStatement;
 import util.BaseImport;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,15 +23,16 @@ import org.json.simple.parser.JSONParser;
  */
 public class ImpDataIssue extends BaseImport{
     
-    public void parser(int projectId, String projectN){
+    @Override
+    public void parser(){
 
-        BufferedReader br = null;
         BatchedStatement bstmt = null;
         PreparedStatement pstmt = null;
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
         JSONParser parser = new JSONParser();
         String new_description = "";
+        int projectId = getProjectID();
         
         try {
             String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
@@ -44,7 +44,7 @@ public class ImpDataIssue extends BaseImport{
             sql = "SELECT * FROM gros.issue WHERE issue_id = ? AND changelog_id = ?";
             existsStmt = con.prepareStatement(sql);
                 
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+projectN+"/data.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data.json"));
             
             for (Object o : a)
             {
@@ -120,6 +120,12 @@ public class ImpDataIssue extends BaseImport{
                     if ((bugfix.trim()).equals("None")){
                         bugfix = "0";
                     }
+                    if (rank_change.equals("0")) {
+                        rank_change = null;
+                    }
+                    if (epic.equals("0")) {
+                        epic = null;
+                    }
 
                     pstmt.setInt(1, Integer.parseInt(issue_id));
                     pstmt.setInt(2, Integer.parseInt(changelog_id));
@@ -190,14 +196,19 @@ public class ImpDataIssue extends BaseImport{
                     }
 
                     pstmt.setString(26, updated_by);
-                    if (rank_change.equals("0")) {
-                        pstmt.setNull(27, java.sql.Types.BOOLEAN);
-                    }
-                    else {
+                    if (rank_change != null) {
                         pstmt.setBoolean(27, rank_change.equals("1"));
                     }
+                    else {
+                        pstmt.setNull(27, java.sql.Types.BOOLEAN);
+                    }
                     
-                    pstmt.setString(28, epic);
+                    if (epic != null) {
+                        pstmt.setString(28, epic);
+                    }
+                    else {
+                        pstmt.setNull(28, java.sql.Types.VARCHAR);
+                    }
                     pstmt.setBoolean(29, flagged.equals("1"));
                     pstmt.setInt(30, Integer.parseInt(ready_status));
 

@@ -20,7 +20,9 @@ public class ImpProject extends BaseImport{
     JSONParser parser = new JSONParser();
     ProjectDb pDB;
 
-    public int parser(String projectN){
+    @Override
+    public void parser(){
+        String projectN = getProjectName();
 
         int project = 0;
          
@@ -43,11 +45,9 @@ public class ImpProject extends BaseImport{
         }
         
         finally{
-      
+            this.setProjectID(project);
             
         }
-        
-        return project;
         
     }
         

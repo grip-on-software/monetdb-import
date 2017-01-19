@@ -19,140 +19,38 @@ import java.sql.Statement;
 import java.util.ResourceBundle;
 
 
-public abstract class BaseImport {
+public abstract class BaseImport extends BaseDb {
     
-    private String url;
-    private String user;
-    private String password;
-    private String path;
-    private String project;
+    private String projectName;
     private int projectID = 0;
     
-    public BaseImport() {
-        ResourceBundle bundle = ResourceBundle.getBundle("util.import");
-        url = bundle.getString("url").trim();
-        user = bundle.getString("user").trim();
-        password = bundle.getString("password").trim();
-        //path = bundle.getString("path");
-        
-        // Get system file path from Java jar location.
-        File f = new File(System.getProperty("java.class.path"));
-        File dir = f.getAbsoluteFile().getParentFile();
-        path = dir.toString() + "/";
-        //project = bundle.getString("project").trim(); 
-        //projectID = this.getProjectId(project);
-     
-    }
-    
-    private int getProjectId(String projectName){
-    
-        int idProject = 0;
-        PreparedStatement pstmt = null;
-        Connection con = null;
-        Statement st = null;
-        ResultSet rs = null;
-        
-        try{
-            con = DataSource.getInstance().getConnection();
-            st = con.createStatement();
-            
-            String sql_var = "SELECT project_id FROM gros.project WHERE UPPER(name) = '" + projectName.toUpperCase().trim()+ "'";
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                idProject = rs.getInt("project_id");
-            }
-        }
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return idProject;
-        
-    }
-    
-    public void printSQLExceptionDetails(SQLException e) {
-        e.printStackTrace();
-        SQLException prev = e;
-        SQLException ex = e.getNextException();
-        while (ex != null && !ex.getMessage().equals(prev.getMessage())) {
-            ex.printStackTrace();
-            prev = ex;
-            ex = ex.getNextException();
-        }
-    }
-
-    /**
-     * @return the url
-     */
-    public String getUrl() {
-        return url;
-    }
-
-    /**
-     * @param url the url to set
-     */
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    /**
-     * @return the user
-     */
-    public String getUser() {
-        return user;
-    }
-
-    /**
-     * @param user the user to set
-     */
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    /**
-     * @return the password
-     */
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * @param password the password to set
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    /**
-     * @return the path
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * @param path the path to set
-     */
-    public void setPath(String path) {
-        this.path = path;
-    }
-
     /**
      * @return the projectID
      */
-    public int getProjectID() {
+    public final int getProjectID() {
         return projectID;
     }
 
     /**
      * @param projectID the projectID to set
      */
-    public void setProjectID(int projectID) {
+    public final void setProjectID(int projectID) {
         this.projectID = projectID;
     }
     
+    /**
+     * @return the project name
+     */
+    public final String getProjectName() {
+        return projectName;
+    }
+    
+    /**
+     * @param projectName the project name to set
+     */
+    public final void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+    
+    public abstract void parser();
 }
