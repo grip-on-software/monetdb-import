@@ -70,4 +70,7 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="-post-compile">
+        <copy file="data_gitdev_to_dev.json" todir="${dist.dir}"/>
+    </target>
 </project>

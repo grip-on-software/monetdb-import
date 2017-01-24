@@ -226,7 +226,7 @@ public class ImpDataIssue extends BaseImport{
             e.printStackTrace();
         }
         finally {
-            bstmt.close();
+            if (bstmt != null) { bstmt.close(); }
             if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
         }
