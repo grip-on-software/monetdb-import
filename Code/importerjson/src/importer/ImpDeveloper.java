@@ -34,8 +34,6 @@ public class ImpDeveloper extends BaseImport{
                 
                 String display_name = (String) jsonObject.get("display_name");
                 String name = (String) jsonObject.get("name");
-                name = addSlashes(name);
-                display_name = addSlashes(display_name);
                 
                 int dev_id = devDb.check_developer(display_name);
                 // check whether the developer does not already exist
@@ -57,16 +55,6 @@ public class ImpDeveloper extends BaseImport{
         }
         
     }
-    
-    public static String addSlashes(String s) {
-        s = s.replaceAll("\\\\", "\\\\\\\\");
-        s = s.replaceAll("\\n", "\\\\n");
-        s = s.replaceAll("\\r", "\\\\r");
-        s = s.replaceAll("\\00", "\\\\0");
-        s = s.replaceAll("'", "\\\\'");
-        return s;
-    }
-        
 
 }
     

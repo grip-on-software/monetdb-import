@@ -87,7 +87,7 @@ public class ImpCommit extends BaseImport{
                 
                 if (repo_id == 0) { // if repo id does not exist, create repo with new id
                     repoDb.insert_repo(git_repo);
-                    repo_id = devDb.check_developer_git(git_repo); // set new id of repo
+                    repo_id = repoDb.check_repo(git_repo); // set new id of repo
                 }
                 
                 pstmt.setString(1, commit_id);
