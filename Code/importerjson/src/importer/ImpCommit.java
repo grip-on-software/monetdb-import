@@ -77,17 +77,17 @@ public class ImpCommit extends BaseImport{
                 developer = addSlashes(developer);
                 int developer_id = devDb.check_developer_git(developer);
                 
-                if (developer_id == 0) { // if developer id does not exist, create developer with new id and _git behind name
-                    int dev_id = devDb.check_developer(developer); // Check if developer already exists in developer table      
+                if (developer_id == 0) { // if developer id does not exist, create git developer with new id
+                    int dev_id = devDb.check_developer(developer); // Check if developer already exists in JIRA developer table
                     devDb.insert_developer_git(dev_id, developer); // if dev id = 0 then link later.
                     developer_id = devDb.check_developer_git(developer); // set new id of dev
                 }
                 
                 int repo_id = repoDb.check_repo(git_repo);
                 
-                if (developer_id == 0) { // if developer id does not exist, create developer with new id and _git behind name  
-                    repoDb.insert_repo(git_repo); // if dev id = 0 then link later.
-                    repo_id = devDb.check_developer_git(git_repo); // set new id of dev
+                if (repo_id == 0) { // if repo id does not exist, create repo with new id
+                    repoDb.insert_repo(git_repo);
+                    repo_id = devDb.check_developer_git(git_repo); // set new id of repo
                 }
                 
                 pstmt.setString(1, commit_id);
@@ -106,8 +106,6 @@ public class ImpCommit extends BaseImport{
 
                 // Calculate developerid Int or String?
                 pstmt.setInt(5, developer_id);
-                /* message = this.addSlashes(message);
-                String new_message = message.replace("'", "\\'"); */
                 pstmt.setString(6, message);
                 pstmt.setInt(7, Integer.parseInt(size_of_commit));
                 pstmt.setInt(8, Integer.parseInt(insertions));
@@ -132,7 +130,7 @@ public class ImpCommit extends BaseImport{
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
         } finally {
-            bstmt.close();
+            if (bstmt != null) { bstmt.close(); }
         }
         
     }
@@ -263,8 +261,8 @@ public class ImpCommit extends BaseImport{
                 dev_name = sha256(salt + dev_name + pepper);
                 
                 String sql2 = "UPDATE gros.git_developer SET display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
-                Statement st2 = con.createStatement();
-                st2.executeQuery(sql2);
+                st = con.createStatement();
+                st.executeQuery(sql2);
                 
             }
             
@@ -281,8 +279,8 @@ public class ImpCommit extends BaseImport{
                 user_name = sha256(salt + user_name + pepper);
                 
                 String sql2 = "UPDATE gros.developer SET name='" + user_name + "', display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
-                Statement st2 = con.createStatement();
-                st2.executeQuery(sql2);
+                st = con.createStatement();
+                st.executeQuery(sql2);
             }
             
             /* Hash Developers in Issue */
@@ -300,15 +298,15 @@ public class ImpCommit extends BaseImport{
                     reporter = sha256(salt + reporter + pepper);
                 }
                 if(!assignee.equals("None")) { 
-                    assignee = sha256(salt + reporter + pepper);
+                    assignee = sha256(salt + assignee + pepper);
                 }
                 if(!updated_by.equals("None")) { 
-                    updated_by = sha256(salt + reporter + pepper);
+                    updated_by = sha256(salt + updated_by + pepper);
                 }
                 
                 String sql2 = "UPDATE gros.issue SET reporter='" + reporter + "', assignee='" + assignee + "', '" + updated_by + "' WHERE issue_id=" + issue_id + " AND updated='" + ts + "'";
-                Statement st2 = con.createStatement();
-                st2.executeQuery(sql2);
+                st = con.createStatement();
+                st.executeQuery(sql2);
             }
             
             /* Hash Developers in Comment*/
@@ -321,9 +319,9 @@ public class ImpCommit extends BaseImport{
                 
                 author = sha256(salt + author + pepper);
                 
-                String sql2 = "UPDATE gros.issue SET author='" + author + "' WHERE comment_id=" + comment_id;
-                Statement st2 = con.createStatement();
-                st2.executeQuery(sql2);
+                String sql2 = "UPDATE gros.comment SET author='" + author + "' WHERE comment_id=" + comment_id;
+                st = con.createStatement();
+                st.executeQuery(sql2);
             }
             
             System.out.println("Developers hashed.");
@@ -356,8 +354,8 @@ public class ImpCommit extends BaseImport{
         s = s.replaceAll("\\r", "\\\\r");
         s = s.replaceAll("\\00", "\\\\0");
         s = s.replaceAll("'", "\\\\'");
-    return s;
-}
+        return s;
+    }
         
 
 }
