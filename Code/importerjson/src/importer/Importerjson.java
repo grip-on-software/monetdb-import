@@ -21,10 +21,11 @@ public class Importerjson {
     private static int projectID = 0;
     private final static SortedSet<String> defaultTasks = retrieveTasks(new String[]{
         "issue", "issuetype", "status", "resolution", "relationshiptype",
-        "priority", "fixVersion", "ready_status", "issuelink", "metric_value",
+        "priority", "fixVersion", "ready_status", "issuelink",
+        "metric_value", "metric_version", "metric_target",
         "sprint", "comment", "developer", "commit",
         // Additional tasks
-        //"developerlink", "encrypt"
+        "developerlink" //, "encrypt"
     });
     
     private static void performTask(BaseImport importer, String importType) {
@@ -138,6 +139,16 @@ public class Importerjson {
         if (tasks.contains("metric_value")) {
             ImpMetricValue impMetricValue = new ImpMetricValue();
             performTask(impMetricValue, "metric values");
+        }
+        
+        if (tasks.contains("metric_version")) {
+            ImpMetricVersion impMetricVersion = new ImpMetricVersion();
+            performTask(impMetricVersion, "metric versions");
+        }
+        
+        if (tasks.contains("metric_target")) {
+            ImpMetricTarget impMetricTarget = new ImpMetricTarget();
+            performTask(impMetricTarget, "metric targets");
         }
         
         if (tasks.contains("sprint")) {
