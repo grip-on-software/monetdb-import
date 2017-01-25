@@ -18,12 +18,15 @@ import java.util.HashMap;
 
 /**
  *
- * @author Enrique
+ * @author Enrique and Leon Helwerda
  */
 public class MetricDb extends BaseDb {
     PreparedStatement checkMetricStmt = null;
     BatchedStatement insertMetricStmt = null;
     BatchedStatement insertMetricValueStmt = null;
+    PreparedStatement checkMetricVersionStmt = null;
+    BatchedStatement insertMetricVersionStmt = null;
+    BatchedStatement insertMetricTargetStmt = null;
     HashMap<String, Integer> nameMap = null;
     
     public MetricDb() {
@@ -31,6 +34,10 @@ public class MetricDb extends BaseDb {
         insertMetricStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_value values (?,?,?,?,?,?);";
         insertMetricValueStmt = new BatchedStatement(sql);
+        sql = "insert into gros.metric_version values (?,?,?,?,?);";
+        insertMetricVersionStmt = new BatchedStatement(sql);
+        sql = "insert into gros.metric_target values (?,?,?,?,?,?,?);";
+        insertMetricTargetStmt = new BatchedStatement(sql);
     }
     
     public void insert_metric(String name) throws SQLException, IOException, PropertyVetoException{
@@ -66,6 +73,16 @@ public class MetricDb extends BaseDb {
             checkMetricStmt.close();
             checkMetricStmt = null;
         }
+        
+        if (checkMetricVersionStmt != null) {
+            checkMetricVersionStmt.close();
+            checkMetricVersionStmt = null;
+        }
+        insertMetricVersionStmt.execute();
+        insertMetricVersionStmt.close();
+        
+        insertMetricTargetStmt.execute();
+        insertMetricTargetStmt.close();
         
         if (nameMap != null) {
             nameMap.clear();
@@ -127,6 +144,58 @@ public class MetricDb extends BaseDb {
         nameMap.put(key, idMetric);
         
         return idMetric;
+    }
+
+    private void getCheckVersionStmt() throws SQLException, IOException, PropertyVetoException {
+        if (checkMetricVersionStmt == null) {
+            Connection con = insertMetricStmt.getConnection();
+            String sql = "SELECT version_id FROM gros.metric_version WHERE project_id = ? AND version_id = ?";
+            checkMetricVersionStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    public int check_version(int projectId, int version) throws SQLException, IOException, PropertyVetoException {
+        getCheckVersionStmt();
+        int idVersion = 0;
+        ResultSet rs = null;
+        
+        checkMetricVersionStmt.setInt(1, projectId);
+        checkMetricVersionStmt.setInt(2, version);
+        rs = checkMetricVersionStmt.executeQuery();
+        
+        while (rs.next()) {
+            idVersion = rs.getInt("version_id");
+        }
+        
+        rs.close();
+        
+        return idVersion;
+    }
+
+    public void insert_version(int projectId, int version, String message, String developer, String commit_date) throws SQLException, IOException, PropertyVetoException {
+        PreparedStatement pstmt = insertMetricVersionStmt.getPreparedStatement();
+        
+        pstmt.setInt(1, projectId);
+        pstmt.setInt(2, version);
+        pstmt.setString(3, message);
+        pstmt.setString(4, developer);
+        pstmt.setTimestamp(5, Timestamp.valueOf(commit_date));
+                    
+        insertMetricVersionStmt.batch();
+    }
+
+    public void insert_target(int projectId, int version, int metricId, String type, int target, int low_target, String comment) throws SQLException, IOException, PropertyVetoException {
+        PreparedStatement pstmt = insertMetricTargetStmt.getPreparedStatement();
+        
+        pstmt.setInt(1, projectId);
+        pstmt.setInt(2, version);
+        pstmt.setInt(3, metricId);
+        pstmt.setString(4, type);
+        pstmt.setInt(5, target);
+        pstmt.setInt(6, low_target);
+        pstmt.setString(7, comment);
+        
+        insertMetricTargetStmt.batch();
     }
         
 

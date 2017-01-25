@@ -115,6 +115,25 @@ CREATE TABLE "gros"."metric_value" (
 	"project_id"      INTEGER     NOT NULL
 );
 
+CREATE TABLE "gros"."metric_version" (
+	"project_id"     INTEGER     NOT NULL,
+	"version_id"     INTEGER     NOT NULL,
+	"developer"      VARCHAR(100) NOT NULL,
+	"message"        TEXT      NULL,
+	"commit_date"    TIMESTAMP NOT NULL,
+        CONSTRAINT "pk_metric_version_id" PRIMARY KEY ("project_id","version_id")
+);
+
+CREATE TABLE "gros"."metric_target" (
+	"project_id"     INTEGER     NOT NULL,
+	"version_id"     INTEGER     NOT NULL,
+	"metric_id"      INTEGER     NOT NULL,
+	"type"           VARCHAR(100) NOT NULL,
+	"target"         INTEGER     NOT NULL,
+	"low_target"     INTEGER     NOT NULL,
+	"comment"        TEXT     NULL,
+);
+
 CREATE TABLE "gros"."sprint" (
 	"sprint_id"      INTEGER     NOT NULL,
 	"project_id"     INTEGER     NOT NULL,
