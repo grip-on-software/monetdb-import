@@ -111,7 +111,7 @@ public class MetricDb extends BaseDb {
             return mapId;
         }
 
-        int idMetric = 0;
+        Integer idMetric = null;
         getCheckMetricStmt();
         ResultSet rs = null;
         
@@ -124,7 +124,7 @@ public class MetricDb extends BaseDb {
         
         rs.close();
         
-        nameMap.put(key, mapId);
+        nameMap.put(key, idMetric);
         
         return idMetric;
     }

@@ -8,17 +8,6 @@ package util;
  *
  * @author Enrique
  */
-
-import dao.DataSource;
-import java.io.File;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ResourceBundle;
-
-
 public abstract class BaseImport extends BaseDb {
     
     private String projectName;
