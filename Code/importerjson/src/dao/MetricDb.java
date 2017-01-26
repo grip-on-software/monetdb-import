@@ -143,6 +143,10 @@ public class MetricDb extends BaseDb {
         
         nameMap.put(key, idMetric);
         
+        if (idMetric == null) {
+            return 0;
+        }
+        
         return idMetric;
     }
 
