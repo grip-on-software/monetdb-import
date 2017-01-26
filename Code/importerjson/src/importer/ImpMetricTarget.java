@@ -6,6 +6,7 @@
 package importer;
 
 import dao.MetricDb;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,7 +26,7 @@ public class ImpMetricTarget extends BaseImport {
         int metric_id = 0;
  
         try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_metric_target.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_metric_targets.json"));
             
             for (Object o : a)
             {
@@ -51,7 +52,9 @@ public class ImpMetricTarget extends BaseImport {
             metricDb.close();
             
         }
-            
+        catch (FileNotFoundException e) {
+            System.out.println("Cannot import metric targets: " + e.getMessage());
+        }
         catch (Exception e) {
             e.printStackTrace();
         }
