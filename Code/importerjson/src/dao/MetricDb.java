@@ -176,13 +176,13 @@ public class MetricDb extends BaseDb {
         return idVersion;
     }
 
-    public void insert_version(int projectId, int version, String message, String developer, String commit_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_version(int projectId, int version, String developer, String message, String commit_date) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricVersionStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
         pstmt.setInt(2, version);
-        pstmt.setString(3, message);
-        pstmt.setString(4, developer);
+        pstmt.setString(3, developer);
+        pstmt.setString(4, message);
         pstmt.setTimestamp(5, Timestamp.valueOf(commit_date));
                     
         insertMetricVersionStmt.batch();

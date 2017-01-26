@@ -43,7 +43,7 @@ public class ImpMetricVersion extends BaseImport {
             
                 if(version_id == 0){
 
-                    metricDb.insert_version(projectId, Integer.parseInt(version), message, developer, commit_date);
+                    metricDb.insert_version(projectId, Integer.parseInt(version), developer, message, commit_date);
                     
                 }
             }
