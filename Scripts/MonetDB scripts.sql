@@ -171,6 +171,8 @@ CREATE TABLE "gros"."comment" (
 	"message"        TEXT           NULL,
 	"author"         VARCHAR(200)   NOT NULL,
 	"date"           TIMESTAMP      NULL,
+	"updater"        VARCHAR(200)   NOT NULL,
+	"updated_date"   TIMESTAMP      NULL,
         CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
 );
 
