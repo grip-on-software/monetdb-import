@@ -132,7 +132,7 @@ CREATE TABLE "gros"."metric_target" (
 	"type"           VARCHAR(100) NOT NULL,
 	"target"         INTEGER     NOT NULL,
 	"low_target"     INTEGER     NOT NULL,
-	"comment"        TEXT     NULL,
+	"comment"        TEXT     NULL
 );
 
 CREATE TABLE "gros"."sprint" (
