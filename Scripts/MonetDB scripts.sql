@@ -21,7 +21,7 @@ CREATE TABLE "gros"."issue" (
 	"attachments"    INTEGER    NULL,
 	"additional_information" TEXT  NULL,
 	"review_comments" TEXT  NULL,
-	"story_points"   INTEGER    NULL,
+	"story_points"   DECIMAL(4,1)    NULL,
 	"resolution_date"        TIMESTAMP,
 	"sprint_id"      INTEGER    NOT NULL,
 	"updated_by"     VARCHAR(100)    NOT NULL,
@@ -29,6 +29,7 @@ CREATE TABLE "gros"."issue" (
 	"epic"           VARCHAR(10)    NULL,
 	"impediment"     BOOL     NOT NULL,
 	"ready_status"   INTEGER    NULL,
+	"labels"         INTEGER    NULL,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 

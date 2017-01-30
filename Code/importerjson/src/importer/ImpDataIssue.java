@@ -8,11 +8,13 @@ package importer;
 import dao.BatchedStatement;
 import util.BaseImport;
 import java.io.FileReader;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -35,7 +37,9 @@ public class ImpDataIssue extends BaseImport{
         int projectId = getProjectID();
         
         try {
-            String sql = "insert into gros.issue values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+            String[] fields = new String[31];
+            Arrays.fill(fields, "?");
+            String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
             bstmt = new BatchedStatement(sql);
             pstmt = bstmt.getPreparedStatement();
             
@@ -79,13 +83,15 @@ public class ImpDataIssue extends BaseImport{
                 String epic = (String) jsonObject.get("epic");
                 String flagged = (String) jsonObject.get("flagged");
                 String ready_status = (String) jsonObject.get("ready_status");
+                String labels = (String) jsonObject.get("labels");
                 
                 existsStmt.setInt(1, Integer.parseInt(issue_id));
                 existsStmt.setInt(2, Integer.parseInt(changelog_id));
                 rs = existsStmt.executeQuery();
                 
-                // check if the issue/changelog id pair does not already exist
+                // Check if the issue/changelog id pair does not already exist
                 if(!rs.next()) {
+                    // Convert legacy format (null, None) and empty fields ("0") from the JSON fields to correct values.
                     if ((sprint.trim()).equals("null")){
                         sprint = "0";
                     }
@@ -114,8 +120,8 @@ public class ImpDataIssue extends BaseImport{
                     if ((resolution_date.trim()).equals("0") || (resolution_date.trim()).equals("None")){
                         resolution_date = null;
                     }
-                    if ((storypoint.trim()).equals("None")){
-                        storypoint = "0";
+                    if ((storypoint.trim()).equals("0") || (storypoint.trim()).equals("None")){
+                        storypoint = null;
                     }
                     if ((bugfix.trim()).equals("None")){
                         bugfix = "0";
@@ -127,6 +133,7 @@ public class ImpDataIssue extends BaseImport{
                         epic = null;
                     }
 
+                    // Fill the prepared statement with the new field values.
                     pstmt.setInt(1, Integer.parseInt(issue_id));
                     pstmt.setInt(2, Integer.parseInt(changelog_id));
                     pstmt.setString(3, key);
@@ -143,7 +150,6 @@ public class ImpDataIssue extends BaseImport{
                         ts_created = Timestamp.valueOf(created); 
                         pstmt.setTimestamp(11, ts_created);
                     } else{
-                        //ts_created = null;
                         pstmt.setNull(11, java.sql.Types.TIMESTAMP);
                     }
 
@@ -152,7 +158,6 @@ public class ImpDataIssue extends BaseImport{
                         ts_updated = Timestamp.valueOf(updated); 
                         pstmt.setTimestamp(12, ts_updated);
                     } else{
-                        //ts_updated = null;
                         pstmt.setNull(12, java.sql.Types.TIMESTAMP);
                     }
 
@@ -164,7 +169,6 @@ public class ImpDataIssue extends BaseImport{
                         ts_duedate = Timestamp.valueOf(duedate); 
                         pstmt.setTimestamp(14, ts_duedate);
                     } else{
-                        //ts_duedate = null;
                         pstmt.setNull(14, java.sql.Types.TIMESTAMP);
                     }
 
@@ -176,7 +180,14 @@ public class ImpDataIssue extends BaseImport{
                     pstmt.setInt(20, Integer.parseInt(attachment));
                     pstmt.setString(21, additional_information);
                     pstmt.setString(22, review_comments);
-                    pstmt.setInt(23, Integer.parseInt(storypoint));
+                    
+                    if (storypoint != null) {
+                        BigDecimal points = BigDecimal.valueOf(Double.parseDouble(storypoint));
+                        pstmt.setBigDecimal(23, points);
+                    }
+                    else {
+                        pstmt.setNull(23, java.sql.Types.DECIMAL);
+                    }
 
                     Timestamp ts_resolution_date;              
                     if (resolution_date != null){
@@ -211,6 +222,7 @@ public class ImpDataIssue extends BaseImport{
                     }
                     pstmt.setBoolean(29, flagged.equals("1"));
                     pstmt.setInt(30, Integer.parseInt(ready_status));
+                    pstmt.setInt(31, Integer.parseInt(labels));
 
                     bstmt.batch();
                 }
