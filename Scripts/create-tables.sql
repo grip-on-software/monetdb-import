@@ -30,6 +30,7 @@ CREATE TABLE "gros"."issue" (
 	"impediment"     BOOL     NOT NULL,
 	"ready_status"   INTEGER    NULL,
 	"labels"         INTEGER    NULL,
+	"version"        INTEGER    NULL,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 

@@ -37,7 +37,7 @@ public class ImpDataIssue extends BaseImport{
         int projectId = getProjectID();
         
         try {
-            String[] fields = new String[31];
+            String[] fields = new String[32];
             Arrays.fill(fields, "?");
             String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
             bstmt = new BatchedStatement(sql);
@@ -84,6 +84,7 @@ public class ImpDataIssue extends BaseImport{
                 String flagged = (String) jsonObject.get("flagged");
                 String ready_status = (String) jsonObject.get("ready_status");
                 String labels = (String) jsonObject.get("labels");
+                String affectedVersion = (String) jsonObject.get("version");
                 
                 existsStmt.setInt(1, Integer.parseInt(issue_id));
                 existsStmt.setInt(2, Integer.parseInt(changelog_id));
@@ -223,6 +224,7 @@ public class ImpDataIssue extends BaseImport{
                     pstmt.setBoolean(29, flagged.equals("1"));
                     pstmt.setInt(30, Integer.parseInt(ready_status));
                     pstmt.setInt(31, Integer.parseInt(labels));
+                    pstmt.setInt(32, Integer.parseInt(affectedVersion));
 
                     bstmt.batch();
                 }
