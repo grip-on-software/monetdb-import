@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import util.BaseDb;
 
 /**
@@ -24,6 +25,7 @@ public class DeveloperDb extends BaseDb {
     PreparedStatement checkVcsDeveloperStmt = null;
     PreparedStatement insertVcsDeveloperStmt = null;
     BatchedStatement bstmt = null;
+    HashMap<String, Integer> vcsNameCache = null;
     
     public DeveloperDb() {
         String sql = "insert into gros.developer (name,display_name) values (?,?);";
@@ -60,6 +62,11 @@ public class DeveloperDb extends BaseDb {
         }
         if (checkVcsDeveloperStmt != null) {
             checkVcsDeveloperStmt.close();
+        }
+        
+        if (vcsNameCache != null) {
+            vcsNameCache.clear();
+            vcsNameCache = null;
         }
     }
     
@@ -128,18 +135,47 @@ public class DeveloperDb extends BaseDb {
         }
     }
     
+    private void fillVcsNameCache() throws SQLException, IOException, PropertyVetoException {
+        if (vcsNameCache != null) {
+            return;
+        }
+        vcsNameCache = new HashMap<>();
+        
+        Connection con = bstmt.getConnection();
+        String sql = "SELECT UPPER(display_name), alias_id FROM gros.vcs_developer";
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+
+        while(rs.next()) {
+            String key = rs.getString(1);
+            Integer id = Integer.parseInt(rs.getString(2));
+            vcsNameCache.put(key, id);
+        }
+
+        stmt.close();
+        rs.close();
+    }
+    
     /**
     * Returns the Alias ID if the developer already exists in the VCS developer 
     * table of the database. Else returns 0.
     * @param display_name the complete name of the developer in the version control system.
     * @return the Developer ID if found, otherwise 0.
     */
-    public int check_vcs_developer(String display_name) throws SQLException, IOException, PropertyVetoException{
-        int idDeveloper = 0;
+    public int check_vcs_developer(String display_name) throws SQLException, IOException, PropertyVetoException {
+        fillVcsNameCache();
+        
+        String key = display_name.toUpperCase().trim();
+        Integer cacheId = vcsNameCache.get(key);
+        if (cacheId != null) {
+            return cacheId;
+        }
+        
+        Integer idDeveloper = null;
         getCheckVcsDeveloperStmt();
         ResultSet rs = null;
         
-        checkVcsDeveloperStmt.setString(1, display_name.toUpperCase().trim());
+        checkVcsDeveloperStmt.setString(1, key);
         
         rs = checkVcsDeveloperStmt.executeQuery();
         
@@ -148,6 +184,12 @@ public class DeveloperDb extends BaseDb {
         }
         
         rs.close();
+        
+        vcsNameCache.put(key, idDeveloper);
+        
+        if (idDeveloper == null) {
+            return 0;
+        }
         
         return idDeveloper;
     }   

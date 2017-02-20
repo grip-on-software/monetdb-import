@@ -27,7 +27,7 @@ public class MetricDb extends BaseDb {
     PreparedStatement checkMetricVersionStmt = null;
     BatchedStatement insertMetricVersionStmt = null;
     BatchedStatement insertMetricTargetStmt = null;
-    HashMap<String, Integer> nameMap = null;
+    HashMap<String, Integer> nameCache = null;
     
     public MetricDb() {
         String sql = "insert into gros.metric(name) values (?);";
@@ -84,9 +84,9 @@ public class MetricDb extends BaseDb {
         insertMetricTargetStmt.execute();
         insertMetricTargetStmt.close();
         
-        if (nameMap != null) {
-            nameMap.clear();
-            nameMap = null;
+        if (nameCache != null) {
+            nameCache.clear();
+            nameCache = null;
         }
     }
     
@@ -99,10 +99,10 @@ public class MetricDb extends BaseDb {
     }
     
     private void fillNameCache() throws SQLException, IOException, PropertyVetoException {
-        if (nameMap != null) {
+        if (nameCache != null) {
             return;
         }
-        nameMap = new HashMap<>();
+        nameCache = new HashMap<>();
         
         Connection con = insertMetricStmt.getConnection();
         String sql = "SELECT UPPER(name), metric_id FROM gros.metric";
@@ -112,7 +112,7 @@ public class MetricDb extends BaseDb {
         while(rs.next()) {
             String key = rs.getString(1);
             Integer id = Integer.parseInt(rs.getString(2));
-            nameMap.put(key, id);
+            nameCache.put(key, id);
         }
 
         stmt.close();
@@ -123,9 +123,9 @@ public class MetricDb extends BaseDb {
         fillNameCache();
         
         String key = name.toUpperCase().trim();
-        Integer mapId = nameMap.get(key);
-        if (mapId != null) {
-            return mapId;
+        Integer cacheId = nameCache.get(key);
+        if (cacheId != null) {
+            return cacheId;
         }
 
         Integer idMetric = null;
@@ -141,7 +141,7 @@ public class MetricDb extends BaseDb {
         
         rs.close();
         
-        nameMap.put(key, idMetric);
+        nameCache.put(key, idMetric);
         
         if (idMetric == null) {
             return 0;
