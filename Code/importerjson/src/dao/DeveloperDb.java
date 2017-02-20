@@ -21,8 +21,8 @@ import util.BaseDb;
 public class DeveloperDb extends BaseDb {
     
     PreparedStatement checkDeveloperStmt = null;
-    PreparedStatement checkDeveloperGitStmt = null;
-    PreparedStatement insertDeveloperGitStmt = null;
+    PreparedStatement checkVcsDeveloperStmt = null;
+    PreparedStatement insertVcsDeveloperStmt = null;
     BatchedStatement bstmt = null;
     
     public DeveloperDb() {
@@ -55,18 +55,18 @@ public class DeveloperDb extends BaseDb {
         if (checkDeveloperStmt != null) {
             checkDeveloperStmt.close();
         }
-        if (insertDeveloperGitStmt != null) {
-            insertDeveloperGitStmt.close();
+        if (insertVcsDeveloperStmt != null) {
+            insertVcsDeveloperStmt.close();
         }
-        if (checkDeveloperGitStmt != null) {
-            checkDeveloperGitStmt.close();
+        if (checkVcsDeveloperStmt != null) {
+            checkVcsDeveloperStmt.close();
         }
     }
     
     private void getCheckDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkDeveloperStmt == null) {
             Connection con = bstmt.getConnection();
-            String sql = "SELECT id FROM gros.developer WHERE UPPER(display_name) = ?";
+            String sql = "SELECT id FROM gros.developer WHERE UPPER(name) = ? OR UPPER(display_name) = ?";
             checkDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -74,15 +74,17 @@ public class DeveloperDb extends BaseDb {
     /**
      * Returns the developer ID if the developer already exists in the developer 
      * table of the database. Else returns 0.
+     * @param name the short alias of the developer in Jira.
      * @param display_name the complete name of the developer in Jira.
      * @return the Developer ID if found, otherwise 0.
      */
-    public int check_developer(String display_name) throws SQLException, IOException, PropertyVetoException {
+    public int check_developer(String name, String display_name) throws SQLException, IOException, PropertyVetoException {
         int idDeveloper = 0;
         getCheckDeveloperStmt();
         ResultSet rs = null;
         
-        checkDeveloperStmt.setString(1, display_name.toUpperCase().trim());
+        checkDeveloperStmt.setString(1, name.toUpperCase().trim());
+        checkDeveloperStmt.setString(2, display_name.toUpperCase().trim());
         rs = checkDeveloperStmt.executeQuery();
  
         while (rs.next()) {
@@ -94,52 +96,52 @@ public class DeveloperDb extends BaseDb {
         return idDeveloper;
     } 
     
-    private void getInsertDeveloperGitStmt() throws SQLException, IOException, PropertyVetoException {
-        if (insertDeveloperGitStmt == null) {
+    private void getInsertVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
+        if (insertVcsDeveloperStmt == null) {
             Connection con = bstmt.getConnection();
-            String sql = "insert into gros.git_developer (jira_dev_id, display_name) values (?,?);";
-            insertDeveloperGitStmt = con.prepareStatement(sql);
+            String sql = "insert into gros.vcs_developer (jira_dev_id, display_name) values (?,?);";
+            insertVcsDeveloperStmt = con.prepareStatement(sql);
         } 
     }
     
     /**
-     * Inserts developers in the git developer table of the database. In case developer
+     * Inserts developers in the VCS developer table of the database. In case developer
      * id is not set, the developer id from Jira will be 0. The alias id's are initialized
      * incremental by the database.
      * @param dev_id the corresponding developer id in Jira 
-     * @param display_name the full name of the user on Git.
+     * @param display_name the full name of the user in the version control system.
      */
-    public void insert_developer_git(int dev_id, String display_name) throws SQLException, IOException, PropertyVetoException{
-        getInsertDeveloperGitStmt();
+    public void insert_vcs_developer(int dev_id, String display_name) throws SQLException, IOException, PropertyVetoException{
+        getInsertVcsDeveloperStmt();
         
-        insertDeveloperGitStmt.setInt(1, dev_id);
-        insertDeveloperGitStmt.setString(2, display_name);
+        insertVcsDeveloperStmt.setInt(1, dev_id);
+        insertVcsDeveloperStmt.setString(2, display_name);
     
-        insertDeveloperGitStmt.execute();
+        insertVcsDeveloperStmt.execute();
     }
    
-    private void getCheckDeveloperGitStmt() throws SQLException, IOException, PropertyVetoException {
-        if (checkDeveloperGitStmt == null) {
+    private void getCheckVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
+        if (checkVcsDeveloperStmt == null) {
             Connection con = bstmt.getConnection();
-            String sql = "SELECT alias_id FROM gros.git_developer WHERE UPPER(display_name) = ?";
-            checkDeveloperGitStmt = con.prepareStatement(sql);
+            String sql = "SELECT alias_id FROM gros.vcs_developer WHERE UPPER(display_name) = ?";
+            checkVcsDeveloperStmt = con.prepareStatement(sql);
         }
     }
     
     /**
-    * Returns the Alias ID if the developer already exists in the git developer 
+    * Returns the Alias ID if the developer already exists in the VCS developer 
     * table of the database. Else returns 0.
-    * @param display_name the complete name of the developer in GIT.
+    * @param display_name the complete name of the developer in the version control system.
     * @return the Developer ID if found, otherwise 0.
     */
-    public int check_developer_git(String display_name) throws SQLException, IOException, PropertyVetoException{
+    public int check_vcs_developer(String display_name) throws SQLException, IOException, PropertyVetoException{
         int idDeveloper = 0;
-        getCheckDeveloperGitStmt();
+        getCheckVcsDeveloperStmt();
         ResultSet rs = null;
         
-        checkDeveloperGitStmt.setString(1, display_name.toUpperCase().trim());
+        checkVcsDeveloperStmt.setString(1, display_name.toUpperCase().trim());
         
-        rs = checkDeveloperGitStmt.executeQuery();
+        rs = checkVcsDeveloperStmt.executeQuery();
         
         while (rs.next()) {
             idDeveloper = rs.getInt("alias_id");
@@ -166,7 +168,7 @@ public class DeveloperDb extends BaseDb {
             
             st = con.createStatement();
             String sql_var = "SELECT c.commit_id, c.developer_id, g.alias_id, g.jira_dev_id" +
-                            "FROM gros.commits c, gros.git_developer g" +
+                            "FROM gros.commits c, gros.vcs_developer g" +
                             "WHERE c.developer_id = g.alias_id;";
             rs = st.executeQuery(sql_var);
  

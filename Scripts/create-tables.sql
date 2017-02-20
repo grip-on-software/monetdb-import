@@ -152,7 +152,7 @@ CREATE TABLE "gros"."project" (
 );
 
 CREATE TABLE "gros"."commits" (
-	"commit_id"     VARCHAR(100)     NOT NULL,
+	"version_id"     VARCHAR(100)     NOT NULL,
 	"project_id"    INTEGER         NOT NULL,
 	"commit_date"   TIMESTAMP       NOT NULL,
 	"sprint_id"     INTEGER         NOT NULL,
@@ -178,15 +178,15 @@ CREATE TABLE "gros"."comment" (
         CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
 );
 
-CREATE TABLE "gros"."git_developer" (
+CREATE TABLE "gros"."vcs_developer" (
 	"alias_id"     INTEGER       NOT NULL AUTO_INCREMENT,
 	"jira_dev_id"  INTEGER,
 	"display_name" VARCHAR(500),
         CONSTRAINT "pk_alias_id" PRIMARY KEY ("alias_id")
 );
 
-CREATE TABLE "gros"."git_repo" (
+CREATE TABLE "gros"."repo" (
 	"id"       INTEGER       NOT NULL AUTO_INCREMENT,
-	"git_name" VARCHAR(1000) NOT NULL,
+	"repo_name" VARCHAR(1000) NOT NULL,
         CONSTRAINT "pk_repo_id" PRIMARY KEY ("id")
 );

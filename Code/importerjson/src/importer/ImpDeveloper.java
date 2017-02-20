@@ -35,7 +35,7 @@ public class ImpDeveloper extends BaseImport{
                 String display_name = (String) jsonObject.get("display_name");
                 String name = (String) jsonObject.get("name");
                 
-                int dev_id = devDb.check_developer(display_name);
+                int dev_id = devDb.check_developer(name, display_name);
                 // check whether the developer does not already exist
                 if(dev_id == 0) {
                     devDb.insert_developer(name, display_name);

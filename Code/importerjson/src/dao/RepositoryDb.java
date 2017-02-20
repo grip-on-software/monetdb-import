@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import util.BaseDb;
 
 /**
- * Class is created to manage the developer table of the database.
+ * Class is created to manage the repository table of the database.
  * @author Enrique & Thomas
  */
 public class RepositoryDb extends BaseDb {
@@ -23,7 +23,7 @@ public class RepositoryDb extends BaseDb {
     PreparedStatement checkRepoStmt = null;
     
     public RepositoryDb() {
-        String sql = "insert into gros.git_repo (git_name) values (?);";
+        String sql = "insert into gros.repo (repo_name) values (?);";
         bstmt = new BatchedStatement(sql);
     }
     
@@ -53,7 +53,7 @@ public class RepositoryDb extends BaseDb {
     private void getCheckRepoStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkRepoStmt == null) {
             Connection con = bstmt.getConnection();
-            String sql = "SELECT id FROM gros.git_repo WHERE UPPER(git_name) = ?";
+            String sql = "SELECT id FROM gros.repo WHERE UPPER(repo_name) = ?";
             checkRepoStmt = con.prepareStatement(sql);
         }
     

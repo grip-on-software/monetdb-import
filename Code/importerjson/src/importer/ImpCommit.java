@@ -48,13 +48,13 @@ public class ImpCommit extends BaseImport{
                 
             pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_commits.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json"));
             
             for (Object o : a)
             {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String commit_id = (String) jsonObject.get("commit_id");
+                String version_id = (String) jsonObject.get("version_id");
                 String commit_date = (String) jsonObject.get("commit_date");
                 String sprint_id = (String) jsonObject.get("sprint_id").toString();
                 String developer = (String) jsonObject.get("developer");
@@ -66,31 +66,32 @@ public class ImpCommit extends BaseImport{
                 String number_of_files = (String) jsonObject.get("number_of_files");
                 String number_of_lines = (String) jsonObject.get("number_of_lines");
                 String type = (String) jsonObject.get("type");
-                String git_repo = (String) jsonObject.get("git_repo");
+                String repo_name = (String) jsonObject.get("repo_name");
                 
                 if ((sprint_id.trim()).equals("null") ){ // In case not in between dates of sprint
                     sprint_id = "0";
                 }
+                
                 if (developer.equals("unknown")) {
                     developer = developer_email;
                 }
-                developer = addSlashes(developer);
-                int developer_id = devDb.check_developer_git(developer);
                 
-                if (developer_id == 0) { // if developer id does not exist, create git developer with new id
-                    int dev_id = devDb.check_developer(developer); // Check if developer already exists in JIRA developer table
-                    devDb.insert_developer_git(dev_id, developer); // if dev id = 0 then link later.
-                    developer_id = devDb.check_developer_git(developer); // set new id of dev
+                int developer_id = devDb.check_vcs_developer(developer);
+                if (developer_id == 0) { // if developer id does not exist, create VCS developer with new id
+                    // Check if developer exists with the same (short) name in JIRA developer table
+                    int dev_id = devDb.check_developer(developer, developer);
+                    devDb.insert_vcs_developer(dev_id, developer); // if dev id = 0 then link later.
+                    developer_id = devDb.check_vcs_developer(developer); // set new id of dev
                 }
                 
-                int repo_id = repoDb.check_repo(git_repo);
+                int repo_id = repoDb.check_repo(repo_name);
                 
                 if (repo_id == 0) { // if repo id does not exist, create repo with new id
-                    repoDb.insert_repo(git_repo);
-                    repo_id = repoDb.check_repo(git_repo); // set new id of repo
+                    repoDb.insert_repo(repo_name);
+                    repo_id = repoDb.check_repo(repo_name); // set new id of repo
                 }
                 
-                pstmt.setString(1, commit_id);
+                pstmt.setString(1, version_id);
                 pstmt.setInt(2, projectID);
 
                 Timestamp ts_created;              
@@ -136,9 +137,9 @@ public class ImpCommit extends BaseImport{
     }
     
     /**
-     * Updates the JiraID's of the git developer table. It uses a json file to read
-     * all the aliases found on Git and then links them to the JiraID's. Best is to do this
-     * after collecting all the records of all the projects.
+     * Updates the JiraID's of the VCS developer table. It uses a json file to read
+     * all the aliases found on the version control system and then links them to the JiraID's.
+     * Best is to do this after collecting all the records of all the projects.
      */
     public void updateJiraID() {
         BufferedReader br = null;
@@ -155,10 +156,10 @@ public class ImpCommit extends BaseImport{
             String sql = "SELECT id FROM gros.developer WHERE name = ?;";
             selectStmt = con.prepareStatement(sql);
 
-            sql = "UPDATE gros.git_developer SET jira_dev_id=? WHERE display_name=?;";
+            sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE display_name=?;";
             pstmt = con.prepareStatement(sql);
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+"/data_gitdev_to_dev.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+"/data_vcsdev_to_dev.json"));
             
             for (Object o : a)
             {
@@ -202,14 +203,14 @@ public class ImpCommit extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();
 
-            String sql = "SELECT display_name FROM gros.git_developer WHERE jira_dev_id=0;";
+            String sql = "SELECT display_name FROM gros.vcs_developer WHERE jira_dev_id=0;";
 
-            System.out.println("These developers should be linked in to Jira. Add them to the file data_gitdev_to_dev.json: ");
+            System.out.println("These VCS developers should be linked in to Jira. Add them to the file data_vcsdev_to_dev.json: ");
             
             st = con.createStatement();
             rs = st.executeQuery(sql);
             while (rs.next()) {
-                System.out.println("Unknown Git Developer: " + rs.getString("display_name"));
+                System.out.println("Unknown VCS Developer: " + rs.getString("display_name"));
             }
             
         } catch (SQLException e) {
@@ -252,7 +253,7 @@ public class ImpCommit extends BaseImport{
             con = DataSource.getInstance().getConnection();
 
             /* Hash Git developers */
-            String sql = "SELECT * FROM gros.git_developer";
+            String sql = "SELECT * FROM gros.vcs_developer";
             st = con.createStatement();
             rs = st.executeQuery(sql);
             while (rs.next()) {
@@ -260,7 +261,7 @@ public class ImpCommit extends BaseImport{
                 String dev_name = rs.getString("display_name");
                 dev_name = sha256(salt + dev_name + pepper);
                 
-                String sql2 = "UPDATE gros.git_developer SET display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
+                String sql2 = "UPDATE gros.vcs_developer SET display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
                 st = con.createStatement();
                 st.executeQuery(sql2);
                 

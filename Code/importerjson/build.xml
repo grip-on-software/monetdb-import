@@ -71,6 +71,6 @@
 
     -->
     <target name="-post-compile">
-        <copy file="data_gitdev_to_dev.json" todir="${dist.dir}"/>
+        <copy file="data_vcsdev_to_dev.json" todir="${dist.dir}"/>
     </target>
 </project>

@@ -36,6 +36,6 @@ DROP TABLE "gros"."commits";
 
 DROP TABLE "gros"."comment";
 
-DROP TABLE "gros"."git_developer";
+DROP TABLE "gros"."vcs_developer";
 
-DROP TABLE "gros"."git_repo";
+DROP TABLE "gros"."repo";
