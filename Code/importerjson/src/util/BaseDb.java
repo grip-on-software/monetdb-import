@@ -29,7 +29,7 @@ public class BaseDb {
         // Get system file path from Java jar location.
         File f = new File(System.getProperty("java.class.path"));
         File dir = f.getAbsoluteFile().getParentFile();
-        path = dir.toString() + "/";    
+        path = dir.toString() + "/" + bundle.getString("relPath") + "/";
     }
     
     public void printSQLExceptionDetails(SQLException e) {
