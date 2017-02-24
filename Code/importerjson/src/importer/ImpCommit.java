@@ -60,7 +60,7 @@ public class ImpCommit extends BaseImport{
                 String developer = (String) jsonObject.get("developer");
                 String developer_email = (String) jsonObject.get("developer_email");
                 String message = (String) jsonObject.get("message");
-                String size_of_commit = (String) jsonObject.get("size_of_commit");
+                String size_of_commit = (String) jsonObject.get("size");
                 String insertions = (String) jsonObject.get("insertions");
                 String deletions = (String) jsonObject.get("deletions");
                 String number_of_files = (String) jsonObject.get("number_of_files");
@@ -159,7 +159,7 @@ public class ImpCommit extends BaseImport{
             sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE display_name=?;";
             pstmt = con.prepareStatement(sql);
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+"/data_vcsdev_to_dev.json"));
+            JSONArray a = (JSONArray) parser.parse(new FileReader(getRootPath()+"/data_vcsdev_to_dev.json"));
             
             for (Object o : a)
             {

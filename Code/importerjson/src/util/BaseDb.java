@@ -17,6 +17,7 @@ public class BaseDb {
     private String url;
     private String user;
     private String password;
+    private String rootPath;
     private String path;
     
     public BaseDb() {
@@ -29,7 +30,8 @@ public class BaseDb {
         // Get system file path from Java jar location.
         File f = new File(System.getProperty("java.class.path"));
         File dir = f.getAbsoluteFile().getParentFile();
-        path = dir.toString() + "/" + bundle.getString("relPath") + "/";
+        rootPath = dir.toString() + "/";
+        path = rootPath + bundle.getString("relPath") + "/";
     }
     
     public void printSQLExceptionDetails(SQLException e) {
@@ -84,9 +86,18 @@ public class BaseDb {
     public final void setPassword(String password) {
         this.password = password;
     }
+    
+    /**
+     * Get the root path where files with properties for the importer are found.
+     * @return the root path
+     */
+    public final String getRootPath() {
+        return rootPath;
+    }
 
     /**
-     * @return the path
+     * Get the path where the gathered data is stored for import.
+     * @return the path where the gathered data is found
      */
     public final String getPath() {
         return path;

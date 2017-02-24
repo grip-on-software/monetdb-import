@@ -36,7 +36,7 @@ public class ImpMetricVersion extends BaseImport {
                 
                 String message = (String) jsonObject.get("message");
                 String developer = (String) jsonObject.get("developer");
-                String version = (String) jsonObject.get("revision");
+                String version = (String) jsonObject.get("version_id");
                 String commit_date = (String) jsonObject.get("commit_date");
                 
                 version_id = metricDb.check_version(projectId, Integer.parseInt(version));
