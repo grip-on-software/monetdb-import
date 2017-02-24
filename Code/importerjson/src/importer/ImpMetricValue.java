@@ -35,9 +35,9 @@ public class ImpMetricValue extends BaseImport{
         String fragment = url.getRef();
         int start_from = Integer.parseInt(fragment);
         InputStream is = url.openStream();
-        GZIPInputStream gis = new GZIPInputStream(is);
+        GZIPInputStream gis = new GZIPInputStream(is, 65536);
         Reader reader = new InputStreamReader(gis, "UTF-8");
-        BufferedReader br = new BufferedReader(reader);
+        BufferedReader br = new BufferedReader(reader, 65536);
         
         String line;
         int line_count = 0;
@@ -49,7 +49,7 @@ public class ImpMetricValue extends BaseImport{
             if (line.trim().isEmpty()) {
                 continue;
             }
-            String row = line.replace("(", "[").replace(")", "]");
+            String row = line.replace("(", "[").replace(")", "]").replace(", }", "}");
             JSONObject metric_row = (JSONObject) parser.parse(row);
             String date = (String) metric_row.get("date");
             for (Iterator it = metric_row.entrySet().iterator(); it.hasNext();) {
