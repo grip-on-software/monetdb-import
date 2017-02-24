@@ -84,7 +84,7 @@ public class ImpDataIssue extends BaseImport{
                 String flagged = (String) jsonObject.get("flagged");
                 String ready_status = (String) jsonObject.get("ready_status");
                 String labels = (String) jsonObject.get("labels");
-                String affectedVersion = (String) jsonObject.get("version");
+                String affectedVersion = (String) jsonObject.get("versions");
                 
                 existsStmt.setInt(1, Integer.parseInt(issue_id));
                 existsStmt.setInt(2, Integer.parseInt(changelog_id));
