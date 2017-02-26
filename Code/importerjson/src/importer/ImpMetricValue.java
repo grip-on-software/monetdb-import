@@ -94,7 +94,7 @@ public class ImpMetricValue extends BaseImport{
                 // Do this upon midway failure as well, but not if we did not read further than the start line.
                 // If we failed somewhere midway, then next time start from the line we failed on.
                 if (line_count > start_from) {
-                    try (PrintWriter writer = new PrintWriter(getPath()+getProjectName()+"history_line_count.txt")) {
+                    try (PrintWriter writer = new PrintWriter(getPath()+getProjectName()+"/history_line_count.txt")) {
                         writer.println(String.valueOf(success ? line_count : line_count-1));
                     }
                 }
