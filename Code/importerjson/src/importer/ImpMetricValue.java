@@ -44,9 +44,9 @@ public class ImpMetricValue extends BaseImport{
         
         private void readPath(String path) throws Exception {
             if (path.contains("|")) {
-                String[] parts = path.split("|");
+                String[] parts = path.split("\\|");
                 String filename = parts[0];
-                int start_from = Integer.parseInt(parts[1]);
+                int start_from = Integer.parseInt(parts[1].substring(1));
                 try (InputStream is = new FileInputStream(filename)) {
                     readGzip(is, start_from);
                 }
