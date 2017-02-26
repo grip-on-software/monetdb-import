@@ -11,6 +11,7 @@ import socket
 from pymonetdb.control import Control
 from pymonetdb.sql.connections import Connection
 from pymonetdb.exceptions import OperationalError
+import requests
 
 def check():
     """
@@ -56,7 +57,8 @@ def parse_args(config):
         parser.print_help()
         parser.exit()
 
-    logging.basicConfig(level=getattr(logging, args.log.upper(), None))
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
+                        level=getattr(logging, args.log.upper(), None))
 
     return args
 
@@ -117,6 +119,10 @@ def main():
                 command = ""
 
     connection.close()
+
+    logging.info('Deleting Jenkins workspace...')
+    url = config.get('jenkins', 'url') + 'doWipeOutWorkspace'
+    requests.post(url)
 
 if __name__ == "__main__":
     main()
