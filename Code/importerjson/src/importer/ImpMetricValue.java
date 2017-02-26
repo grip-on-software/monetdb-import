@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class ImpMetricValue extends BaseImport{
         JSONParser parser = new JSONParser();
         MetricDb mDB = null;
         int projectID;
-        final int BUFFER_SIZE = 65536;
+        final int BUFFER_SIZE = 8192;
         
         public MetricReader(MetricDb mDB, int projectID) {
             this.mDB = mDB;
@@ -43,8 +44,12 @@ public class ImpMetricValue extends BaseImport{
         private void readNetworked(URL url) throws Exception {
             String fragment = url.getRef();
             int start_from = Integer.parseInt(fragment);
-            InputStream is = url.openStream();
-            readGzip(is, start_from);
+            
+            URLConnection con = url.openConnection();
+            con.connect();
+            try (InputStream is = con.getInputStream()) {
+                readGzip(is, start_from);
+            }
         }
         
         private void readGzip(InputStream is, int start_from) throws Exception {
@@ -65,7 +70,7 @@ public class ImpMetricValue extends BaseImport{
                     if (line.trim().isEmpty()) {
                         continue;
                     }
-                    String row = line.replace("(", "[").replace(")", "]").replace(", }", "}");
+                    String row = line.replace("(\"", "[\"").replace("\")", "\"]").replace(", }", "}");
                     try {
                         metric_row = (JSONObject) parser.parse(row);
                     }
@@ -88,6 +93,9 @@ public class ImpMetricValue extends BaseImport{
                     }
                 }
                 success = true;
+            }
+            catch (Exception e) {
+                throw new Exception("Problem at line " + String.valueOf(line_count), e);
             }
             finally {
                 // Write a progress file so that we can read from the correct location.
