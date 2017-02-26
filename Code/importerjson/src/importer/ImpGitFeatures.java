@@ -22,12 +22,13 @@ public class ImpGitFeatures extends BaseImport{
     public void parser(){
 
         JSONParser parser = new JSONParser();
-        GitFeatureDb gitFeatureDb;
+        GitFeatureDb gitFeatureDb = new GitFeatureDb();
+
         int user_id = 0;
  
-        try {
+        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_features.json")) {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_features.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {
@@ -39,7 +40,6 @@ public class ImpGitFeatures extends BaseImport{
                 String sprint_id = (String) jsonObject.get("sprint_id");
                 String user_name = (String) jsonObject.get("user_name");
                 
-                gitFeatureDb = new GitFeatureDb();
                 user_id = gitFeatureDb.check_username(user_name);
             
                 if(user_id == 0){

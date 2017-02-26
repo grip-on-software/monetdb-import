@@ -10,7 +10,6 @@ import dao.DataSource;
 import dao.DeveloperDb;
 import dao.RepositoryDb;
 import java.beans.PropertyVetoException;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -34,21 +33,20 @@ public class ImpCommit extends BaseImport{
     
     @Override
     public void parser() {
-
-        BatchedStatement bstmt = null;
-        PreparedStatement pstmt = null;
         JSONParser parser = new JSONParser();
-        DeveloperDb devDb = new DeveloperDb();
-        RepositoryDb repoDb = new RepositoryDb();
         int projectID = getProjectID();
+        String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
-        try {
-            String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
-            bstmt = new BatchedStatement(sql);
+        try (
+            DeveloperDb devDb = new DeveloperDb();
+            RepositoryDb repoDb = new RepositoryDb();
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json");
+            BatchedStatement bstmt = new BatchedStatement(sql)
+        ) {
                 
-            pstmt = bstmt.getPreparedStatement();
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {
@@ -123,17 +121,10 @@ public class ImpCommit extends BaseImport{
             
             //Used for creating Project if it didn't exist
             this.setProjectID(projectID);
-            
-            devDb.close();
-            repoDb.close();
         }
-            
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
             e.printStackTrace();
-        } finally {
-            if (bstmt != null) { bstmt.close(); }
         }
-        
     }
     
     /**
@@ -142,7 +133,6 @@ public class ImpCommit extends BaseImport{
      * Best is to do this after collecting all the records of all the projects.
      */
     public void updateJiraID() {
-        BufferedReader br = null;
         PreparedStatement pstmt = null;
         Connection con = null;
         PreparedStatement selectStmt = null;
@@ -150,7 +140,7 @@ public class ImpCommit extends BaseImport{
         ResultSet rs = null;
         //DeveloperDb devDb = new DeveloperDb();
  
-        try {
+        try (FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json")) {
             con = DataSource.getInstance().getConnection();
 
             String sql = "SELECT id FROM gros.developer WHERE name = ?;";
@@ -159,7 +149,7 @@ public class ImpCommit extends BaseImport{
             sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE display_name=?;";
             pstmt = con.prepareStatement(sql);
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getRootPath()+"/data_vcsdev_to_dev.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {

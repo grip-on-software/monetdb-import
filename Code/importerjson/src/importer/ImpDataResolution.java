@@ -27,9 +27,9 @@ public class ImpDataResolution extends BaseImport{
         String new_description="";
         String new_name="";
         
-        try {
+        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_resolution.json")) {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_resolution.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {

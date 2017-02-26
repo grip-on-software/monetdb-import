@@ -25,9 +25,9 @@ public class ImpDataType extends BaseImport{
         DataTypeDb dataTypeDb;
         int type_id = 0;
         
-        try {
+        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_type.json")) {
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_type.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {

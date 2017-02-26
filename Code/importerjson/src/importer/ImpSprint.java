@@ -36,7 +36,7 @@ public class ImpSprint extends BaseImport{
         JSONParser parser = new JSONParser();
         int project = getProjectID();
  
-        try {
+        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_sprint.json")) {
             con = DataSource.getInstance().getConnection();
 
             String sql = "SELECT * FROM gros.sprint WHERE sprint_id=? AND project_id=?";
@@ -45,7 +45,7 @@ public class ImpSprint extends BaseImport{
             sql = "insert into gros.sprint values (?,?,?,?,?);";
             pstmt = con.prepareStatement(sql);
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_sprint.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {

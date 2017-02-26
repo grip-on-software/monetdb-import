@@ -27,25 +27,24 @@ public class ImpDataIssueLink extends BaseImport{
     @Override
     public void parser() {
 
-        BatchedStatement bstmt = null;
-        PreparedStatement pstmt = null;
         PreparedStatement existsStmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
         Statement st = null;
         ResultSet rs = null;
-        //JSONParser parser = new JSONParser();
+        String sql = "insert into gros.issuelink values (?,?,?);";
  
-        try {
-            con = DataSource.getInstance().getConnection();
-            String sql = "SELECT * FROM gros.issuelink WHERE id_from=? AND id_to=? AND relationship_type=?";
-            existsStmt = con.prepareStatement(sql);
+        try (
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_issuelinks.json");
+            BatchedStatement bstmt = new BatchedStatement(sql);
+        ) {
+            con = bstmt.getConnection();
+            String existsSql = "SELECT * FROM gros.issuelink WHERE id_from=? AND id_to=? AND relationship_type=?";
+            existsStmt = con.prepareStatement(existsSql);
 
-            sql = "insert into gros.issuelink values (?,?,?);";
-            bstmt = new BatchedStatement(sql);
-            pstmt = bstmt.getPreparedStatement();
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_issuelinks.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {
@@ -80,8 +79,6 @@ public class ImpDataIssueLink extends BaseImport{
         catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (bstmt != null) { bstmt.close(); }
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
             if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
             if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}

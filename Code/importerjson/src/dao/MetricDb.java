@@ -20,7 +20,7 @@ import java.util.HashMap;
  *
  * @author Enrique and Leon Helwerda
  */
-public class MetricDb extends BaseDb {
+public class MetricDb extends BaseDb implements AutoCloseable {
     PreparedStatement checkMetricStmt = null;
     BatchedStatement insertMetricStmt = null;
     BatchedStatement insertMetricValueStmt = null;
@@ -62,6 +62,7 @@ public class MetricDb extends BaseDb {
         insertMetricValueStmt.batch();
     }
     
+    @Override
     public void close() throws SQLException {
         // All metric names are already commited
         insertMetricStmt.close();

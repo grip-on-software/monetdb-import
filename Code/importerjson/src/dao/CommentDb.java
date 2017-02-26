@@ -18,7 +18,7 @@ import java.sql.Timestamp;
  *
  * @author Enrique
  */
-public class CommentDb extends BaseDb {
+public class CommentDb extends BaseDb implements AutoCloseable {
     BatchedStatement insertStmt = null;
     PreparedStatement checkStmt = null;
     BatchedStatement updateStmt = null;
@@ -93,6 +93,7 @@ public class CommentDb extends BaseDb {
         updateStmt.batch();
     }
     
+    @Override
     public void close() throws SQLException {
         insertStmt.execute();
         insertStmt.close();

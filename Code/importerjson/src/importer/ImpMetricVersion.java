@@ -22,12 +22,14 @@ public class ImpMetricVersion extends BaseImport {
     @Override
     public void parser() {
         JSONParser parser = new JSONParser();
-        MetricDb metricDb = new MetricDb();
         int projectId = this.getProjectID();
         int version_id = 0;
  
-        try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_metric_versions.json"));
+        try (
+            MetricDb metricDb = new MetricDb();
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_metric_versions.json")
+        ) {
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {
@@ -46,10 +48,7 @@ public class ImpMetricVersion extends BaseImport {
                     metricDb.insert_version(projectId, Integer.parseInt(version), developer, message, commit_date);
                     
                 }
-            }
-            
-            metricDb.close();
-            
+            }            
         }
         catch (FileNotFoundException e) {
             System.out.println("Cannot import metric versions: " + e.getMessage());

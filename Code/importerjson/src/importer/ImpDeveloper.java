@@ -23,13 +23,14 @@ public class ImpDeveloper extends BaseImport{
     public void parser(){
 
         JSONParser parser = new JSONParser();
-        DeveloperDb devDb = new DeveloperDb();
  
-        try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_developer.json"));
+        try (
+            DeveloperDb devDb = new DeveloperDb();
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_developer.json")
+        ) {
+            JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String display_name = (String) jsonObject.get("display_name");
@@ -41,10 +42,7 @@ public class ImpDeveloper extends BaseImport{
                     devDb.insert_developer(name, display_name);
                 }
 
-            }
-            
-            devDb.close();
-                  
+            }                  
         }
             
         catch (SQLException e) {

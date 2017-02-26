@@ -15,7 +15,7 @@ import java.sql.SQLException;
  *
  * @author Leon Helwerda
  */
-public class BatchedStatement {
+public class BatchedStatement implements AutoCloseable {
     Connection con = null;
     PreparedStatement pstmt = null;
     String query = "";
@@ -61,9 +61,10 @@ public class BatchedStatement {
         }
     }
 
-    public void close() {
-        if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-        if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+    @Override
+    public void close() throws SQLException {
+        if (con != null) con.close();
+        if (pstmt != null) pstmt.close();
         con = null;
         pstmt = null;
         batchSize = 0;

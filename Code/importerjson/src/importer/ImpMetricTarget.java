@@ -22,16 +22,16 @@ public class ImpMetricTarget extends BaseImport {
     @Override
     public void parser() {
         JSONParser parser = new JSONParser();
-        MetricDb metricDb = new MetricDb();
         int projectId = this.getProjectID();
         int metric_id = 0;
  
-        try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_metric_targets.json"));
+        try (
+            MetricDb metricDb = new MetricDb();
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_metric_targets.json")
+        ) {
+            JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
-      
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String name = (String) jsonObject.get("name");
@@ -48,10 +48,7 @@ public class ImpMetricTarget extends BaseImport {
                 }
                 
                 metricDb.insert_target(projectId, Integer.parseInt(revision), metric_id, type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
-            }
-            
-            metricDb.close();
-            
+            }            
         }
         catch (FileNotFoundException e) {
             System.out.println("Cannot import metric targets: " + e.getMessage());

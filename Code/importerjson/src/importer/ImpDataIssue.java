@@ -26,29 +26,28 @@ import org.json.simple.parser.JSONParser;
 public class ImpDataIssue extends BaseImport{
     
     @Override
-    public void parser(){
-
-        BatchedStatement bstmt = null;
-        PreparedStatement pstmt = null;
+    public void parser() {
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
         JSONParser parser = new JSONParser();
         String new_description = "";
         int projectId = getProjectID();
+        String[] fields = new String[32];
+        Arrays.fill(fields, "?");
+        String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
         
-        try {
-            String[] fields = new String[32];
-            Arrays.fill(fields, "?");
-            String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
-            bstmt = new BatchedStatement(sql);
-            pstmt = bstmt.getPreparedStatement();
+        try (
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data.json");
+            BatchedStatement bstmt = new BatchedStatement(sql);
+        ) {
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
             
             Connection con = bstmt.getConnection();
             
             sql = "SELECT * FROM gros.issue WHERE issue_id = ? AND changelog_id = ?";
             existsStmt = con.prepareStatement(sql);
                 
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {
@@ -240,7 +239,6 @@ public class ImpDataIssue extends BaseImport{
             e.printStackTrace();
         }
         finally {
-            if (bstmt != null) { bstmt.close(); }
             if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
             if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
         }

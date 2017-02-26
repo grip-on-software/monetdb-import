@@ -25,8 +25,8 @@ public class ImpReadyStatus extends BaseImport{
         ReadyStatusDb readyStatusDB = new ReadyStatusDb();
         int stat_id = 0;
  
-        try {
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_ready_status.json"));
+        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_ready_status.json")) {
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {

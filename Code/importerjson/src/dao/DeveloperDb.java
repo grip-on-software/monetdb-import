@@ -19,7 +19,7 @@ import util.BaseDb;
  * Class is created to manage the developer table of the database.
  * @author Enrique & Thomas
  */
-public class DeveloperDb extends BaseDb {
+public class DeveloperDb extends BaseDb implements AutoCloseable {
     
     PreparedStatement checkDeveloperStmt = null;
     PreparedStatement checkVcsDeveloperStmt = null;
@@ -49,7 +49,9 @@ public class DeveloperDb extends BaseDb {
     
     /**
      * Commits changes to the developer table and closes the connection.
+     * @throws java.sql.SQLException
      */
+    @Override
     public void close() throws SQLException {
         bstmt.execute();
         bstmt.close();

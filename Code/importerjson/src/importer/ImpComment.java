@@ -24,11 +24,12 @@ public class ImpComment extends BaseImport{
     public void parser() {
 
         JSONParser parser = new JSONParser();
-        CommentDb commentDb = new CommentDb();
  
-        try {
-            
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_comments.json"));
+        try (
+            CommentDb commentDb = new CommentDb();
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_comments.json")
+        ) {
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {
@@ -56,8 +57,6 @@ public class ImpComment extends BaseImport{
                 }
                 
             }
-            
-            commentDb.close();
         }
             
         catch (SQLException e) {

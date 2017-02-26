@@ -30,13 +30,11 @@ public class ImpDataRelationshipType extends BaseImport{
         JSONParser parser = new JSONParser();
         RelationshipTypeDb relTypeDB;
         int rel_id = 0;
-        
-        //JSONParser parser = new JSONParser();
  
-        try {
+        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_relationshiptype.json")) {
             con = DataSource.getInstance().getConnection();
             
-            JSONArray a = (JSONArray) parser.parse(new FileReader(getPath()+getProjectName()+"/data_relationshiptype.json"));
+            JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
             {

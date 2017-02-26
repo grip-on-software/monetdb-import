@@ -19,7 +19,7 @@ import util.BaseDb;
  * Class is created to manage the repository table of the database.
  * @author Enrique & Thomas
  */
-public class RepositoryDb extends BaseDb {
+public class RepositoryDb extends BaseDb implements AutoCloseable {
     
     BatchedStatement bstmt = null;
     PreparedStatement checkRepoStmt = null;
@@ -30,6 +30,7 @@ public class RepositoryDb extends BaseDb {
         bstmt = new BatchedStatement(sql);
     }
     
+    @Override
     public void close() throws SQLException {
         // All statements are already executed
         bstmt.close();
