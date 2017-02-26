@@ -8,6 +8,7 @@ package importer;
 import util.BaseImport;
 import dao.MetricDb;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
@@ -39,6 +40,20 @@ public class ImpMetricValue extends BaseImport{
         public MetricReader(MetricDb mDB, int projectID) {
             this.mDB = mDB;
             this.projectID = projectID;
+        }
+        
+        private void readPath(String path) throws Exception {
+            if (path.contains("|")) {
+                String[] parts = path.split("|");
+                String filename = parts[0];
+                int start_from = Integer.parseInt(parts[1]);
+                try (InputStream is = new FileInputStream(filename)) {
+                    readGzip(is, start_from);
+                }
+            }
+            else {
+                readNetworked(new URL(path));
+            }
         }
 
         private void readNetworked(URL url) throws Exception {
@@ -114,8 +129,8 @@ public class ImpMetricValue extends BaseImport{
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("\"") && line.endsWith("\"")) {
-                    String url = (String) parser.parse(line);
-                    readNetworked(new URL(url));
+                    String path = (String) parser.parse(line);
+                    readPath(path);
                     break;
                 }
                 if ("[".equals(line) || "]".equals(line)) {
