@@ -22,6 +22,7 @@ import java.util.zip.GZIPInputStream;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -55,6 +56,7 @@ public class ImpMetricValue extends BaseImport{
                 BufferedReader br = new BufferedReader(reader, BUFFER_SIZE)
             ) {
                 String line;
+                JSONObject metric_row;
                 while ((line = br.readLine()) != null) {
                     line_count++;
                     if (line_count <= start_from) {
@@ -64,7 +66,12 @@ public class ImpMetricValue extends BaseImport{
                         continue;
                     }
                     String row = line.replace("(", "[").replace(")", "]").replace(", }", "}");
-                    JSONObject metric_row = (JSONObject) parser.parse(row);
+                    try {
+                        metric_row = (JSONObject) parser.parse(row);
+                    }
+                    catch (ParseException e) {
+                        throw new Exception("Could not parse row:\n" + row, e);
+                    }
                     String date = (String) metric_row.get("date");
                     for (Iterator it = metric_row.entrySet().iterator(); it.hasNext();) {
                         Map.Entry pair = (Map.Entry)it.next();
