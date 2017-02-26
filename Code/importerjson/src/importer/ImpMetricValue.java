@@ -47,16 +47,17 @@ public class ImpMetricValue extends BaseImport{
         }
         
         private void readGzip(InputStream is, int start_from) throws Exception {
+            int line_count = 0;
+            Boolean success = false;
             try (
                 GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
                 Reader reader = new InputStreamReader(gis, "UTF-8");
                 BufferedReader br = new BufferedReader(reader, BUFFER_SIZE)
             ) {
                 String line;
-                int line_count = 0;
                 while ((line = br.readLine()) != null) {
                     line_count++;
-                    if (line_count < start_from) {
+                    if (line_count <= start_from) {
                         continue;
                     }
                     if (line.trim().isEmpty()) {
@@ -79,9 +80,16 @@ public class ImpMetricValue extends BaseImport{
                         }
                     }
                 }
-
-                try (PrintWriter writer = new PrintWriter(getPath()+getProjectName()+"history_line_count.txt")) {
-                    writer.println(String.valueOf(line_count));
+                success = true;
+            }
+            finally {
+                // Write a progress file so that we can read from the correct location.
+                // Do this upon midway failure as well, but not if we did not read further than the start line.
+                // If we failed somewhere midway, then next time start from the line we failed on.
+                if (line_count > start_from) {
+                    try (PrintWriter writer = new PrintWriter(getPath()+getProjectName()+"history_line_count.txt")) {
+                        writer.println(String.valueOf(success ? line_count : line_count-1));
+                    }
                 }
             }
         }
