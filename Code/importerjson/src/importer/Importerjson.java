@@ -97,28 +97,28 @@ public class Importerjson {
         }
                 
         if (tasks.contains("issuetype")) {
-            ImpDataType impDataType = new ImpDataType();
-            performTask(impDataType, "issue types");
+            ImportTable impType = new ImportTable("issuetype", "name", "description");
+            performTask(impType, "issue types");
         }
                 
         if (tasks.contains("status")) {
-            ImpDataStatus impDataStatus = new ImpDataStatus();
-            performTask(impDataStatus, "status types");
+            ImportTable impStatus = new ImportTable("status", "name", "description");
+            performTask(impStatus, "status types");
         }
                 
         if (tasks.contains("resolution")) {
-            ImpDataResolution impDataResolution = new ImpDataResolution();
-            performTask(impDataResolution, "resolution types");
+            ImportTable impResolution = new ImportTable("resolution", "name", "description");
+            performTask(impResolution, "resolution types");
         }
         
         if (tasks.contains("relationshiptype")) {
-            ImpDataRelationshipType impDataRelationshipType = new ImpDataRelationshipType();
-            performTask(impDataRelationshipType, "relationship types");
+            ImportTable impRelationshipType = new ImportTable("relationshiptype", "name");
+            performTask(impRelationshipType, "relationship types");
         }
         
         if (tasks.contains("priority")) {
-            ImpDataPriority impDataPriority = new ImpDataPriority();
-            performTask(impDataPriority, "priority types");
+            ImportTable impPriority = new ImportTable("priority", "name");
+            performTask(impPriority, "priority types");
         }
         
         if (tasks.contains("fixVersion")) {
@@ -127,7 +127,7 @@ public class Importerjson {
         }
         
         if (tasks.contains("ready_status")) {
-            ImpReadyStatus impReadyStatus = new ImpReadyStatus();
+            ImportTable impReadyStatus = new ImportTable("ready_status", "name");
             performTask(impReadyStatus, "ready status names");
         }
         
