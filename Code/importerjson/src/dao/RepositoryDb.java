@@ -49,6 +49,9 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     /**
      * Inserts repository in the developer table. 
      * @param name The complete name of the repository.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
      */
     public void insert_repo(String name) throws SQLException, IOException, PropertyVetoException{
         PreparedStatement pstmt = bstmt.getPreparedStatement();
@@ -93,6 +96,9 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
      * table of the database. Else returns 0.
      * @param name the complete name of the repository.
      * @return the Developer ID if found, otherwise 0.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
      */
     public int check_repo(String name) throws SQLException, IOException, PropertyVetoException {
         fillNameCache();

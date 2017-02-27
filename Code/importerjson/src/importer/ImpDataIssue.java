@@ -30,7 +30,6 @@ public class ImpDataIssue extends BaseImport{
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
         JSONParser parser = new JSONParser();
-        String new_description = "";
         int projectId = getProjectID();
         String[] fields = new String[42];
         Arrays.fill(fields, "?");
@@ -217,16 +216,12 @@ public class ImpDataIssue extends BaseImport{
             
             bstmt.execute();
         }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
         finally {
-            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException ex) {logException(ex);}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     }

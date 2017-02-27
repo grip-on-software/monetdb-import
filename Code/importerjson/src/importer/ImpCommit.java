@@ -122,8 +122,8 @@ public class ImpCommit extends BaseImport{
             //Used for creating Project if it didn't exist
             this.setProjectID(projectID);
         }
-        catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
-            e.printStackTrace();
+        catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
+            logException(ex);
         }
     }
     
@@ -175,13 +175,13 @@ public class ImpCommit extends BaseImport{
                   
         }
             
-        catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException e) {
-            e.printStackTrace();
+        catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
+            logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (selectStmt != null) try { selectStmt.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (selectStmt != null) try { selectStmt.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) {logException(ex);}
         }
     }
     
@@ -201,16 +201,13 @@ public class ImpCommit extends BaseImport{
             rs = st.executeQuery(sql);
             while (rs.next()) {
                 System.out.println("Unknown VCS Developer: " + rs.getString("display_name"));
-            }
-            
-        } catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        } catch (Exception e) {
-            e.printStackTrace();
+            }            
+        } catch (PropertyVetoException | IOException | SQLException ex) {
+            logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
     }
     
@@ -317,14 +314,12 @@ public class ImpCommit extends BaseImport{
             
             System.out.println("Developers hashed.");
             
-        } catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (PropertyVetoException | IOException | SQLException ex) {
+            logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     }

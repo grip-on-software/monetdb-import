@@ -13,8 +13,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -35,12 +33,11 @@ public class GitFeatureDb extends BaseDb {
             sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_name) values ('"+name+"',"+value+","+sprint+"'"+user+"'');";
                     
             st.executeUpdate(sql);
-
         } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
+            logException(ex);
         } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
          
     
@@ -59,12 +56,13 @@ public class GitFeatureDb extends BaseDb {
             sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_id,user_name) values ('"+name+"',"+value+","+sprint+","+userId+",'"+user+"'');";
                     
             st.executeUpdate(sql);
-
-        } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(GitFeatureDb.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+        }
+        catch (SQLException | IOException | PropertyVetoException ex) {
+            logException(ex);
+        }
+        finally {
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     
@@ -89,19 +87,14 @@ public class GitFeatureDb extends BaseDb {
             while (rs.next()) {
                 idUser = rs.getInt("id");
             }
-            
         }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (PropertyVetoException | IOException | SQLException ex) {
+            logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) {logException(ex);}
         }
         
         return idUser;

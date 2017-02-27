@@ -6,7 +6,6 @@
 package importer;
 
 import dao.BatchedStatement;
-import dao.DataSource;
 import util.BaseImport;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -71,17 +70,13 @@ public class ImpDataIssueLink extends BaseImport{
                 }
             }
             bstmt.execute();
-        }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        }            
+        catch (Exception ex) {
+            logException(ex);
         } finally {
-            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException ex) {logException(ex);}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     }

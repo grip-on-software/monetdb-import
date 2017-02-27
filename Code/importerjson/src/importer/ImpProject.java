@@ -27,26 +27,20 @@ public class ImpProject extends BaseImport{
         int project = 0;
          
         try {
-            
             pDB = new ProjectDb();
             project = pDB.check_project(projectN);
             
-            if(project == 0){
-
+            if (project == 0) {
                 pDB.insert_project(projectN);
                 project = pDB.check_project(projectN);
                     
             }
-            
         }
-            
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
-        
-        finally{
+        finally {
             this.setProjectID(project);
-            
         }
         
     }

@@ -13,8 +13,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -36,10 +34,10 @@ public class ProjectDb extends BaseDb {
                     
             st.executeUpdate(sql);
         } catch (SQLException | IOException | PropertyVetoException ex) {
-            Logger.getLogger(ProjectDb.class.getName()).log(Level.SEVERE, null, ex);
+            logException(ex);
         } finally {
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     
@@ -65,17 +63,13 @@ public class ProjectDb extends BaseDb {
             }
 
         }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (PropertyVetoException | IOException | SQLException ex) {
+            logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) {logException(ex);}
         }
         
         return idProject;

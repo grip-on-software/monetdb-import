@@ -17,7 +17,6 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -187,14 +186,11 @@ public class ImpMetricValue extends BaseImport{
             MetricReader reader = new MetricReader(mDB, this.getProjectID());
             reader.readBufferedJSON(br);
         }
-        catch (FileNotFoundException e) {
-            System.out.println("Cannot import metrics: " + e.getMessage());
+        catch (FileNotFoundException ex) {
+            System.out.println("Cannot import metrics: " + ex.getMessage());
         }
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
         
     }

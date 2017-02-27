@@ -224,18 +224,14 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
                 st2.executeQuery(sql);
             }
         }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (PropertyVetoException | IOException | SQLException ex) {
+            logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (rs2 != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st2 != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (rs2 != null) try { rs2.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (st2 != null) try { st2.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
     }   
     

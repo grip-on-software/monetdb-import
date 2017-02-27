@@ -8,7 +8,6 @@ package importer;
 import util.BaseImport;
 import dao.CommentDb;
 import java.io.FileReader;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -58,12 +57,8 @@ public class ImpComment extends BaseImport{
                 
             }
         }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }        
     }
         

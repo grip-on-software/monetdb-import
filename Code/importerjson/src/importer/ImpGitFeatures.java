@@ -48,11 +48,9 @@ public class ImpGitFeatures extends BaseImport{
                     gitFeatureDb.insert_feature(feature_name,Double.parseDouble(feature_value),Integer.parseInt(sprint_id),user_id,user_name);                    
                 }
             }
-            
         }
-            
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
         
     }

@@ -8,7 +8,6 @@ package importer;
 import dao.MetricDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.sql.SQLException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -50,14 +49,11 @@ public class ImpMetricTarget extends BaseImport {
                 metricDb.insert_target(projectId, Integer.parseInt(revision), metric_id, type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
             }            
         }
-        catch (FileNotFoundException e) {
-            System.out.println("Cannot import metric targets: " + e.getMessage());
+        catch (FileNotFoundException ex) {
+            System.out.println("Cannot import metric targets: " + ex.getMessage());
         }
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
 
     }

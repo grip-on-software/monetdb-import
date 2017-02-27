@@ -8,6 +8,8 @@ package util;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -34,14 +36,21 @@ public class BaseDb {
         path = rootPath + bundle.getString("relPath") + "/";
     }
     
-    public void printSQLExceptionDetails(SQLException e) {
-        e.printStackTrace();
-        SQLException prev = e;
-        SQLException ex = e.getNextException();
-        while (ex != null && !ex.getMessage().equals(prev.getMessage())) {
-            ex.printStackTrace();
-            prev = ex;
-            ex = ex.getNextException();
+    /**
+     * Log an exception that occurs while performing importing tasks.
+     * @param ex The exception that occurred
+     */
+    protected final void logException(Exception ex) {
+        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+
+        if (ex instanceof SQLException) {
+            SQLException prev = (SQLException)ex;
+            SQLException next = prev.getNextException();
+            while (next != null && !next.getMessage().equals(prev.getMessage())) {
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Earlier exception", ex);
+                prev = next;
+                next = prev.getNextException();
+            }
         }
     }
     

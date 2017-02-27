@@ -26,7 +26,7 @@ import org.json.simple.parser.JSONParser;
 public class ImpSprint extends BaseImport{
     
     @Override
-    public void parser(){
+    public void parser() {
 
         PreparedStatement pstmt = null;
         PreparedStatement existsStmt = null;
@@ -96,20 +96,15 @@ public class ImpSprint extends BaseImport{
                     pstmt.executeUpdate();
                 }
             }
-            
         }
-            
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         } finally {
-            if (con != null) try { con.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (st != null) try { st.close(); } catch (SQLException e) {e.printStackTrace();}
-            if (rs != null) try { rs.close(); } catch (SQLException e) {e.printStackTrace();}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
+            if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) {logException(ex);}
+            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     }

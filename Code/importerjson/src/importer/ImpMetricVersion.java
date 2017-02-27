@@ -50,14 +50,11 @@ public class ImpMetricVersion extends BaseImport {
                 }
             }            
         }
-        catch (FileNotFoundException e) {
-            System.out.println("Cannot import metric versions: " + e.getMessage());
+        catch (FileNotFoundException ex) {
+            System.out.println("Cannot import metric versions: " + ex.getMessage());
         }
-        catch (SQLException e) {
-            printSQLExceptionDetails(e);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
 
     }

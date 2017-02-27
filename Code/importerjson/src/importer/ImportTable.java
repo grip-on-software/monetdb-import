@@ -75,8 +75,8 @@ public class ImportTable extends BaseImport {
                 }
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (Exception ex) {
+            logException(ex);
         }
 
     }
