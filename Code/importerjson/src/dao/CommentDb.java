@@ -46,23 +46,22 @@ public class CommentDb extends BaseDb implements AutoCloseable {
         getCheckStmt();
         
         checkStmt.setInt(1, comment_id);
-        ResultSet rs = checkStmt.executeQuery();
-
-        CheckResult result = CheckResult.MISSING;
-        while (rs.next()) {
-            if (message.equals(rs.getString("message")) &&
-                    author.equals(rs.getString("author")) &&
-                    date.equals(rs.getTimestamp("date")) &&
-                    updater.equals(rs.getString("updater")) &&
-                    updated_date.equals(rs.getTimestamp("updated_date"))) {
-                result = CheckResult.EXISTS;
-            }
-            else {
-                result = CheckResult.DIFFERS;
+        CheckResult result;
+        try (ResultSet rs = checkStmt.executeQuery()) {
+            result = CheckResult.MISSING;
+            while (rs.next()) {
+                if (message.equals(rs.getString("message")) &&
+                        author.equals(rs.getString("author")) &&
+                        date.equals(rs.getTimestamp("date")) &&
+                        updater.equals(rs.getString("updater")) &&
+                        updated_date.equals(rs.getTimestamp("updated_date"))) {
+                    result = CheckResult.EXISTS;
+                }
+                else {
+                    result = CheckResult.DIFFERS;
+                }
             }
         }
-        
-        rs.close();
         
         return result;
     }

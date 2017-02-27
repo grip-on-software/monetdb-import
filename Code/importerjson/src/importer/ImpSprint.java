@@ -5,7 +5,9 @@
  */
 package importer;
 
+import dao.CommentDb;
 import dao.DataSource;
+import dao.SprintDb;
 import util.BaseImport;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -27,29 +29,16 @@ public class ImpSprint extends BaseImport{
     
     @Override
     public void parser() {
-
-        PreparedStatement pstmt = null;
-        PreparedStatement existsStmt = null;
-        Statement st = null;
-        Connection con = null;
-        ResultSet rs = null;
         JSONParser parser = new JSONParser();
         int project = getProjectID();
  
-        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_sprint.json")) {
-            con = DataSource.getInstance().getConnection();
-
-            String sql = "SELECT * FROM gros.sprint WHERE sprint_id=? AND project_id=?";
-            existsStmt = con.prepareStatement(sql);
-
-            sql = "insert into gros.sprint values (?,?,?,?,?);";
-            pstmt = con.prepareStatement(sql);
-            
+        try (
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_sprint.json");
+            SprintDb sprintDb = new SprintDb()
+        ) {            
             JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
-      
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String id = (String) jsonObject.get("id");
@@ -57,54 +46,34 @@ public class ImpSprint extends BaseImport{
                 String start = (String) jsonObject.get("start_date");
                 String end = (String) jsonObject.get("end_date");
                 
+                int sprint_id = Integer.valueOf(id);
+                Timestamp start_date;
                 if ((start.trim()).equals("0") || (start.trim()).equals("None")){
-                    start = null;
+                    start_date = null;
+                }
+                else {
+                    start_date = Timestamp.valueOf(start);
                 }
                 
+                Timestamp end_date;
                 if ((end.trim()).equals("0") || (end.trim()).equals("None")){
-                    end = null;
+                    end_date = null;
                 }
-                
-                existsStmt.setInt(1, Integer.parseInt(id));
-                existsStmt.setInt(2, project);
-                rs = existsStmt.executeQuery();
-                
-                // check if the sprint id does not already exist
-                if(!rs.next()) {
-                    pstmt.setInt(1, Integer.parseInt(id));
-                    pstmt.setInt(2, project);
-                    pstmt.setString(3, name);
-
-                    Timestamp ts_start;              
-                    if (start !=null){
-                        ts_start = Timestamp.valueOf(start); 
-                        pstmt.setTimestamp(4,ts_start);
-                    } else{
-                        //start = null;
-                        pstmt.setNull(3, java.sql.Types.TIMESTAMP);
-                    }
-
-                    Timestamp ts_end;              
-                    if (end !=null){
-                        ts_end = Timestamp.valueOf(end); 
-                        pstmt.setTimestamp(5,ts_end);
-                    } else{
-                        //end = null;
-                        pstmt.setNull(4, java.sql.Types.TIMESTAMP);
-                    }
-
-                    pstmt.executeUpdate();
+                else {
+                    end_date = Timestamp.valueOf(end);
+                }
+                                
+                SprintDb.CheckResult result = sprintDb.check_sprint(sprint_id, project, name, start_date, end_date);
+                if (result == SprintDb.CheckResult.MISSING) {
+                    sprintDb.insert_sprint(sprint_id, project, name, start_date, end_date);
+                }
+                else if (result == SprintDb.CheckResult.DIFFERS) {
+                    sprintDb.update_sprint(sprint_id, project, name, start_date, end_date);
                 }
             }
         }
         catch (Exception ex) {
             logException(ex);
-        } finally {
-            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) {logException(ex);}
-            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException ex) {logException(ex);}
-            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
-            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
         }
         
     }
