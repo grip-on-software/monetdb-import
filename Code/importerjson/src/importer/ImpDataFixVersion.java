@@ -43,7 +43,7 @@ public class ImpDataFixVersion extends BaseImport{
             sql = "SELECT * FROM gros.fixversion WHERE id=?;";
             existsStmt = con.prepareStatement(sql);
 
-            sql = "insert into gros.fixversion values (?,?,?,?);";
+            sql = "insert into gros.fixversion values (?,?,?,?,?);";
             pstmt = con.prepareStatement(sql);
             
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -56,6 +56,7 @@ public class ImpDataFixVersion extends BaseImport{
                 String id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 String release_date = (String) jsonObject.get("release_date");
+                String released = (String) jsonObject.get("released");
                 
                 existsStmt.setInt(1, Integer.parseInt(id));
                 rs = existsStmt.executeQuery();
@@ -76,6 +77,13 @@ public class ImpDataFixVersion extends BaseImport{
                     } else{
                         //release_date = null;
                         pstmt.setNull(4, java.sql.Types.DATE);
+                    }
+                    
+                    if (released == null || released.equals("0")) {
+                        pstmt.setNull(5, java.sql.Types.BOOLEAN);
+                    }
+                    else {
+                        pstmt.setBoolean(5, released.equals("1"));
                     }
 
                     pstmt.executeUpdate();
