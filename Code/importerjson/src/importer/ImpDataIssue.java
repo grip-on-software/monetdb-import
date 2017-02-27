@@ -32,7 +32,7 @@ public class ImpDataIssue extends BaseImport{
         JSONParser parser = new JSONParser();
         String new_description = "";
         int projectId = getProjectID();
-        String[] fields = new String[32];
+        String[] fields = new String[42];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
         
@@ -60,7 +60,7 @@ public class ImpDataIssue extends BaseImport{
                 String fixVersions = (String) jsonObject.get("fixVersions");
                 String priority = (String) jsonObject.get("priority");
                 String attachment = (String) jsonObject.get("attachment");
-                String type = (String) jsonObject.get("type");
+                String type = (String) jsonObject.get("issuetype");
                 String duedate = (String) jsonObject.get("duedate");
                 String status = (String) jsonObject.get("status");
                 String updated = (String) jsonObject.get("updated");
@@ -82,8 +82,18 @@ public class ImpDataIssue extends BaseImport{
                 String epic = (String) jsonObject.get("epic");
                 String flagged = (String) jsonObject.get("flagged");
                 String ready_status = (String) jsonObject.get("ready_status");
+                String ready_status_reason = (String) jsonObject.get("ready_status_reason");
+                String approved = (String) jsonObject.get("approved");
+                String approved_by_po = (String) jsonObject.get("approved_by_po");
                 String labels = (String) jsonObject.get("labels");
                 String affectedVersion = (String) jsonObject.get("versions");
+                String expected_ltcs = (String) jsonObject.get("expected_ltcs");
+                String expected_phtcs = (String) jsonObject.get("expected_phtcs");
+                String test_given = (String) jsonObject.get("test_given");
+                String test_when = (String) jsonObject.get("test_when");
+                String test_then = (String) jsonObject.get("test_then");
+                String test_execution = (String) jsonObject.get("test_execution");
+                String test_execution_time = (String) jsonObject.get("test_execution_time");
                 
                 existsStmt.setInt(1, Integer.parseInt(issue_id));
                 existsStmt.setInt(2, Integer.parseInt(changelog_id));
@@ -126,9 +136,6 @@ public class ImpDataIssue extends BaseImport{
                     if ((bugfix.trim()).equals("None")){
                         bugfix = "0";
                     }
-                    if (rank_change.equals("0")) {
-                        rank_change = null;
-                    }
                     if (epic.equals("0")) {
                         epic = null;
                     }
@@ -142,35 +149,15 @@ public class ImpDataIssue extends BaseImport{
                     pstmt.setInt(6, Integer.parseInt(priority));
                     pstmt.setInt(7, Integer.parseInt(resolution));
                     pstmt.setInt(8, Integer.parseInt(fixVersions));
-                    pstmt.setInt(9, Integer.parseInt(bugfix));
+                    setBoolean(pstmt, 9, bugfix);
                     pstmt.setInt(10, Integer.parseInt(watchers));
 
-                    Timestamp ts_created;              
-                    if (created != null){
-                        ts_created = Timestamp.valueOf(created); 
-                        pstmt.setTimestamp(11, ts_created);
-                    } else{
-                        pstmt.setNull(11, java.sql.Types.TIMESTAMP);
-                    }
+                    setTimestamp(pstmt, 11, created);
+                    setTimestamp(pstmt, 12, updated);
 
-                    Timestamp ts_updated;              
-                    if (updated != null){
-                        ts_updated = Timestamp.valueOf(updated); 
-                        pstmt.setTimestamp(12, ts_updated);
-                    } else{
-                        pstmt.setNull(12, java.sql.Types.TIMESTAMP);
-                    }
+                    pstmt.setString(13, description);
 
-                    new_description = description.replace("'","\\'");
-                    pstmt.setString(13, new_description);
-
-                    Timestamp ts_duedate;              
-                    if (duedate != null){
-                        ts_duedate = Timestamp.valueOf(duedate); 
-                        pstmt.setTimestamp(14, ts_duedate);
-                    } else{
-                        pstmt.setNull(14, java.sql.Types.TIMESTAMP);
-                    }
+                    setTimestamp(pstmt, 14, duedate);
 
                     pstmt.setInt(15, projectId);
                     pstmt.setInt(16, Integer.parseInt(status));
@@ -189,16 +176,7 @@ public class ImpDataIssue extends BaseImport{
                         pstmt.setNull(23, java.sql.Types.DECIMAL);
                     }
 
-                    Timestamp ts_resolution_date;              
-                    if (resolution_date != null){
-
-                        ts_resolution_date = Timestamp.valueOf(resolution_date); 
-
-                        pstmt.setTimestamp(24, ts_resolution_date);
-                    } else{
-                        //ts_resolution_date = null;
-                        pstmt.setNull(24, java.sql.Types.TIMESTAMP);
-                    }
+                    setTimestamp(pstmt, 24, resolution_date);
 
                     pstmt.setInt(25, Integer.parseInt(sprint));                
 
@@ -207,12 +185,7 @@ public class ImpDataIssue extends BaseImport{
                     }
 
                     pstmt.setString(26, updated_by);
-                    if (rank_change != null) {
-                        pstmt.setBoolean(27, rank_change.equals("1"));
-                    }
-                    else {
-                        pstmt.setNull(27, java.sql.Types.BOOLEAN);
-                    }
+                    setBoolean(pstmt, 27, rank_change);
                     
                     if (epic != null) {
                         pstmt.setString(28, epic);
@@ -220,10 +193,23 @@ public class ImpDataIssue extends BaseImport{
                     else {
                         pstmt.setNull(28, java.sql.Types.VARCHAR);
                     }
+                    
                     pstmt.setBoolean(29, flagged.equals("1"));
                     pstmt.setInt(30, Integer.parseInt(ready_status));
-                    pstmt.setInt(31, Integer.parseInt(labels));
-                    pstmt.setInt(32, Integer.parseInt(affectedVersion));
+                    pstmt.setString(31, ready_status_reason);
+                    setBoolean(pstmt, 32, approved);
+                    setBoolean(pstmt, 33, approved_by_po);
+                    
+                    pstmt.setInt(34, Integer.parseInt(labels));
+                    pstmt.setInt(35, Integer.parseInt(affectedVersion));
+                    
+                    pstmt.setInt(36, Integer.parseInt(expected_ltcs));
+                    pstmt.setInt(37, Integer.parseInt(expected_phtcs));
+                    pstmt.setString(38, test_given);
+                    pstmt.setString(39, test_when);
+                    pstmt.setString(40, test_then);
+                    pstmt.setInt(41, Integer.parseInt(test_execution));
+                    pstmt.setInt(42, Integer.parseInt(test_execution_time));
 
                     bstmt.batch();
                 }
@@ -244,6 +230,23 @@ public class ImpDataIssue extends BaseImport{
         }
         
     }
+    
+    private void setBoolean(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value == null || value.equals("0")) {
+            pstmt.setNull(index, java.sql.Types.BOOLEAN);
+        }
+        else {
+            pstmt.setBoolean(index, value.equals("1"));
+        }
+    }
 
+    private void setTimestamp(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null){
+            Timestamp date = Timestamp.valueOf(value); 
+            pstmt.setTimestamp(index, date);
+        } else{
+            pstmt.setNull(index, java.sql.Types.TIMESTAMP);
+        }
+    }
 }
     

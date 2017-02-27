@@ -20,6 +20,8 @@ DROP TABLE "gros"."subtask";
 
 DROP TABLE "gros"."ready_status";
 
+DROP TABLE "gros"."test_execution";
+
 DROP TABLE "gros"."metric";
 
 DROP TABLE "gros"."metric_value";

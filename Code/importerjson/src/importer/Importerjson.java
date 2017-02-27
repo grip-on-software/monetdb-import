@@ -21,7 +21,7 @@ public class Importerjson {
     private static int projectID = 0;
     private final static SortedSet<String> defaultTasks = retrieveTasks(new String[]{
         "issue", "issuetype", "status", "resolution", "relationshiptype",
-        "priority", "fixVersion", "ready_status", "issuelink",
+        "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
         "metric_value", "metric_version", "metric_target",
         "sprint", "comment", "developer", "commit",
         // Additional tasks
@@ -134,6 +134,11 @@ public class Importerjson {
         if (tasks.contains("issuelink")) {
             ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
             performTask(impDataIssueLink, "issue links");
+        }
+        
+        if (tasks.contains("test_execution")) {
+            ImportTable impTestExecution = new ImportTable("test_execution", "value");
+            performTask(impTestExecution, "test execution methods");
         }
         
         if (tasks.contains("metric_value")) {

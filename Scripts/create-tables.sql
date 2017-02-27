@@ -7,7 +7,7 @@ CREATE TABLE "gros"."issue" (
 	"priority"       INTEGER    NULL,
 	"resolution"     INTEGER    NULL,
 	"fixversion"     INTEGER    NULL,
-	"bugfix"         INTEGER    NULL,
+	"bugfix"         BOOL    NULL,
 	"watchers"       INTEGER    NULL,
 	"created"     TIMESTAMP  NULL,
 	"updated"     TIMESTAMP  NULL,
@@ -29,8 +29,18 @@ CREATE TABLE "gros"."issue" (
 	"epic"           VARCHAR(10)    NULL,
 	"impediment"     BOOL     NOT NULL,
 	"ready_status"   INTEGER    NULL,
+	"ready_status_reason" TEXT  NULL,
+	"approved"       BOOL    NULL,
+	"approved_by_po" BOOL    NULL,
 	"labels"         INTEGER    NULL,
 	"version"        INTEGER    NULL,
+	"expected_ltcs"  INTEGER    NULL,
+	"expected_phtcs" INTEGER    NULL,
+	"test_given"     TEXT    NULL,
+	"test_when"      TEXT    NULL,
+	"test_then"      TEXT    NULL,
+	"test_execution" INTEGER NULL,
+	"test_execution_time" INTEGER   NULL,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 
@@ -101,6 +111,12 @@ CREATE TABLE "gros"."ready_status" (
 	"id"              INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL,
         CONSTRAINT "pk_ready_status_id" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "gros"."test_execution" (
+	"id"              INTEGER     NOT NULL AUTO_INCREMENT,
+	"value"            VARCHAR(100)   NOT NULL,
+        CONSTRAINT "pk_test_execution_id" PRIMARY KEY ("id")
 );
 
 CREATE TABLE "gros"."metric" (
