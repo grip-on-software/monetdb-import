@@ -91,8 +91,8 @@ public class TableDb implements AutoCloseable {
         }
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
-        pstmt.setInt(0, identifier);
-        pstmt.setString(1, value);
+        pstmt.setInt(1, identifier);
+        pstmt.setString(2, value);
         
         insertStmt.batch();
     }
@@ -112,9 +112,9 @@ public class TableDb implements AutoCloseable {
         }
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
-        pstmt.setInt(0, identifier);
-        pstmt.setString(1, value);
-        pstmt.setString(2, metadata);
+        pstmt.setInt(1, identifier);
+        pstmt.setString(2, value);
+        pstmt.setString(3, metadata);
         
         insertStmt.batch();
     }
@@ -132,7 +132,7 @@ public class TableDb implements AutoCloseable {
         
         Integer id = null;
         
-        checkIdStmt.setInt(0, identifier);
+        checkIdStmt.setInt(1, identifier);
         try (ResultSet rs = checkIdStmt.executeQuery()) {
             while (rs.next()) {
                 id = rs.getInt("id");
@@ -155,7 +155,7 @@ public class TableDb implements AutoCloseable {
 
         Integer id = null;
         
-        checkValueStmt.setString(0, value);
+        checkValueStmt.setString(1, value);
         try (ResultSet rs = checkValueStmt.executeQuery()) {
             while (rs.next()) {
                 id = rs.getInt("id");
