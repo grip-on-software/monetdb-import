@@ -24,6 +24,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import util.StringReplacer;
 
 /**
  *
@@ -34,7 +35,7 @@ public class ImpMetricValue extends BaseImport{
         JSONParser parser = new JSONParser();
         MetricDb mDB = null;
         int projectID;
-        final int BUFFER_SIZE = 8192;
+        final int BUFFER_SIZE = 65536;
         
         public MetricReader(MetricDb mDB, int projectID) {
             this.mDB = mDB;
@@ -76,15 +77,17 @@ public class ImpMetricValue extends BaseImport{
             ) {
                 String line;
                 JSONObject metric_row;
+                StringReplacer replacer = new StringReplacer();
+                replacer.add("(\"", "[\"").add("\")", "\"]").add(", }", "}");
                 while ((line = br.readLine()) != null) {
                     line_count++;
                     if (line_count <= start_from) {
                         continue;
                     }
-                    if (line.trim().isEmpty()) {
+                    if (line.isEmpty()) {
                         continue;
                     }
-                    String row = line.replace("(\"", "[\"").replace("\")", "\"]").replace(", }", "}");
+                    String row = replacer.execute(line);
                     try {
                         metric_row = (JSONObject) parser.parse(row);
                     }
