@@ -49,6 +49,15 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         return date.equals(current_date);
     }
     
+    private void setDate(PreparedStatement pstmt, int index, Date date) throws SQLException {
+        if (date == null) {
+            pstmt.setNull(index, java.sql.Types.DATE);
+        }
+        else {
+            pstmt.setDate(index, date);
+        }
+    }
+    
     public CheckResult check_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, IOException, PropertyVetoException {
         getCheckStmt();
         
@@ -80,8 +89,8 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(2, project_id);
         pstmt.setString(3, name);
         pstmt.setString(4, description);
-        pstmt.setDate(5, start_date);
-        pstmt.setDate(6, release_date);
+        setDate(pstmt, 5, start_date);
+        setDate(pstmt, 6, release_date);
         pstmt.setBoolean(7, released);
                              
         insertStmt.batch();
@@ -91,8 +100,8 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
         pstmt.setString(2, description);
-        pstmt.setDate(3, start_date);
-        pstmt.setDate(4, release_date);
+        setDate(pstmt, 3, start_date);
+        setDate(pstmt, 4, release_date);
         pstmt.setBoolean(5, released);
         
         pstmt.setInt(6, id);

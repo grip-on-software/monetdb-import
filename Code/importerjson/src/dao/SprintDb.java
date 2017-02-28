@@ -49,6 +49,15 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         return date.equals(current_date);
     }
     
+    private void setTimestamp(PreparedStatement pstmt, int index, Timestamp date) throws SQLException {
+        if (date == null) {
+            pstmt.setNull(index, java.sql.Types.TIMESTAMP);
+        }
+        else {
+            pstmt.setTimestamp(index, date);
+        }
+    }
+    
     public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
         getCheckStmt();
         
@@ -77,8 +86,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(1, sprint_id);
         pstmt.setInt(2, project_id);
         pstmt.setString(3, name);
-        pstmt.setTimestamp(4, start_date);
-        pstmt.setTimestamp(5, end_date);
+        setTimestamp(pstmt, 4, start_date);
+        setTimestamp(pstmt, 5, end_date);
                              
         insertStmt.batch();
     }
@@ -86,8 +95,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
-        pstmt.setTimestamp(2, start_date);
-        pstmt.setTimestamp(3, end_date);
+        setTimestamp(pstmt, 2, start_date);
+        setTimestamp(pstmt, 3, end_date);
         
         pstmt.setInt(4, sprint_id);
         pstmt.setInt(5, project_id);
