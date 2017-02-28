@@ -8,6 +8,8 @@ package importer;
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import util.BaseImport;
 
 /**
@@ -44,8 +46,7 @@ public class Importerjson {
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
         
-        String line = taskName + " in " + (elapsedTime / 1000) + " seconds";
-        System.out.println(line);
+        Logger.getLogger("importer").log(Level.INFO, "{0} in {1} seconds", new Object[]{taskName, elapsedTime / 1000});
     }
     
     private static SortedSet<String> retrieveTasks(String[] taskList) {
@@ -71,8 +72,16 @@ public class Importerjson {
     }
     
     public static void main(String[] args) {
+        String usage = "Usage: java [-Dimporter.log=LEVEL] -jar importerjson <project> [tasks]";
+        String logLevel = System.getProperty("importer.log", "WARNING");
+        try {
+            Logger.getLogger("importer").setLevel(Level.parse(logLevel));
+        }
+        catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + "\n" + usage);
+        }
         if (args.length <= 0) {
-            throw new RuntimeException("Usage: java -jar importerjson <project> [tasks]");
+            throw new RuntimeException(usage);
         }
         projectName = args[0].trim();
         
@@ -84,7 +93,7 @@ public class Importerjson {
             tasks = defaultTasks;
         }
         
-        System.out.println("Tasks to run: " + Arrays.toString(tasks.toArray()));
+        Logger.getLogger("importer").log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
         
         // Always perform project import so that project ID is known to exist
         ImpProject impProject = new ImpProject();

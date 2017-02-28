@@ -41,13 +41,15 @@ public class BaseDb {
      * @param ex The exception that occurred
      */
     protected final void logException(Exception ex) {
-        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+        // Get the source method
+        StackTraceElement source = Thread.currentThread().getStackTrace()[1];
+        Logger.getLogger("importer").logp(Level.SEVERE, source.getClassName(), source.getMethodName(), null, ex);
 
         if (ex instanceof SQLException) {
             SQLException prev = (SQLException)ex;
             SQLException next = prev.getNextException();
             while (next != null && !next.getMessage().equals(prev.getMessage())) {
-                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Earlier exception", ex);
+                Logger.getLogger("importer").logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Earlier exception", ex);
                 prev = next;
                 next = prev.getNextException();
             }
