@@ -49,14 +49,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.execute();
     }
     
-    public void insert_metricValue(int id, Integer value, String category, String date, String since_date, int project) throws SQLException, IOException, PropertyVetoException{
+    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, Timestamp since_date, int project) throws SQLException, IOException, PropertyVetoException{
         PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
         
-        pstmt.setInt(1, id);
+        pstmt.setInt(1, metric_id);
         pstmt.setInt(2, value);
         pstmt.setString(3, category);
-        pstmt.setTimestamp(4, Timestamp.valueOf(date));
-        pstmt.setTimestamp(5, Timestamp.valueOf(since_date));
+        pstmt.setTimestamp(4, date);
+        pstmt.setTimestamp(5, since_date);
         pstmt.setInt(6, project);
                     
         insertMetricValueStmt.batch();

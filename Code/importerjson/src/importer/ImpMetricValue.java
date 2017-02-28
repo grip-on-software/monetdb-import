@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -94,18 +95,18 @@ public class ImpMetricValue extends BaseImport{
                     catch (ParseException e) {
                         throw new Exception("Could not parse row:\n" + row, e);
                     }
-                    String date = (String) metric_row.get("date");
+                    Timestamp date = Timestamp.valueOf((String) metric_row.get("date"));
                     for (Iterator it = metric_row.entrySet().iterator(); it.hasNext();) {
                         Map.Entry pair = (Map.Entry)it.next();
-                        String metric_name = (String) pair.getKey();
                         Object data = pair.getValue();
                         if (data instanceof JSONArray) {
                             JSONArray metric_data = (JSONArray) data;
+                            String metric_name = (String) pair.getKey();
                             String value = (String) metric_data.get(0);
                             String category = (String) metric_data.get(1);
                             String since_date = (String) metric_data.get(2);
 
-                            insert(metric_name, value, category, date, since_date);
+                            insert(metric_name, value, category, date, Timestamp.valueOf(since_date));
                         }
                     }
                 }
@@ -159,10 +160,10 @@ public class ImpMetricValue extends BaseImport{
             String date = (String) jsonObject.get("date");
             String since_date = (String) jsonObject.get("since_date");
 
-            insert(metric_name, value, category, date, since_date);
+            insert(metric_name, value, category, Timestamp.valueOf(date), Timestamp.valueOf(since_date));
         }
 
-        private void insert(String metric_name, String value, String category, String date, String since_date) throws Exception {
+        private void insert(String metric_name, String value, String category, Timestamp date, Timestamp since_date) throws Exception {
             // Using the metric name, check if the metric was not already stored
             int metric_id = mDB.check_metric(metric_name);
 
