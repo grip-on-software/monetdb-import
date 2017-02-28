@@ -76,10 +76,12 @@ CREATE TABLE "gros"."developer" (
 
 CREATE TABLE "gros"."fixversion" (
 	"id"              INTEGER     NOT NULL,
+	"project_id"      INTEGER     NOT NULL,
 	"name"            VARCHAR(100)   NOT NULL,
 	"description"     VARCHAR(500)   NULL,
+	"start_date"      DATE  NULL,
 	"release_date"    DATE  NULL,
-	"released"        BOOL  NULL,
+	"released"        BOOL  NOT NULL,
         CONSTRAINT "pk_fixversion_id" PRIMARY KEY ("id")
 );
 
