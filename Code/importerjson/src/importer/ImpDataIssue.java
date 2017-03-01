@@ -10,6 +10,7 @@ import util.BaseImport;
 import java.io.FileReader;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -156,7 +157,7 @@ public class ImpDataIssue extends BaseImport{
 
                     pstmt.setString(13, description);
 
-                    setTimestamp(pstmt, 14, duedate);
+                    setDate(pstmt, 14, duedate);
 
                     pstmt.setInt(15, projectId);
                     pstmt.setInt(16, Integer.parseInt(status));
@@ -237,10 +238,19 @@ public class ImpDataIssue extends BaseImport{
 
     private void setTimestamp(PreparedStatement pstmt, int index, String value) throws SQLException {
         if (value != null){
-            Timestamp date = Timestamp.valueOf(value); 
+            Timestamp date = Timestamp.valueOf(value);
             pstmt.setTimestamp(index, date);
         } else{
             pstmt.setNull(index, java.sql.Types.TIMESTAMP);
+        }
+    }
+
+    private void setDate(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null){
+            Date date = Date.valueOf(value);
+            pstmt.setDate(index, date);
+        } else{
+            pstmt.setNull(index, java.sql.Types.DATE);
         }
     }
 }

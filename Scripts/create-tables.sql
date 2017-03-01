@@ -12,7 +12,7 @@ CREATE TABLE "gros"."issue" (
 	"created"     TIMESTAMP  NULL,
 	"updated"     TIMESTAMP  NULL,
 	"description"    TEXT  NULL,
-	"duedate"        TIMESTAMP  NULL,
+	"duedate"        DATE  NULL,
 	"project_id"     INTEGER    NOT NULL,
 	"status"         INTEGER    NULL,
 	"delta_comments" TEXT  NULL,
