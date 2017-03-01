@@ -125,7 +125,7 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
     private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
-            checkStmt = con.prepareStatement("select start_date, end_date from gros.issuelink where from_key=? and to_key=? and relationship_type? and outward=?;");
+            checkStmt = con.prepareStatement("select start_date, end_date from gros.issuelink where from_key=? and to_key=? and relationship_type=? and outward=?;");
         }
     }
 
