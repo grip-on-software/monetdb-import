@@ -70,7 +70,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
                 if (name.equals(rs.getString("name")) &&
                         description.equals(rs.getString("description")) &&
                         compareDates(start_date, rs.getDate("start_date")) &&
-                        compareDates(release_date, rs.getDate("end_date")) &&
+                        compareDates(release_date, rs.getDate("release_date")) &&
                         released == rs.getBoolean("released")) {
                     result = CheckResult.EXISTS;
                 }
