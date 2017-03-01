@@ -5,14 +5,11 @@
  */
 package importer;
 
-import dao.BatchedStatement;
+import dao.IssueLinkDb;
+import dao.IssueLinkDb.CheckResult;
 import util.BaseImport;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -25,62 +22,61 @@ public class ImpDataIssueLink extends BaseImport{
     
     @Override
     public void parser() {
-
-        PreparedStatement existsStmt = null;
-        Connection con = null;
         JSONParser parser = new JSONParser();
-        Statement st = null;
-        ResultSet rs = null;
-        String sql = "insert into gros.issuelink values (?,?,?);";
  
         try (
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_issuelinks.json");
-            BatchedStatement bstmt = new BatchedStatement(sql);
+            IssueLinkDb linkDb = new IssueLinkDb()
         ) {
-            con = bstmt.getConnection();
-            String existsSql = "SELECT * FROM gros.issuelink WHERE id_from=? AND id_to=? AND relationship_type=?";
-            existsStmt = con.prepareStatement(existsSql);
-
-            PreparedStatement pstmt = bstmt.getPreparedStatement();
-            
             JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
-      
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String from_id = (String) jsonObject.get("from_id");
-                String to_id = (String) jsonObject.get("to_id");
+                String from_key = (String) jsonObject.get("from_key");
+                String to_key = (String) jsonObject.get("to_key");
                 String relationshiptype = (String) jsonObject.get("relationshiptype");
+                String outward = (String) jsonObject.get("outward");
+                String start_date = (String) jsonObject.get("start_date");
+                String end_date = (String) jsonObject.get("end_date");
                 
-                existsStmt.setInt(1, Integer.parseInt(from_id));
-                existsStmt.setInt(2, Integer.parseInt(to_id));
-                existsStmt.setInt(3, Integer.parseInt(relationshiptype));
+                int relationship_type = Integer.parseInt(relationshiptype);
+                boolean is_outward = outward.equals("1");
+                Timestamp start;
+                if (start_date.equals("0")) {
+                    start = null;
+                }
+                else {
+                    start = Timestamp.valueOf(start_date);
+                }
+                Timestamp end;
+                if (end_date.equals("0")) {
+                    end = null;
+                }
+                else {
+                    end = Timestamp.valueOf(end_date);
+                }
                 
-                rs = existsStmt.executeQuery();
-                
-                // check if the link does not already exist in the database
-                if(!rs.next()) {
-                    pstmt.setInt(1, Integer.parseInt(from_id));
-                    pstmt.setInt(2, Integer.parseInt(to_id));
-                    pstmt.setInt(3, Integer.parseInt(relationshiptype));
-
-                    bstmt.batch();
+                CheckResult result = linkDb.check_link(from_key, to_key, relationship_type, is_outward, start, end);
+                if (result.state == CheckResult.State.MISSING) {
+                    linkDb.insert_link(from_key, to_key, relationship_type, is_outward, start, end);
+                }
+                else if (result.state == CheckResult.State.DIFFERS) {
+                    // Ensure we take the earliest start date and latest end date.
+                    if (result.dates.start_date != null &&
+                            (start == null || start.after(result.dates.start_date))) {
+                        start = result.dates.start_date;
+                    }
+                    if (result.dates.end_date != null && end != null && end.before(result.dates.end_date)) {
+                        end= result.dates.end_date;
+                    }
+                    linkDb.update_link(from_key, to_key, relationship_type, is_outward, start, end);
                 }
             }
-            bstmt.execute();
         }            
         catch (Exception ex) {
             logException(ex);
-        } finally {
-            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException ex) {logException(ex);}
-            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
-            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
         }
-        
     }
-        
-
 }
     

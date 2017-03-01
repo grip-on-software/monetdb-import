@@ -98,10 +98,13 @@ CREATE TABLE "gros"."relationshiptype" (
 );
 
 CREATE TABLE "gros"."issuelink" (
-	"id_from"              INTEGER   NOT NULL,
-	"id_to"                INTEGER   NOT NULL,
-	"relationship_type"    INTEGER   NOT NULL,
-        CONSTRAINT "pk_issuelink_id" PRIMARY KEY ("id_from","id_to","relationship_type")
+	"from_key"        VARCHAR(10) NOT NULL,
+	"to_key"          VARCHAR(10) NOT NULL,
+	"relationship_type"     INTEGER NOT NULL,
+	"outward"         BOOL    NOT NULL,
+	"start_date"      TIMESTAMP   NULL,
+	"end_date"        TIMESTAMP   NULL,
+        CONSTRAINT "pk_issuelink_id" PRIMARY KEY ("from_key","to_key","relationship_type","outward")
 );
 
 CREATE TABLE "gros"."subtask" (
