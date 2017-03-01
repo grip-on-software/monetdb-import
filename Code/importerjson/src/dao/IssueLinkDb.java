@@ -115,7 +115,7 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
     BatchedStatement updateStmt = null;
 
     public IssueLinkDb() {
-        String sql = "insert into gros.isselink (from_key,to_key,relationship_type,outward,start_date,end_date) values (?,?,?,?,?,?);";
+        String sql = "insert into gros.issuelink (from_key,to_key,relationship_type,outward,start_date,end_date) values (?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
 
         sql = "update gros.issuelink set start_date=?, end_date=? where from_key=? and to_key=? and relationship_type=? and outward=?;";
