@@ -42,7 +42,7 @@ public class BaseDb {
      */
     protected final void logException(Exception ex) {
         // Get the source method
-        StackTraceElement source = Thread.currentThread().getStackTrace()[1];
+        StackTraceElement source = Thread.currentThread().getStackTrace()[2];
         Logger.getLogger("importer").logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Exception", ex);
 
         if (ex instanceof SQLException) {
