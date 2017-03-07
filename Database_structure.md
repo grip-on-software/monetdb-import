@@ -14,7 +14,7 @@ The structure will be shown as follows:
     -   **Attribute**
     -   **Attribute**
 
-## Jira
+## Issue tables (Jira)
 
 -   **issue**: Entries from the JIRA database. Each row is one changelog
     item. Primary key is (issue_id, changelog_id)
@@ -236,9 +236,11 @@ The structure will be shown as follows:
     -   **id_from** - reference to issue.issue_id
     -   **id_to** - reference to issue.issue_id
     -   **relationship_type** - reference to relationshiptype.id
--   **Note: the issuelink table has been updated to provide more data,
-    the new format is as follows:** Primary key consists of (from_key,
-    to_key, outward, relationship_type).
+
+    :   **Note: the issuelink table has been updated to provide more
+        data, the new format is as follows:** Primary key consists of
+        (from_key, to_key, outward, relationship_type).
+
     -   **from_key** - VARCHAR - reference to issue.key: Issue involved
         in the link.
     -   **to_key** - VARCHAR - reference to issue.key: Another issue
@@ -261,8 +263,10 @@ The structure will be shown as follows:
         link relationship type
     -   **name** - VARCHAR: Textual name of the relationship, as a noun
         or verb
--   **The following fields do not yet exist, but may be added at a later
-    stage:**
+
+    :   **The following fields do not yet exist, but may be added at a
+        later stage:**
+
     -   **outward** - VARCHAR: Phrase used to describe the outward
         relation, such as 'blocks' or 'duplicates'
     -   **inward** - VARCHAR: Phrase used to describe the inward
@@ -274,7 +278,7 @@ The structure will be shown as follows:
     -   **id_parent** - reference to issue.issue_id: The parent issue.
     -   **id_subtask** - reference to issue.issue_id: The subtask issue
 
-## Version control system
+## Version control system tables
 
 These tables include data from Gitlab/Git and Subversion.
 
@@ -301,7 +305,7 @@ These tables include data from Gitlab/Git and Subversion.
         display_name or data_gitdev_to_dev.json)
     -   **display_name**
 
-## History Files (Jenkins)
+## Metrics Files (Quality dashboard history)
 
 -   **metric**: Metric types
     -   **metric_id**
