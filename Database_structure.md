@@ -229,28 +229,50 @@ The structure will be shown as follows:
 
 ### Relationship tables
 
--   **issuelink**: (Bi)directional links that exist between pairs of
+-   **issuelink**: Bidirectional links that exist between pairs of
     issues in JIRA. Only the links that exist when the data is collected
     are stored here (no changelogs). Primary key consists of all
     columns.
     -   **id_from** - reference to issue.issue_id
     -   **id_to** - reference to issue.issue_id
     -   **relationship_type** - reference to relationshiptype.id
+-   **Note: the issuelink table has been updated to provide more data,
+    the new format is as follows:** Primary key consists of (from_key,
+    to_key, outward, relationship_type).
+    -   **from_key** - VARCHAR - reference to issue.key: Issue involved
+        in the link.
+    -   **to_key** - VARCHAR - reference to issue.key: Another issue
+        involved in the link.
+    -   **outward** - BOOL: Whether the given entry is outward from
+        *from_key* (true) or inward to it (false).
+    -   **relationship_type** - reference to relationshiptype.id: The
+        type of the link relationship as an internal Jira identifier.
+    -   **start_date** - TIMESTAMP - reference to issue.updated: Point
+        in time when the link was first added to the *from_key* issue,
+        or NULL if not known.
+    -   **end_date** - TIMESTAMP - reference to issue.updated: Point in
+        time when the link was last removed from the *from_key* issue,
+        or NULL if the link still exists.
 
-**Note: the issuelink table has been updated to provide more data, but
-this is not yet reflected here.**'
 
 -   **relationshiptype**: The types of relationships that can exist
     between issues, such as Blocks, Details or Duplicate
-    -   **id**
-    -   **name**
-    -   **description**
+    -   **id** - INT - primary key: The Jira identifier of this issue
+        link relationship type
+    -   **name** - VARCHAR: Textual name of the relationship, as a noun
+        or verb
+-   **The following fields do not yet exist, but may be added at a later
+    stage:**
+    -   **outward** - VARCHAR: Phrase used to describe the outward
+        relation, such as 'blocks' or 'duplicates'
+    -   **inward** - VARCHAR: Phrase used to describe the inward
+        relation, such as 'is blocked by' or 'is duplicated by'
 
 
--   subtasks: **Not implemented in the database and data gathering thus
-    far**
-    -   **id_parent**
-    -   **id_subtask**
+-   **subtasks**: Links that exists between issues and their subtasks,
+    different from the issue links.
+    -   **id_parent** - reference to issue.issue_id: The parent issue.
+    -   **id_subtask** - reference to issue.issue_id: The subtask issue
 
 ## Version control system
 
