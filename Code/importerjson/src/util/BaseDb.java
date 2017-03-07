@@ -49,7 +49,7 @@ public class BaseDb {
             SQLException prev = (SQLException)ex;
             SQLException next = prev.getNextException();
             while (next != null && !next.getMessage().equals(prev.getMessage())) {
-                Logger.getLogger("importer").logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Earlier exception", ex);
+                Logger.getLogger("importer").logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Earlier exception", next);
                 prev = next;
                 next = prev.getNextException();
             }
