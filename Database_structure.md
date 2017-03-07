@@ -4,10 +4,10 @@ The database structure will be split per data source.
 
 The structure will be shown as follows:
 
--   Table - Description
-    -   **Attribute** - Type or other (pseudo)reference
-    -   **Attribute**
-    -   **Attribute**
+-   **Table**: Description
+    -   **Attribute** - TYPE - (pseudo)reference: Description
+    -   **Attribute** - TYPE: Description
+    -   **Attribute** - TYPE
 
 
 -   Table
@@ -146,25 +146,44 @@ The structure will be shown as follows:
 
 -   **sprint**: Data regarding a sprint registered in JIRA, including
     the start and end dates.
-    -   **sprint_id** - primary key
-    -   **project_id** - reference to project.project_id
-    -   **name**
-    -   **start_date**
-    -   **end_date**
+    -   **sprint_id** - INT - primary key: Jira identifier for the given
+        sprint
+    -   **project_id** - INT - reference to project.project_id: Project
+        in which the given sprint occurs
+    -   **name** - VARCHAR: Human-readable name of the sprint, may
+        include a sequence number (not unique) and/or the sprint topic
+        if it is a specialized sprint
+    -   **start_date** - TIMESTAMP: Moment in time at which the sprint
+        starts or is set to start. May differ from the actual start time
+        (but usually not by more than a day).
+    -   **end_date** - TIMESTAMP: Moment in time at which the sprint
+        ends or is set to end. May be a projected date from the start
+        and thus has a time which is not always correct, but is usually
+        close to the real date.
 
 
 -   **project**: The projects that were collected. The name is the JIRA
     key, the project ID is unrelated to internal JIRA IDs.
-    -   **project_id** - primary key
-    -   **name**
+    -   **project_id** - INT - primary key: Sequence number of the
+        project when it is inserted into the database.
+    -   **name** - VARCHAR: Jira key abbreviation.
 
 
--   **comment**: Individual comment that was added to a JIRA issue
-    -   **comment_id** - primary key
-    -   **issue_id** - reference to issue.issue_id
-    -   **message**
-    -   **author** - VARCHAR - reference to developer.name
-    -   **date**
+-   **comment**: Individual comment that was added to a JIRA issue.
+    -   **comment_id** - INT - primary key: Internal Jira identifier of
+        the comment.
+    -   **issue_id** - INT - reference to issue.issue_id: Issue to which
+        the comment is posted.
+    -   **message** - TEXT: The current message contents, including
+        edits.
+    -   **author** - VARCHAR - reference to developer.name: Developer
+        that wrote the message initially.
+    -   **date** - TIMESTAMP: Date at which the message was originally
+        written.
+    -   **updater** - VARCHAR - reference to developer.name: Developer
+        that edited the message most recently.
+    -   **updated_date** - TIMESTAMP: Most recent time at which the
+        message was edited.
 
 ### Metadata tables
 
