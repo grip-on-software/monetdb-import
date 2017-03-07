@@ -21,7 +21,7 @@ CREATE TABLE "gros"."issue" (
 	"attachments"    INTEGER    NULL,
 	"additional_information" TEXT  NULL,
 	"review_comments" TEXT  NULL,
-	"story_points"   DECIMAL(4,1)    NULL,
+	"story_points"   DECIMAL(4,2)    NULL,
 	"resolution_date"        TIMESTAMP,
 	"sprint_id"      INTEGER    NOT NULL,
 	"updated_by"     VARCHAR(100)    NOT NULL,
