@@ -294,48 +294,71 @@ The structure will be shown as follows:
 
 -   **subtasks**: Links that exists between issues and their subtasks,
     different from the issue links.
-    -   **id_parent** - reference to issue.issue_id: The parent issue.
-    -   **id_subtask** - reference to issue.issue_id: The subtask issue
+    -   **id_parent** - INT - reference to issue.issue_id: The parent
+        issue.
+    -   **id_subtask** - INT - reference to issue.issue_id: The subtask
+        issue
 
 ## Version control system tables
 
 These tables include data from Gitlab/Git and Subversion.
 
--   **commits**: Data from individual commits in Git or repositories
-    -   **version_id** - SHA hash, primary key
-    -   **project_id** - reference to project.project_id
-    -   **commit_date**
-    -   **sprint_id** - reference to sprint.sprint_id (based on date
-        intervals)
-    -   **developer_id** - reference to git_developer.alias_id
-    -   **message**
-    -   **size_of_commit**
-    -   **message**
-    -   **insertions**
-    -   **deletions**
-    -   **number_of_files**
-    -   **number_of_lines**
-    -   **type**
+-   **commits**: Data from individual commits in Git or repositories.
+    -   **version_id** - VARCHAR: unique SHA hash or revision number
+        belonging to this code version.
+    -   **project_id** - INT - reference to project.project_id: The
+        project this code version belongs to.
+    -   **commit_date** - TIMESTAMP: point in time at which the commit
+        was made (in case of Git: the commit date, not the push date).
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which this commit was made, based on date intervals.
+    -   **developer_id** - INT - reference to git_developer.alias_id:
+        The developer that made the commit.
+    -   **message** - TEXT: The full commit message that is shown in
+        version control logs.
+    -   **size_of_commit** - INT: The byte size of the commit. The
+        semantic meaning differs between version control system, namely
+        whether it includes the diff or other data.
+    -   **insertions** - INT: Number of lines "added" or changed but not
+        deleted in this commit.
+    -   **deletions** - INT: Number of lines deleted in this commit.
+    -   **number_of_files** - INT: Number of files touched by this
+        commit.
+    -   **number_of_lines** - INT: Number of lines touched by this
+        commit, be it added, deleted or changed.
+    -   **type** - VARCHAR: The type of code change made (commit,
+        revert, merge). Deduced from auxiliary data and possibly the
+        commit message.
+    -   **repo_id** - INT - reference to repo.id: The repository in
+        which the code change is made.
 
 
 -   **git_developer**: User names from VCS commits
-    -   **alias_id** - primary key
-    -   **jira_dev_id** - reference to developer.id (based on
-        display_name or data_gitdev_to_dev.json)
-    -   **display_name**
+    -   **alias_id** - INT - primary key: Sequential number assigned to
+        the developer.
+    -   **jira_dev_id** - INT - reference to developer.id. The matching
+        is based on the VCS developer's display name and the JIRA
+        developer display name or short name. The matching is also
+        manually tweaked using data_gitdev_to_dev.json.
+    -   **display_name** - VARCHAR: The name of the developer used in
+        the version control system.
 
 ## Metrics Files (Quality dashboard history)
 
 -   **metric**: Metric types
-    -   **metric_id**
-    -   **metric_name**
+    -   **metric_id** - INT - primary key: Sequential number assigned to
+        the metric.
+    -   **metric_name** - VARCHAR: Amalgamated name of the metric, based
+        on the type of metric and the component, product, team or other
+        domain object it measures.
 
 
 -   **metric_value**: Singular metric data from quality report
     -   **metric_id** - INT - reference to metric.metric_id: The metric
         that is measured
     -   **value** - INT: The raw value. This is -1 if there is a problem
-        with measuring the metric.
+        with measuring the metric (category is grey, missing, or
+        missing_source).
     -   **category** - VARCHAR: 'red' (below low target), 'yellow'
         (below target), green (at or above target), perfect (cannot be
         improved), grey (disabled), missing (internal problem),
@@ -365,7 +388,9 @@ These tables include data from Gitlab/Git and Subversion.
         whose norms are changed
     -   **type** - VARCHAR: Type of change: options, old_options,
         TechnicalDebtTarget
-    -   **target** - INT
-    -   **low_target** - INT
+    -   **target** - INT: Norm value at which the category changes from
+        green to yellow.
+    -   **low_target** - INT: Norm value at which the category changes
+        from yellow to red.
     -   **comment** - TEXT: Comment for technical debt targets
         describing the reason of the norm change
