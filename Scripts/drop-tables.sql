@@ -41,3 +41,11 @@ DROP TABLE "gros"."comment";
 DROP TABLE "gros"."vcs_developer";
 
 DROP TABLE "gros"."repo";
+
+DROP TABLE "gros"."gitlab_repo";
+
+DROP TABLE "gros"."merge_request";
+
+DROP TABLE "gros"."merge_request_note";
+
+DROP TABLE "gros"."commit_comment";

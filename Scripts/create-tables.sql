@@ -212,3 +212,50 @@ CREATE TABLE "gros"."repo" (
 	"repo_name" VARCHAR(1000) NOT NULL,
         CONSTRAINT "pk_repo_id" PRIMARY KEY ("id")
 );
+
+CREATE TABLE "gros"."gitlab_repo" (
+	"repo_id" INTEGER NOT NULL,
+	"gitlab_id" INTEGER NOT NULL,
+	"description" TEXT NULL,
+	"create_date" TIMESTAMP NOT NULL,
+	"archived" BOOL NOT NULL,
+	"has_avatar" BOOL NOT NULL,
+	"star_count" INTEGER NOT NULL,
+		CONSTRAINT "pk_gitlab_repo_id" PRIMARY KEY ("repo_id", "gitlab_id")
+);
+
+CREATE TABLE "gros"."merge_request" (
+	"repo_id" INTEGER NOT NULL,
+	"request_id" INTEGER NOT NULL,
+	"title" TEXT NULL,
+	"description" TEXT NULL,
+	"source_branch" VARCHAR(255) NOT NULL,
+	"target_branch" VARCHAR(255) NOT NULL,
+	"author" VARCHAR(500) NOT NULL,
+	"assignee" VARCHAR(500) NULL,
+	"upvotes" INTEGER NULL,
+	"downvotes" INTEGER NULL,
+	"created_date" TIMESTAMP NULL,
+	"updated_date" TIMESTAMP NULL,
+		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
+);
+
+CREATE TABLE "gros"."merge_request_note" (
+	"repo_id" INTEGER NOT NULL,
+	"request_id" INTEGER NOT NULL,
+	"note_id" INTEGER NOT NULL,
+	"author" VARCHAR(500) NOT NULL,
+	"comment" TEXT NULL,
+	"created_date" TIMESTAMP NULL,
+		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id". "note_id")
+);
+
+CREATE TABLE "gros"."commit_comment" (
+	"repo_id" INTEGER NOT NULL,
+	"version_id" VARCHAR(100) NOT NULL,
+	"author" VARCHAR(500) NOT NULL,
+	"comment" TEXT NULL,
+	"file" VARCHAR(1000) NULL,
+	"line" INTEGER NULL,
+	"line_type" VARCHAR(100) NULL
+);
