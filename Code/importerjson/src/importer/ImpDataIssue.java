@@ -44,7 +44,7 @@ public class ImpDataIssue extends BaseImport{
             
             Connection con = bstmt.getConnection();
             
-            sql = "SELECT * FROM gros.issue WHERE issue_id = ? AND changelog_id = ?";
+            sql = "SELECT issue_id,changelog_id FROM gros.issue WHERE issue_id=? AND changelog_id=?";
             existsStmt = con.prepareStatement(sql);
                 
             JSONArray a = (JSONArray) parser.parse(fr);
