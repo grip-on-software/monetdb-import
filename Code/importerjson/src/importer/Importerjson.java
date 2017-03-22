@@ -82,7 +82,7 @@ public class Importerjson {
         catch (IllegalArgumentException ex) {
             throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + usage);
         }
-        if (args.length <= 0) {
+        if (args.length <= 0 || "--help".equals(args[0])) {
             throw new RuntimeException(usage);
         }
         projectName = args[0].trim();
