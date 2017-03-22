@@ -1,7 +1,7 @@
 CREATE TABLE "gros"."issue" (
 	"issue_id"       INTEGER     NOT NULL,
 	"changelog_id"   INTEGER     NOT NULL,
-	"key"            VARCHAR(10)   NOT NULL,
+	"key"            VARCHAR(20)   NOT NULL,
 	"title"          TEXT   NOT NULL,
 	"type"           INTEGER    NULL,
 	"priority"       INTEGER    NULL,
@@ -26,7 +26,7 @@ CREATE TABLE "gros"."issue" (
 	"sprint_id"      INTEGER    NOT NULL,
 	"updated_by"     VARCHAR(100)    NOT NULL,
 	"rank_change"    BOOL    NULL,
-	"epic"           VARCHAR(10)    NULL,
+	"epic"           VARCHAR(20)    NULL,
 	"impediment"     BOOL     NOT NULL,
 	"ready_status"   INTEGER    NULL,
 	"ready_status_reason" TEXT  NULL,
@@ -98,8 +98,8 @@ CREATE TABLE "gros"."relationshiptype" (
 );
 
 CREATE TABLE "gros"."issuelink" (
-	"from_key"        VARCHAR(10) NOT NULL,
-	"to_key"          VARCHAR(10) NOT NULL,
+	"from_key"        VARCHAR(20) NOT NULL,
+	"to_key"          VARCHAR(20) NOT NULL,
 	"relationship_type"     INTEGER NOT NULL,
 	"outward"         BOOL    NOT NULL,
 	"start_date"      TIMESTAMP   NULL,
