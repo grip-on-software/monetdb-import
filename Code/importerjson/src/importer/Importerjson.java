@@ -25,7 +25,7 @@ public class Importerjson {
         "issue", "issuetype", "status", "resolution", "relationshiptype",
         "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
         "metric_value", "metric_version", "metric_target",
-        "sprint", "comment", "developer", "commit", "gitlab_repo",
+        "sprint", "comment", "developer", "commit", "gitlab_repo", "reservation",
         // Additional tasks
         "developerlink" //, "encrypt"
     });
@@ -192,6 +192,11 @@ public class Importerjson {
         if (tasks.contains("gitlab_repo")) {
             ImpGitLabRepo impGitLabRepo = new ImpGitLabRepo();
             performTask(impGitLabRepo, "GitLab repositories");
+        }
+        
+        if (tasks.contains("reservation")) {
+            ImpReservation impReservation = new ImpReservation();
+            performTask(impReservation, "reservations");
         }
         
         if (tasks.contains("developerlink")) {

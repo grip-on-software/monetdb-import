@@ -25,7 +25,6 @@ public class ImpGitLabRepo extends BaseImport{
     @Override
     public void parser() {
         JSONParser parser = new JSONParser();
-        String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
         try (
             RepositoryDb repoDb = new RepositoryDb();

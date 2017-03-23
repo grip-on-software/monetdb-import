@@ -259,3 +259,16 @@ CREATE TABLE "gros"."commit_comment" (
 	"line" INTEGER NULL,
 	"line_type" VARCHAR(100) NULL
 );
+
+CREATE TABLE "gros"."reservation" (
+	"reservation_id" VARCHAR(10) NOT NULL,
+	"project_id" INTEGER NOT NULL,
+	"requester" VARCHAR(500) NOT NULL,
+	"number_of_people" INTEGER NULL,
+	"description" TEXT NULL,
+	"start_date" TIMESTAMP NOT NULL,
+	"end_date" TIMESTAMP NOT NULL,
+	"prepare_date" TIMESTAMP NULL,
+	"close_date" TIMESTAMP NULL,
+		CONSTRAINT "pk_reservation_id" PRIMARY KEY("reservation_id")
+);
