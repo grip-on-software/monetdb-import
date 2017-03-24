@@ -14,27 +14,41 @@ The structure will be shown as follows:
     -   **Attribute**
     -   **Attribute**
 
-## Issue tables (Jira)
+## Special field types
+
+The following types are aliases for an actual MonetDB type
+specification. They describe the constraints set on the values stored in
+such fields more thoroughly and uniformly.
+
+-   **VARCHAR(Issue key)**: A field containing a JIRA issue key. The
+    maximum length limitation of this field is currently 20 characters,
+    which should hold most project keys and issue sequence numbers.
+-   **VARCHAR(JIRA developer)**: A field containing a developer short
+    name from JIRA. These are usually not more than 6 characters, but
+    the limit is currently 15 characters in some fields, and 100 or 200
+    in others.
+
+## Issue tables (JIRA)
 
 -   **issue**: Entries from the JIRA database. Each row is one changelog
     item. Primary key is (issue_id, changelog_id)
-    -   **issue_id** - INT: Internal Jira identifier. **There may be
+    -   **issue_id** - INT: Internal JIRA identifier. **There may be
         multiple rows with the same issue_id.**
     -   **changelog_id** - INT: Version number deduced from the
         changelog. The earliest version is has a changelog id of zero.
-    -   **key** - VARCHAR (10): The Jira key. **There may be multiple
-        rows with the same key.**
+    -   **key** - VARCHAR (Issue key): The JIRA issue key. **There may
+        be multiple rows with the same key.**
     -   **title** - VARCHAR(250): The human-readable title of the issue.
         Can be updated in changes.
     -   **type** - INT - reference to issuetype.id: The issue type
-        (Story, Bug, Use Case) as an internal Jira identifier.
+        (Story, Bug, Use Case) as an internal JIRa identifier.
     -   **priority** - INT - reference to priority.id: The issue
         priority (Low, Medium High) as an internal scale.
     -   **resolution** - INT - reference to resolution.id: The issue
         resolution (Fixed, Duplicate, Works as designed) as an internal
-        Jira identifier
+        JIRA identifier
     -   **fixVersion** - INT - reference to fixversion.id: The earliest
-        version in which the issue is fixed as an internal Jira
+        version in which the issue is fixed as an internal JIRA
         identifier, or NULL if not provided.
     -   **bugfix** - BOOL: Whether this is a bugfix issue (possibly
         deduced from the issue type)
@@ -52,31 +66,30 @@ The structure will be shown as follows:
     -   **duedate** - DATE: The due date of this issue, or NULL if not
         provided. Some projects use due dates for milestone and issue
         prioritization, in addition to sprint constraints.
-    -   **project_id** - INT - reference to project.project_id: The Jira
+    -   **project_id** - INT - reference to project.project_id: The JIRA
         project in which this issue is contained.
     -   **status** - INT - reference to status.id: The issue status
-        (Open, In Progress, Resolved, Closed) as an internal Jira
+        (Open, In Progress, Resolved, Closed) as an internal JIRA
         identifier.
     -   **delta_comments** - TEXT: **Currently unused.**
-    -   **reporter** - VARCHAR - reference to developer.name: The
-        reporter of the issue according to the issue data. Usually, this
-        is the same developer as *updated_by* on the first version, but
-        this may be different due to cloned issues or intermediate
-        changes.
-    -   **assignee** - VARCHAR - reference to developer.name: The
-        developer that should resolve the issue, or NULL if none is
-        assigned thus far.
+    -   **reporter** - VARCHAR(JIRA developer) - reference to
+        developer.name: The reporter of the issue according to the issue
+        data. Usually, this is the same developer as *updated_by* on the
+        first version, but this may be different due to cloned issues or
+        intermediate changes.
+    -   **assignee** - VARCHAR(JIRA developer) - reference to
+        developer.name: The developer that should resolve the issue, or
+        NULL if none is assigned thus far.
     -   **attachments** - INT: The number of attachments in the issue.
         Updated according to changed in the changelog.
     -   **additional_information** - TEXT: Human-readable text that is
         shown within a tab beside the description, or NULL if it is not
         filled in. Often used for extra implementation/functional
         details for user stories.
-    -   **review_comments** - VARCHAR: Human-readable text that is shown
-        in a Review tab beside the description, or '0' if it is not
-        filled in. Updated by reviewing developers to check whether the
-        story is complete enough to start with it or that an issue is
-        fixed.
+    -   **review_comments** - TEXT: Human-readable text that is shown in
+        a Review tab beside the description, or '0' if it is not filled
+        in. Updated by reviewing developers to check whether the story
+        is complete enough to start with it or that an issue is fixed.
     -   **story_points** - DECIMAL: The number of points assigned to a
         story after the developers meet in a refinement and determine
         the difficulty of the story. If not yet set, then this is NULL.
@@ -93,18 +106,19 @@ The structure will be shown as follows:
         attached to it (due to mismatch with parent tasks or manual
         changes). If the issue is not yet (explicitly) added into a
         sprint, then this is the integer 0.
-    -   **updated_by** - VARCHAR - reference to developer.name: The
-        developer that made a change in this version of the issue.
+    -   **updated_by** - VARCHAR(JIRA developer) - reference to
+        developer.name: The developer that made a change in this version
+        of the issue.
     -   **rank_change** - BOOL: The rank change performed in this
         change. Possible values are *true*, meaning an increase in rank,
         *false*, meaning a decrease in rank, or NULL, which means that
         the rank was not changed. The actual rank cannot be deduced from
         the changes due to dependencies on the ranks of other issues.
-    -   **epic** - VARCHAR: The issue key of the Epic link.
+    -   **epic** - VARCHAR(Issue key): The issue key of the Epic link.
     -   **impediment** - BOOL: Whether the issue is currently marked as
         being blocked by an Impediment.
     -   **ready_status** - INTEGER - reference to ready_status.id: The
-        refinement ready status as an internal Jira identifier.
+        refinement ready status as an internal JIRA identifier.
     -   **ready_status_reason** - TEXT: Additional text provided in the
         Review tab of the issue to describe why it currently has the
         given ready status.
@@ -136,7 +150,7 @@ The structure will be shown as follows:
         part of a test model for a particular use case.
     -   **test_execution** - INT - reference to test_execution.id: The
         test execution model (Manual, Automated, Will not be tested) as
-        an internal Jira identifier.
+        an internal JIRA identifier.
     -   **test_execution_time** - INT: Units of time that the test
         execution appears to take. This is often set after the use case
         is resolved and tested. If this is not set, then it is the
@@ -146,11 +160,11 @@ The structure will be shown as follows:
 
 -   **sprint**: Data regarding a sprint registered in JIRA, including
     the start and end dates.
-    -   **sprint_id** - INT - primary key: Jira identifier for the given
+    -   **sprint_id** - INT - primary key: identifier for the given
         sprint
     -   **project_id** - INT - reference to project.project_id: Project
         in which the given sprint occurs
-    -   **name** - VARCHAR: Human-readable name of the sprint, may
+    -   **name** - VARCHAR(500): Human-readable name of the sprint, may
         include a sequence number (not unique) and/or the sprint topic
         if it is a specialized sprint
     -   **start_date** - TIMESTAMP: Moment in time at which the sprint
@@ -166,22 +180,22 @@ The structure will be shown as follows:
     key, the project ID is unrelated to internal JIRA IDs.
     -   **project_id** - INT - primary key: Sequence number of the
         project when it is inserted into the database.
-    -   **name** - VARCHAR: Jira key abbreviation.
+    -   **name** - VARCHAR(100): JIRA key prefix abbreviation.
 
 
 -   **comment**: Individual comment that was added to a JIRA issue.
-    -   **comment_id** - INT - primary key: Internal Jira identifier of
+    -   **comment_id** - INT - primary key: Internal JIRA identifier of
         the comment.
     -   **issue_id** - INT - reference to issue.issue_id: Issue to which
         the comment is posted.
     -   **message** - TEXT: The current message contents, including
         edits.
-    -   **author** - VARCHAR - reference to developer.name: Developer
-        that wrote the message initially.
+    -   **author** - VARCHAR(JIRA developer) - reference to
+        developer.name: Developer that wrote the message initially.
     -   **date** - TIMESTAMP: Date at which the message was originally
         written.
-    -   **updater** - VARCHAR - reference to developer.name: Developer
-        that edited the message most recently.
+    -   **updater** - VARCHAR(JIRA developer) - reference to
+        developer.name: Developer that edited the message most recently.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
         message was edited.
 
@@ -189,61 +203,71 @@ The structure will be shown as follows:
 
 -   **issuetype**: The types of issues and their descriptive names,
     e.g., Bug, Task, Story or Epic.
-    -   **id** - primary key
-    -   **name**
-    -   **description**
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **name** - VARCHAR(100)
+    -   **description** - VARCHAR(500)
 
 
 -   **status**: The statuses that issues can have, such as Closed,
     Resolved, Opened or In Progress. Actual use may differ between
     project based on Sprint board setup.
-    -   **id** - primary key
-    -   **name**
-    -   **description**
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **name** - VARCHAR(100)
+    -   **description** - VARCHAR(500)
 
 
 -   **resolution**: Once an issue receives a status of Resolved or
     Closed, an indicator of why it was closed (such as Fixed, Duplicate
     or Works as designed).
-    -   **id** - primary key
-    -   **name**
-    -   **description**
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **name** - VARCHAR(100)
+    -   **description** - VARCHAR(500)
 
 
 -   **developer**: Names of JIRA users that performed some action in an
     issue, including short account name and long display name.
-    -   **id** - primary key
-    -   **name**
-    -   **display_name**
+    -   **id** - INT - primary key: Auto-incrementing idenfitier
+    -   **name** - VARCHAR(100): JIRA developer abbreviation
+    -   **display_name**: VARCHAR(100): Name as displayed in the JIRA
+        interface
 
 
 -   **fixversion**: Indicators in JIRA issues of the version to fix the
     issue before that version is released.
-    -   **id** - primary key
-    -   **name**
-    -   **description**
-    -   **release_date**
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **project_id** - INT - reference to project.id: The project this
+        version belongs to.
+    -   **name** - VARCHAR(100): The name (version numbering scheme) of
+        the release version.
+    -   **description** - VARCHAR(500): Description provided to the
+        release version.
+    -   **start_date** - DATE: Day on which work started on this fix
+        version according to JIRA aggregate information.
+    -   **release_date** - DATE: Day on which the version is released or
+        is supposed to be released.
+    -   **released** - BOOL: Whether the fix version has been released
+        already.
 
 
 -   **priority**: An indicator of the priority of the issue, on a scale
     of 1-5, with names like Low, Medium, High. This is not necessarily
     related to user story points or backlog prioritization.
-    -   **id** - primary key
-    -   **name**
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **name** - VARCHAR(100)
 
 
 -   **ready_status**: An indicator of the pre-refinement ready state:
     Whether the user story can be pulled into the next stage such as
     Workshops, Design meetings, and Refinements. It may also be Blocked
     for or by any of these stages.
-    -   **id** - INT - primary key
-    -   **name** - VARCHAR: Human-readable short description of the
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **name** - VARCHAR(100): Human-readable short description of the
         ready status: 'Ready for refinement', 'Blocked for design'
 
 
 -   **test_execution**: The state of how a use case is tested.
-    -   **id** - INT - primary key
-    -   **value** - VARCHAR: 'Manual', 'Automated' or 'Will not be
+    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **value** - VARCHAR(100): 'Manual', 'Automated' or 'Will not be
         executed'
 
 ### Relationship tables
