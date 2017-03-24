@@ -247,7 +247,7 @@ CREATE TABLE "gros"."merge_request_note" (
 	"author" VARCHAR(500) NOT NULL,
 	"comment" TEXT NULL,
 	"created_date" TIMESTAMP NULL,
-		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id". "note_id")
+		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "note_id")
 );
 
 CREATE TABLE "gros"."commit_comment" (

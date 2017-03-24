@@ -25,7 +25,8 @@ public class Importerjson {
         "issue", "issuetype", "status", "resolution", "relationshiptype",
         "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
         "metric_value", "metric_version", "metric_target",
-        "sprint", "comment", "developer", "commit", "gitlab_repo", "reservation",
+        "sprint", "comment", "developer", "commit", "reservation",
+        "gitlab_repo", "merge_request", "merge_request_note", "commit_comment",
         // Additional tasks
         "developerlink" //, "encrypt"
     });
@@ -192,6 +193,21 @@ public class Importerjson {
         if (tasks.contains("gitlab_repo")) {
             ImpGitLabRepo impGitLabRepo = new ImpGitLabRepo();
             performTask(impGitLabRepo, "GitLab repositories");
+        }
+        
+        if (tasks.contains("merge_request")) {
+            ImpMergeRequest impMergeRequest = new ImpMergeRequest();
+            performTask(impMergeRequest, "GitLab merge requests");
+        }
+        
+        if (tasks.contains("merge_request_note")) {
+            ImpMergeRequestNote impMergeRequestNote = new ImpMergeRequestNote();
+            performTask(impMergeRequestNote, "GitLab merge request notes");
+        }
+        
+        if (tasks.contains("commit_comment")) {
+            ImpCommitComment impCommitComment = new ImpCommitComment();
+            performTask(impCommitComment, "GitLab commit comments");
         }
         
         if (tasks.contains("reservation")) {
