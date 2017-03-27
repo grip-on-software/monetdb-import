@@ -37,7 +37,7 @@ public class ImpMergeRequestNote extends BaseImport {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String repo_name = (String) jsonObject.get("repo_name");
-                String merge_request_id = (String) jsonObject.get("request_id");
+                String merge_request_id = (String) jsonObject.get("merge_request_id");
                 String note = (String) jsonObject.get("note_id");
                 String author = (String) jsonObject.get("author");
                 String comment = (String) jsonObject.get("comment");

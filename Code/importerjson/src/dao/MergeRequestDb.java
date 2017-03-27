@@ -51,7 +51,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         try (ResultSet rs = checkStmt.executeQuery()) {
             result = CheckResult.MISSING;
             while (rs.next()) {
-                if (title.equals(rs.getString("tite")) &&
+                if (title.equals(rs.getString("title")) &&
                         description.equals(rs.getString("description")) &&
                         source_branch.equals(rs.getString("source_branch")) &&
                         target_branch.equals(rs.getString("target_branch")) &&
