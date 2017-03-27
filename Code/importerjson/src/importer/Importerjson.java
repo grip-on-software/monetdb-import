@@ -162,16 +162,16 @@ public class Importerjson {
                             Class<?>[] typeSpec = new Class<?>[arguments.length];
                             Arrays.fill(typeSpec, String.class);
                             Constructor<? extends BaseImport> constructor = importClass.getDeclaredConstructor(typeSpec);
-                            importer = constructor.newInstance((Object) arguments);
+                            importer = constructor.newInstance((Object[]) arguments);
                         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
-                            Logger.getLogger("importer").log(Level.SEVERE, null, ex);
+                            Logger.getLogger("importer").log(Level.SEVERE, "While instatiating importer for task " + task, ex);
                         }
                     }
                     else {
                         try {
                             importer = importClass.newInstance();
                         } catch (InstantiationException | IllegalAccessException ex) {
-                            Logger.getLogger("importer").log(Level.SEVERE, null, ex);
+                            Logger.getLogger("importer").log(Level.SEVERE, "While instatiating importer for task " + task, ex);
                         }
                     }
                     if (importer != null) {
