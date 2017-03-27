@@ -39,7 +39,7 @@ public class NoteDb extends BaseDb implements AutoCloseable {
     private void getCheckRequestStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkRequestStmt == null) {
             Connection con = insertRequestStmt.getConnection();
-            checkRequestStmt = con.prepareStatement("select note_id from gros.merge_request where repo_id=? AND request_id=? AND note_id=?;");
+            checkRequestStmt = con.prepareStatement("select note_id from gros.merge_request_note where repo_id=? AND request_id=? AND note_id=?;");
         }
     }
     

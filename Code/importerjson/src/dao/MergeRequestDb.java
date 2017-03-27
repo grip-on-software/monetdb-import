@@ -59,7 +59,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
                         (assignee == null ? rs.getString("assignee") == null : assignee.equals(rs.getString("assignee"))) &&
                         upvotes == rs.getInt("upvotes") &&
                         downvotes == rs.getInt("downvotes") &&
-                        created_date.equals(rs.getTimestamp("date")) &&
+                        created_date.equals(rs.getTimestamp("created_date")) &&
                         updated_date.equals(rs.getTimestamp("updated_date"))) {
                     result = CheckResult.EXISTS;
                 }
