@@ -41,5 +41,14 @@ public abstract class BaseImport extends BaseDb {
         this.projectName = projectName;
     }
     
+    /**
+     * Perform the import of the JSON data for this task.
+     */
     public abstract void parser();
+    
+    /**
+     * Get the type of data that this importer processes.
+     * @return the importer name 
+     */
+    public abstract String getImportName();
 }

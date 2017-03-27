@@ -44,6 +44,11 @@ public class ImpProject extends BaseImport{
         }
         
     }
+
+    @Override
+    public String getImportName() {
+        return "project";
+    }
         
 
 }

@@ -20,16 +20,19 @@ public class ImportTable extends BaseImport {
     String name;
     String fieldName;
     String metadataName = null;
+    String description;
     
     /**
      * Create an importer for a table with only an id--name relation
      * @param name File name part (excluding 'data_' and '.json' affixes) to import,
      *   as well as the table name in the database, passed along to a TableDb
      * @param fieldName Field name of the name field, both in the JSON file and database
+     * @param description Text describing what the table imports
      */
-    public ImportTable(String name, String fieldName) {
+    public ImportTable(String name, String fieldName, String description) {
         this.name = name;
         this.fieldName = fieldName;
+        this.description = description;
     }
 
     /**
@@ -38,9 +41,10 @@ public class ImportTable extends BaseImport {
      *   as well as the table name in the database, passed along to a TableDb
      * @param fieldName Field name of the name field, both in the JSON file and database
      * @param metadataName Field name of the metadata field, both in the JSON file and database
+     * @param description Text describing what the table imports
      */
-    public ImportTable(String name, String fieldName, String metadataName) {
-        this(name, fieldName);
+    public ImportTable(String name, String fieldName, String metadataName, String description) {
+        this(name, fieldName, description);
         this.metadataName = metadataName;
     }
     
@@ -80,4 +84,10 @@ public class ImportTable extends BaseImport {
         }
 
     }
+
+    @Override
+    public String getImportName() {
+        return description;
+    }
+    
 }

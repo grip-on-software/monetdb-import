@@ -8,7 +8,6 @@ package importer;
 import dao.MetricDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.sql.SQLException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -51,11 +50,16 @@ public class ImpMetricVersion extends BaseImport {
             }            
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import metric versions: " + ex.getMessage());
+            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
         }
         catch (Exception ex) {
             logException(ex);
         }
 
+    }
+
+    @Override
+    public String getImportName() {
+        return "metric versions";
     }
 }

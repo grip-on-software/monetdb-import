@@ -191,14 +191,18 @@ public class ImpMetricValue extends BaseImport{
             reader.readBufferedJSON(br);
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import metrics: " + ex.getMessage());
+            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
         }
         catch (Exception ex) {
             logException(ex);
         }
         
     }
-        
+
+    @Override
+    public String getImportName() {
+        return "metric values";
+    }
 
 }
     

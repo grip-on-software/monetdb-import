@@ -342,7 +342,11 @@ public class ImpCommit extends BaseImport{
         s = s.replaceAll("'", "\\\\'");
         return s;
     }
-        
+
+    @Override
+    public String getImportName() {
+        return "VCS commit versions";
+    }
 
 }
     

@@ -5,7 +5,10 @@
  */
 package importer;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -21,7 +24,7 @@ import util.BaseImport;
 public class Importerjson {
     private static String projectName = "";
     private static int projectID = 0;
-    private final static SortedSet<String> defaultTasks = retrieveTasks(new String[]{
+    private final static SortedSet<String> DEFAULT_TASKS = retrieveTasks(new String[]{
         "issue", "issuetype", "status", "resolution", "relationshiptype",
         "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
         "metric_value", "metric_version", "metric_target",
@@ -30,7 +33,52 @@ public class Importerjson {
         // Additional tasks
         "developerlink" //, "encrypt"
     });
+        
+    private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
+
+    private static HashMap<String, Class<? extends BaseImport>> retrieveImporters() {
+        HashMap<String, Class<? extends BaseImport>> importers = new HashMap<>();
+        importers.put("issue", ImpDataIssue.class);
+        importers.put("fixVersion", ImpDataFixVersion.class);
+        importers.put("issuelink", ImpDataIssueLink.class);
+
+        importers.put("issuetype", ImportTable.class);
+        importers.put("status", ImportTable.class);
+        importers.put("resolution", ImportTable.class);
+        importers.put("relationshiptype", ImportTable.class);
+        importers.put("priority", ImportTable.class);
+        importers.put("ready_status", ImportTable.class);
+        importers.put("test_execution", ImportTable.class);
+        
+        importers.put("metric_value", ImpMetricValue.class);
+        importers.put("metric_version", ImpMetricVersion.class);
+        importers.put("metric_target", ImpMetricTarget.class);
+        importers.put("sprint", ImpSprint.class);
+        importers.put("comment", ImpComment.class);
+        importers.put("developer", ImpDeveloper.class);
+        importers.put("commit", ImpCommit.class);
+        importers.put("gitlab_repo", ImpGitLabRepo.class);
+        importers.put("merge_request", ImpMergeRequest.class);
+        importers.put("mege_request_note", ImpMergeRequestNote.class);
+        importers.put("commit_comment", ImpCommitComment.class);
+        importers.put("reservation", ImpReservation.class);
+        return importers;
+    }
     
+    private final static HashMap<String, String[]> IMPORTER_ARGUMENTS = retrieveImporterArguments();
+    
+    private static HashMap<String, String[]> retrieveImporterArguments() {
+        HashMap<String, String[]> importers = new HashMap<>();
+        importers.put("issuetype", new String[]{"issuetype", "name", "description", "issue types"});
+        importers.put("status", new String[]{"status", "name", "description", "status types"});
+        importers.put("resolution", new String[]{"resolution", "name", "description", "resolution types"});
+        importers.put("relationshiptype", new String[]{"relationshiptype", "name", "relationship types"});
+        importers.put("priority", new String[]{"priority", "name", "priority types"});
+        importers.put("ready_status", new String[]{"ready_status", "name", "ready status names"});
+        importers.put("test_execution", new String[]{"test_execution", "value", "test execution methods"});
+        return importers;
+    }
+
     private static void performTask(BaseImport importer, String importType) {
         long startTime;
         
@@ -54,14 +102,14 @@ public class Importerjson {
         SortedSet<String> tasks = new TreeSet<>();
         for (String task : taskList) {
             if (task.equals("all")) {
-                tasks.addAll(defaultTasks);
+                tasks.addAll(DEFAULT_TASKS);
             }
             else if (task.startsWith("-")) {
                 // Remove task from the list (overriding earlier additions).
                 // Also, if this is the first option in the list of tasks,
                 // then add all default tasks and remove it from there.
                 if (tasks.isEmpty()) {
-                    tasks.addAll(defaultTasks);
+                    tasks.addAll(DEFAULT_TASKS);
                 }
                 tasks.remove(task.substring(1));
             }
@@ -93,7 +141,7 @@ public class Importerjson {
             tasks = retrieveTasks(args[1].trim().split(","));
         }
         else {
-            tasks = defaultTasks;
+            tasks = DEFAULT_TASKS;
         }
         
         Logger.getLogger("importer").log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
@@ -102,119 +150,40 @@ public class Importerjson {
         ImpProject impProject = new ImpProject();
         performTask(impProject, "project");
         projectID = impProject.getProjectID();
-               
-        if (tasks.contains("issue")) {
-            ImpDataIssue impIssue = new ImpDataIssue();
-            performTask(impIssue, "issues");
-        }
-                
-        if (tasks.contains("issuetype")) {
-            ImportTable impType = new ImportTable("issuetype", "name", "description");
-            performTask(impType, "issue types");
-        }
-                
-        if (tasks.contains("status")) {
-            ImportTable impStatus = new ImportTable("status", "name", "description");
-            performTask(impStatus, "status types");
-        }
-                
-        if (tasks.contains("resolution")) {
-            ImportTable impResolution = new ImportTable("resolution", "name", "description");
-            performTask(impResolution, "resolution types");
-        }
         
-        if (tasks.contains("relationshiptype")) {
-            ImportTable impRelationshipType = new ImportTable("relationshiptype", "name");
-            performTask(impRelationshipType, "relationship types");
-        }
-        
-        if (tasks.contains("priority")) {
-            ImportTable impPriority = new ImportTable("priority", "name");
-            performTask(impPriority, "priority types");
-        }
-        
-        if (tasks.contains("fixVersion")) {
-            ImpDataFixVersion impDataFixVersion = new ImpDataFixVersion();
-            performTask(impDataFixVersion, "fixVersions");
-        }
-        
-        if (tasks.contains("ready_status")) {
-            ImportTable impReadyStatus = new ImportTable("ready_status", "name");
-            performTask(impReadyStatus, "ready status names");
-        }
-        
-        if (tasks.contains("issuelink")) {
-            ImpDataIssueLink impDataIssueLink = new ImpDataIssueLink();
-            performTask(impDataIssueLink, "issue links");
-        }
-        
-        if (tasks.contains("test_execution")) {
-            ImportTable impTestExecution = new ImportTable("test_execution", "value");
-            performTask(impTestExecution, "test execution methods");
-        }
-        
-        if (tasks.contains("metric_value")) {
-            ImpMetricValue impMetricValue = new ImpMetricValue();
-            performTask(impMetricValue, "metric values");
-        }
-        
-        if (tasks.contains("metric_version")) {
-            ImpMetricVersion impMetricVersion = new ImpMetricVersion();
-            performTask(impMetricVersion, "metric versions");
-        }
-        
-        if (tasks.contains("metric_target")) {
-            ImpMetricTarget impMetricTarget = new ImpMetricTarget();
-            performTask(impMetricTarget, "metric targets");
-        }
-        
-        if (tasks.contains("sprint")) {
-            ImpSprint impSprint = new ImpSprint();
-            performTask(impSprint, "sprints");
-        }
-        
-        if (tasks.contains("comment")) {
-            ImpComment impComment = new ImpComment();
-            performTask(impComment, "comments");
-        }
-        
-        if (tasks.contains("developer")) {
-            ImpDeveloper impDeveloper = new ImpDeveloper();
-            performTask(impDeveloper, "developers");
+        for (String task : DEFAULT_TASKS) {
+            if (tasks.contains(task)) {
+                if (TASK_IMPORTERS.containsKey(task)) {
+                    Class<? extends BaseImport> importClass = TASK_IMPORTERS.get(task);
+                    BaseImport importer = null;
+                    if (IMPORTER_ARGUMENTS.containsKey(task)) {
+                        String[] arguments = IMPORTER_ARGUMENTS.get(task);
+                        try {
+                            Class<?>[] typeSpec = new Class<?>[arguments.length];
+                            Arrays.fill(typeSpec, String.class);
+                            Constructor<? extends BaseImport> constructor = importClass.getDeclaredConstructor(typeSpec);
+                            importer = constructor.newInstance((Object) arguments);
+                        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
+                            Logger.getLogger("importer").log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    else {
+                        try {
+                            importer = importClass.newInstance();
+                        } catch (InstantiationException | IllegalAccessException ex) {
+                            Logger.getLogger("importer").log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    if (importer != null) {
+                        performTask(importer, importer.getImportName());
+                    }
+                }
+            }
         }
         
         ImpCommit impCommit = new ImpCommit();
         impCommit.setProjectName(projectName);
         impCommit.setProjectID(projectID);
-        if (tasks.contains("commit")) {
-            performTask(impCommit, "commits");
-        }
-        
-        if (tasks.contains("gitlab_repo")) {
-            ImpGitLabRepo impGitLabRepo = new ImpGitLabRepo();
-            performTask(impGitLabRepo, "GitLab repositories");
-        }
-        
-        if (tasks.contains("merge_request")) {
-            ImpMergeRequest impMergeRequest = new ImpMergeRequest();
-            performTask(impMergeRequest, "GitLab merge requests");
-        }
-        
-        if (tasks.contains("merge_request_note")) {
-            ImpMergeRequestNote impMergeRequestNote = new ImpMergeRequestNote();
-            performTask(impMergeRequestNote, "GitLab merge request notes");
-        }
-        
-        if (tasks.contains("commit_comment")) {
-            ImpCommitComment impCommitComment = new ImpCommitComment();
-            performTask(impCommitComment, "GitLab commit comments");
-        }
-        
-        if (tasks.contains("reservation")) {
-            ImpReservation impReservation = new ImpReservation();
-            performTask(impReservation, "reservations");
-        }
-        
         if (tasks.contains("developerlink")) {
             long startTime = System.currentTimeMillis();
             

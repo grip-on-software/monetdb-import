@@ -26,7 +26,6 @@ public class ImpDataSubtask extends BaseImport{
     
     @Override
     public void parser() {
-        PreparedStatement pstmt = null;
         PreparedStatement existsStmt = null;
         Connection con = null;
         JSONParser parser = new JSONParser();
@@ -42,7 +41,7 @@ public class ImpDataSubtask extends BaseImport{
             String existsSql = "SELECT * FROM gros.subtask WHERE id_parent=? AND id_subtask=?";
             existsStmt = con.prepareStatement(existsSql);
 
-            pstmt = bstmt.getPreparedStatement();
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
             
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -78,6 +77,11 @@ public class ImpDataSubtask extends BaseImport{
             if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
         }
         
+    }
+
+    @Override
+    public String getImportName() {
+        return "JIRA issue subtasks";
     }
         
 

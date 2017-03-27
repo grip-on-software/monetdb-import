@@ -253,5 +253,10 @@ public class ImpDataIssue extends BaseImport{
             pstmt.setNull(index, java.sql.Types.DATE);
         }
     }
+
+    @Override
+    public String getImportName() {
+        return "JIRA issues";
+    }
 }
     

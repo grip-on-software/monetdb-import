@@ -5,17 +5,9 @@
  */
 package importer;
 
-import dao.CommentDb;
-import dao.DataSource;
 import dao.SprintDb;
 import util.BaseImport;
-import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -76,6 +68,11 @@ public class ImpSprint extends BaseImport{
             logException(ex);
         }
         
+    }
+
+    @Override
+    public String getImportName() {
+        return "JIRA sprints";
     }
         
 

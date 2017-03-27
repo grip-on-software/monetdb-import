@@ -70,7 +70,11 @@ public class ImpDataFixVersion extends BaseImport {
             logException(ex);
         }
     }
-        
+
+    @Override
+    public String getImportName() {
+        return "JIRA fix and release versions";
+    }
 
 }
     

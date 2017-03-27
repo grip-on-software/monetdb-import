@@ -50,11 +50,16 @@ public class ImpMetricTarget extends BaseImport {
             }            
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import metric targets: " + ex.getMessage());
+            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
         }
         catch (Exception ex) {
             logException(ex);
         }
 
+    }
+
+    @Override
+    public String getImportName() {
+        return "metric targets";
     }
 }

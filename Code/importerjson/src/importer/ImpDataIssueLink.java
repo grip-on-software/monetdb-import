@@ -78,5 +78,10 @@ public class ImpDataIssueLink extends BaseImport{
             logException(ex);
         }
     }
+
+    @Override
+    public String getImportName() {
+        return "JIRA issue links";
+    }
 }
     

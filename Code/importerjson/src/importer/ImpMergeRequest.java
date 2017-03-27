@@ -71,12 +71,17 @@ public class ImpMergeRequest extends BaseImport {
             
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import GitLab merge requests: " + ex.getMessage());
+            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
         }
         catch (Exception ex) {
             logException(ex);
         }
 
+    }
+
+    @Override
+    public String getImportName() {
+        return "GitLab merge requests";
     }
     
 }

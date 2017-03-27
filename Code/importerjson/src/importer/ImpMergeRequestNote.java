@@ -59,12 +59,17 @@ public class ImpMergeRequestNote extends BaseImport {
             
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import GitLab merge request notes: " + ex.getMessage());
+            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
         }
         catch (Exception ex) {
             logException(ex);
         }
 
+    }
+
+    @Override
+    public String getImportName() {
+        return "GitLab merge request notes";
     }
     
 }

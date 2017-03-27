@@ -61,6 +61,11 @@ public class ImpComment extends BaseImport{
             logException(ex);
         }        
     }
+
+    @Override
+    public String getImportName() {
+        return "JIRA comments";
+    }
         
 
 }

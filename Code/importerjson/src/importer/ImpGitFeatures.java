@@ -54,6 +54,11 @@ public class ImpGitFeatures extends BaseImport{
         }
         
     }
+
+    @Override
+    public String getImportName() {
+        return "Git features";
+    }
         
 
 }

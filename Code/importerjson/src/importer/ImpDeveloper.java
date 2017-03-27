@@ -50,5 +50,10 @@ public class ImpDeveloper extends BaseImport{
         
     }
 
+    @Override
+    public String getImportName() {
+        return "JIRA developers";
+    }
+
 }
     

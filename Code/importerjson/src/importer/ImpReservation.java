@@ -5,7 +5,6 @@
  */
 package importer;
 
-import dao.RepositoryDb;
 import dao.ReservationDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -57,12 +56,17 @@ public class ImpReservation extends BaseImport {
             }
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import reservations: " + ex.getMessage());
+            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
         }
         catch (Exception ex) {
             logException(ex);
         }
             
+    }
+
+    @Override
+    public String getImportName() {
+        return "reservations";
     }
     
 }
