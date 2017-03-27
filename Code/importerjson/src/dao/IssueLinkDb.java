@@ -201,15 +201,6 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    private void setTimestamp(PreparedStatement pstmt, int index, Timestamp date) throws SQLException {
-        if (date == null) {
-            pstmt.setNull(index, java.sql.Types.TIMESTAMP);
-        }
-        else {
-            pstmt.setTimestamp(index, date);
-        }
-    }
-    
     public void insert_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setString(1, from_key);

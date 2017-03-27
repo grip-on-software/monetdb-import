@@ -81,7 +81,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         pstmt.setString(5, source_branch);
         pstmt.setString(6, target_branch);
         pstmt.setString(7, author);
-        pstmt.setString(8, assignee);
+        setString(pstmt, 8, assignee);
         pstmt.setInt(9, upvotes);
         pstmt.setInt(10, downvotes);
         pstmt.setTimestamp(11, created_date);
@@ -96,7 +96,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         pstmt.setString(2, description);
         pstmt.setString(3, source_branch);
         pstmt.setString(4, target_branch);
-        pstmt.setString(5, author);
+        setString(pstmt, 5, author);
         pstmt.setString(6, assignee);
         pstmt.setInt(7, upvotes);
         pstmt.setInt(8, downvotes);

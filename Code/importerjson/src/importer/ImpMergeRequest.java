@@ -59,6 +59,9 @@ public class ImpMergeRequest extends BaseImport {
                 int number_of_downvotes = Integer.parseInt(downvotes);
                 Timestamp created_date = Timestamp.valueOf(created_at);
                 Timestamp updated_date = Timestamp.valueOf(updated_at);
+                if (assignee.equals("0")) {
+                    assignee = null;
+                }
                 
                 MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date);
                 if (result == MergeRequestDb.CheckResult.MISSING) {

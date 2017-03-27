@@ -77,16 +77,16 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    public boolean check_commit_note(int repo_id, String version_id, String author, String comment, String file, int line, String line_type) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_commit_note(int repo_id, String version_id, String author, String comment, String file, Integer line, String line_type) throws SQLException, IOException, PropertyVetoException {
         getCheckCommitStmt();
         
         checkCommitStmt.setInt(1, repo_id);
         checkCommitStmt.setString(2, version_id);
         checkCommitStmt.setString(3, author);
         checkCommitStmt.setString(4, comment);
-        checkCommitStmt.setString(5, file);
-        checkCommitStmt.setInt(6, line);
-        checkCommitStmt.setString(7, line_type);
+        setString(checkCommitStmt, 5, file);
+        setInteger(checkCommitStmt, 6, line);
+        setString(checkCommitStmt, 7, line_type);
         try (ResultSet rs = checkCommitStmt.executeQuery()) {
             if (rs.next()) {
                 return true;
@@ -96,19 +96,19 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_commit_note(int repo_id, String version_id, String author, String comment, String file, int line, String line_type) throws SQLException, IOException, PropertyVetoException {
+    public void insert_commit_note(int repo_id, String version_id, String author, String comment, String file, Integer line, String line_type) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertCommitStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setString(2, version_id);
         pstmt.setString(3, author);
         pstmt.setString(4, comment);
-        pstmt.setString(5, file);
-        pstmt.setInt(6, line);
-        pstmt.setString(7, line_type);
+        setString(pstmt, 5, file);
+        setInteger(pstmt, 6, line);
+        setString(pstmt, 7, line_type);
                              
         insertCommitStmt.batch();
     }
-    
+        
     @Override
     public void close() throws SQLException {
         insertRequestStmt.execute();

@@ -6,7 +6,10 @@
 package util;
 
 import java.io.File;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,4 +123,41 @@ public class BaseDb {
     public final void setPath(String path) {
         this.path = path;
     }
+
+    protected void setString(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null) {
+            pstmt.setString(index, value);
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.VARCHAR);
+        }
+    }
+    
+    protected void setInteger(PreparedStatement pstmt, int index, Integer value) throws SQLException {
+        if (value != null) {
+            pstmt.setInt(index, value);
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.INTEGER);
+        }
+    }
+    
+    protected void setTimestamp(PreparedStatement pstmt, int index, Timestamp date) throws SQLException {
+        if (date != null) {
+            pstmt.setTimestamp(index, date);
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.TIMESTAMP);
+        }
+    }
+    
+    protected void setDate(PreparedStatement pstmt, int index, Date date) throws SQLException {
+        if (date != null) {
+            pstmt.setDate(index, date);
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.DATE);
+        }
+    }
+    
 }

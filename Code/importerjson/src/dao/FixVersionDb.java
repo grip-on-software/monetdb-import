@@ -49,15 +49,6 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         return date.equals(current_date);
     }
     
-    private void setDate(PreparedStatement pstmt, int index, Date date) throws SQLException {
-        if (date == null) {
-            pstmt.setNull(index, java.sql.Types.DATE);
-        }
-        else {
-            pstmt.setDate(index, date);
-        }
-    }
-    
     public CheckResult check_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, IOException, PropertyVetoException {
         getCheckStmt();
         

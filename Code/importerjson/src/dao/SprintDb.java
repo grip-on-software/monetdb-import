@@ -49,15 +49,6 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         return date.equals(current_date);
     }
     
-    private void setTimestamp(PreparedStatement pstmt, int index, Timestamp date) throws SQLException {
-        if (date == null) {
-            pstmt.setNull(index, java.sql.Types.TIMESTAMP);
-        }
-        else {
-            pstmt.setTimestamp(index, date);
-        }
-    }
-    
     public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
         getCheckStmt();
         

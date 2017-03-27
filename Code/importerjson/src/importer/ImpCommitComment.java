@@ -48,7 +48,17 @@ public class ImpCommitComment extends BaseImport {
                 if (repo_id == 0) {
                     throw new Exception("Cannot determine repository: " + repo_name);
                 }
-                int line = Integer.parseInt(line_number);
+                
+                if (file.equals("0")) {
+                    file = null;
+                }
+                Integer line = Integer.parseInt(line_number);
+                if (line == 0) {
+                    line = null;
+                }
+                if (line_type.equals("0")) {
+                    line_type = null;
+                }
                 
                 if (!noteDb.check_commit_note(repo_id, version_id, author, comment, file, line, line_type)) {
                     noteDb.insert_commit_note(repo_id, version_id, author, comment, file, line, line_type);
