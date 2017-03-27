@@ -27,6 +27,8 @@ such fields more thoroughly and uniformly.
     name from JIRA. These are usually not more than 6 characters, but
     the limit is currently 15 characters in some fields, and 100 or 200
     in others.
+-   **VARCHAR(Git branch)**': A field containing a Git branch object
+    name. The maximum length limitation of this field is 255 characters.
 
 ## Issue tables (JIRA)
 
@@ -316,7 +318,7 @@ such fields more thoroughly and uniformly.
     -   **id_subtask** - INT - reference to issue.issue_id: The subtask
         issue
 
-## Version control system tables
+## Version control system tables (Git, Subversion)
 
 These tables include data from Gitlab/Git and Subversion.
 
@@ -367,6 +369,94 @@ These tables include data from Gitlab/Git and Subversion.
     -   **repo_name** - VARCHAR(1000): Readable name of the repository
         extracted from one of the data sources (GitLab, project
         definition, path name)
+
+### GitLab tables
+
+-   **gitlab_repo**: GitLab-specific metadata of a repository. Primary
+    key is (repo_id, gitlab_id).
+    -   **repo_id** - INT - reference to repo.id: Repository that the
+        GitLab repo stores.
+    -   **gitlab_id** - INT: internal GitLab identifier of the
+        repository.
+    -   **description** - TEXT: Description of the repository.
+    -   **create_date** - TIMESTAMP: Time at which the GitLab repository
+        was created.
+    -   **archived** - BOOL: Whether the repository is marked as
+        archived (read-only) by the development team.
+    -   **has_avatar** - BOOL: Whether the development team has given
+        the repository an avatar image.
+    -   **star_count** - INT: Number of people in the team that have
+        starred the repository such that it is shown more prominently on
+        their personal dashboard. Some GitLab instances do not provide
+        this and the value is then 0.
+
+
+-   **merge_request**: A request within the development team to merge a
+    Git branch into another. Primary key is (repo_id, request_id).
+    -   **repo_id** - INT - reference to repo.id: Repository whose
+        branches are the topic of the request.
+    -   **request_id** - INT: Internal GitLab identifier which is unique
+        for the GitLab instance.
+    -   **title** - TEXT: The short header message describing what the
+        merge request is about, e.g., what branches/commits it merges.
+    -   **description** - TEXT: The contents of the request message.
+    -   **source_branch** - VARCHAR(Git branch): The (feature) branch
+        from which commits should be merged.
+    -   **target_branch** - VARCHAR(Git branch): The (main) branch at
+        which the commits should be merged into.
+    -   **author** - VARCHAR(500): The GitLab user name of the developer
+        that started the request.
+    -   **assignee** - VARCHAR(500): The GitLab user name of the
+        developer that should review the request. This is NULL if nobody
+        is assigned.
+    -   **upvotes** - INT: Number of votes from the development team in
+        support of the merge request.
+    -   **downvotes** - INT: Number of votes from the development team
+        against the merge request.
+    -   **created_date** - TIMESTAMP: Time at which the merge request is
+        created.
+    -   **updated_date** - TIMESTAMP: Time at which the merge request
+        received an update (a merge request note or update to the
+        request details).
+
+
+-   **merge_request_note**: A comment or automated message attached to a
+    merge request, which is a part of a discussion about the request or
+    describes changes to request details or branch commits. Primary key
+    is (repo_id, request_id, note_id).
+    -   **repo_id** - INT - reference to repo.id: Repository for which
+        this note is added.
+    -   **request_id** - INT - reference to merge_request.request_id:
+        Merge request to which this note is added.
+    -   **note_id** - INT: Internal GitLab identifier which is unique
+        for the GitLab instance.
+    -   **author** - VARCHAR(500): The GitLab user name of the developer
+        that wrote the comment or on whose regard the automated comment
+        is added.
+    -   **comment** - TEXT: Plain text comment message of the note.
+        Automated notes have a first line which is surrounded with
+        underscores, or matches the regex "Added \\d commits?:" with the
+        remaining lines either empty or starting with star-bullets.
+    -   **created_date** - TIMESTAMP: Time at which the comment is added
+        to the merge request.
+
+
+-   **commit_comment**: A comment attached to a version in the Git
+    repository. Note that the comment may be part of a review of a merge
+    request, but this is not directly visible from the data.
+    -   **repo_id** - INT - reference to repo.id: Repository for which
+        this note is added.
+    -   **version_id** - VACHAR(100) - reference to commits.version_id:
+        Commit to which this note is added.
+    -   **file** - VARCHAR(1000): Path to a file in the repository that
+        is changed in the commit and is discussed by the comment. If
+        this is NULL, then the comment belongs to the entire version.
+    -   **line** - INT: Line number of the file that is discussed by the
+        comment. If this is NULL, then the comment belongs to the entire
+        version.
+    -   **line_type** - VARCHAR(100): The type of line being discussed
+        by the comment: 'old' or 'new'. If this is NULL, then the
+        comment belongs to the entire version.
 
 ## Metrics tables (Quality dashboard history)
 
@@ -423,3 +513,31 @@ dashboard project definition.
         from yellow to red.
     -   **comment** - TEXT: Comment for technical debt targets
         describing the reason of the norm change
+
+## Reservation tables (Topdesk)
+
+-   **reservation**: A reservation that is planned in the Topdesk
+    self-service tool.
+    -   **reservation_id** - VARCHAR(10) - primary key: Reservation
+        identifier as a formatted number.
+    -   **project_id** - INT - reference to project.id: Project to which
+        the reservation belongs according to whitelist/blacklist
+        matching.
+    -   **requester** - VARCHAR(500): Name of the person who requests
+        the reservation.
+    -   **number_of_people** - INT: Number of people that the
+        reservation encompasses. This may be 0 if not filled in, and
+        other values may not be exact or meaningful either.
+    -   **description** - TEXT: The text accompanying the reservation,
+        usually a description of what type of meeting it is and possibly
+        who is involved.
+    -   **start_date** - TIMESTAMP: Time (up to minute) at which the
+        reservation starts.
+    -   **end_date** - TIMESTAMP: Time (up to minute) at which the
+        reservation ends.
+    -   **prepare_date** - TIMESTAMP: Time (up to minute) at which the
+        reservation is booked to perform setup in the room. If no
+        preparation is needed, then this is the same as start_date.
+    -   **close_date** - TIMESTAMP: Time (up to minute) until which the
+        reservation is booked to break down any setup in the room. If no
+        dismantling is needed, then this is the same as end_date.
