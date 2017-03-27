@@ -80,14 +80,14 @@ public class NoteDb extends BaseDb implements AutoCloseable {
     public boolean check_commit_note(int repo_id, String version_id, String author, String comment, String file, int line, String line_type) throws SQLException, IOException, PropertyVetoException {
         getCheckCommitStmt();
         
-        checkRequestStmt.setInt(1, repo_id);
-        checkRequestStmt.setString(2, version_id);
-        checkRequestStmt.setString(3, author);
-        checkRequestStmt.setString(4, comment);
-        checkRequestStmt.setString(5, file);
-        checkRequestStmt.setInt(6, line);
-        checkRequestStmt.setString(7, line_type);
-        try (ResultSet rs = checkRequestStmt.executeQuery()) {
+        checkCommitStmt.setInt(1, repo_id);
+        checkCommitStmt.setString(2, version_id);
+        checkCommitStmt.setString(3, author);
+        checkCommitStmt.setString(4, comment);
+        checkCommitStmt.setString(5, file);
+        checkCommitStmt.setInt(6, line);
+        checkCommitStmt.setString(7, line_type);
+        try (ResultSet rs = checkCommitStmt.executeQuery()) {
             if (rs.next()) {
                 return true;
             }
