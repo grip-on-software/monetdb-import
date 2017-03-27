@@ -274,24 +274,17 @@ such fields more thoroughly and uniformly.
 
 -   **issuelink**: Bidirectional links that exist between pairs of
     issues in JIRA. Only the links that exist when the data is collected
-    are stored here (no changelogs). Primary key consists of all
-    columns.
-    -   **id_from** - reference to issue.issue_id
-    -   **id_to** - reference to issue.issue_id
-    -   **relationship_type** - reference to relationshiptype.id
-
-    :   **Note: the issuelink table has been updated to provide more
-        data, the new format is as follows:** Primary key consists of
-        (from_key, to_key, outward, relationship_type).
-
-    -   **from_key** - VARCHAR - reference to issue.key: Issue involved
-        in the link.
-    -   **to_key** - VARCHAR - reference to issue.key: Another issue
-        involved in the link.
+    are stored here (no changelogs). Primary key consists of (from_key,
+    to_key, relationship_type, outward).
+    -   **from_key** - VARCHAR(Issue key) - reference to issue.key:
+        Issue involved in the link.
+    -   **to_key** - VARCHAR(Issue key) - reference to issue.key:
+        Another issue involved in the link.
+    -   **relationship_type** - INT - reference to relationshiptype.id:
+        The type of the link relationship as an internal JIRA
+        identifier.
     -   **outward** - BOOL: Whether the given entry is outward from
         *from_key* (true) or inward to it (false).
-    -   **relationship_type** - reference to relationshiptype.id: The
-        type of the link relationship as an internal Jira identifier.
     -   **start_date** - TIMESTAMP - reference to issue.updated: Point
         in time when the link was first added to the *from_key* issue,
         or NULL if not known.
@@ -304,8 +297,8 @@ such fields more thoroughly and uniformly.
     between issues, such as Blocks, Details or Duplicate
     -   **id** - INT - primary key: The Jira identifier of this issue
         link relationship type
-    -   **name** - VARCHAR: Textual name of the relationship, as a noun
-        or verb
+    -   **name** - VARCHAR(100): Textual name of the relationship, as a
+        noun or verb
 
     :   **The following fields do not yet exist, but may be added at a
         later stage:**
@@ -327,9 +320,10 @@ such fields more thoroughly and uniformly.
 
 These tables include data from Gitlab/Git and Subversion.
 
--   **commits**: Data from individual commits in Git or repositories.
-    -   **version_id** - VARCHAR: unique SHA hash or revision number
-        belonging to this code version.
+-   **commits**: Data from individual commits in VCS (Git or Subversion)
+    repositories used by the development team.
+    -   **version_id** - VARCHAR(100): unique SHA hash or revision
+        number belonging to this code version.
     -   **project_id** - INT - reference to project.project_id: The
         project this code version belongs to.
     -   **commit_date** - TIMESTAMP: point in time at which the commit
@@ -350,7 +344,7 @@ These tables include data from Gitlab/Git and Subversion.
         commit.
     -   **number_of_lines** - INT: Number of lines touched by this
         commit, be it added, deleted or changed.
-    -   **type** - VARCHAR: The type of code change made (commit,
+    -   **type** - VARCHAR(100): The type of code change made (commit,
         revert, merge). Deduced from auxiliary data and possibly the
         commit message.
     -   **repo_id** - INT - reference to repo.id: The repository in
@@ -364,17 +358,27 @@ These tables include data from Gitlab/Git and Subversion.
         is based on the VCS developer's display name and the JIRA
         developer display name or short name. The matching is also
         manually tweaked using data_gitdev_to_dev.json.
-    -   **display_name** - VARCHAR: The name of the developer used in
-        the version control system.
+    -   **display_name** - VARCHAR(500): The name of the developer used
+        in the version control system.
 
-## Metrics Files (Quality dashboard history)
+
+-   **repo**: Repository names
+    -   **repo_id** - INT - primary key: Auto-incrementing identifier
+    -   **repo_name** - VARCHAR(1000): Readable name of the repository
+        extracted from one of the data sources (GitLab, project
+        definition, path name)
+
+## Metrics tables (Quality dashboard history)
+
+These tables include data from the metrics history files and the quality
+dashboard project definition.
 
 -   **metric**: Metric types
     -   **metric_id** - INT - primary key: Sequential number assigned to
         the metric.
-    -   **metric_name** - VARCHAR: Amalgamated name of the metric, based
-        on the type of metric and the component, product, team or other
-        domain object it measures.
+    -   **metric_name** - VARCHAR(100): Amalgamated name of the metric,
+        based on the type of metric and the component, product, team or
+        other domain object it measures.
 
 
 -   **metric_value**: Singular metric data from quality report
@@ -383,14 +387,15 @@ These tables include data from Gitlab/Git and Subversion.
     -   **value** - INT: The raw value. This is -1 if there is a problem
         with measuring the metric (category is grey, missing, or
         missing_source).
-    -   **category** - VARCHAR: 'red' (below low target), 'yellow'
+    -   **category** - VARCHAR(100): 'red' (below low target), 'yellow'
         (below target), green (at or above target), perfect (cannot be
         improved), grey (disabled), missing (internal problem),
         missing_source (external problem).
     -   **date** - TIMESTAMP: Time at which the measurement took place.
-    -   **since_date** - TIMESTAMP: Time since which the metric has the
-        same value.
-    -   **project_id** - INT - reference to project.project_id
+    -   **since_date** - TIMESTAMP - reference to metric_value.date:
+        Time since which the metric has the same value.
+    -   **project_id** - INT - reference to project.project_id: The
+        project for which the measurement was made
 
 
 -   **metric_version**: Versions of the project definition in which
@@ -398,8 +403,8 @@ These tables include data from Gitlab/Git and Subversion.
     (project_id, version_id)
     -   **project_id** - INT - reference to project.project_id
     -   **version_id** - INT: Subversion revision number
-    -   **developer** - VARCHAR: Developer or quality lead that made the
-        change
+    -   **developer** - VARCHAR(100): Developer or quality lead that
+        made the change
     -   **message** - TEXT: Commit message describing the change
     -   **commit_date** - TIMESTAMP: Time at which the target change
         took place
@@ -410,8 +415,8 @@ These tables include data from Gitlab/Git and Subversion.
     -   **version_id** - INT - reference to metric_version.version_id
     -   **metric_id** - INT - reference to metric.metric_id: Metric
         whose norms are changed
-    -   **type** - VARCHAR: Type of change: options, old_options,
-        TechnicalDebtTarget
+    -   **type** - VARCHAR(100): Type of change: 'options',
+        'old_options', 'TechnicalDebtTarget'
     -   **target** - INT: Norm value at which the category changes from
         green to yellow.
     -   **low_target** - INT: Norm value at which the category changes
