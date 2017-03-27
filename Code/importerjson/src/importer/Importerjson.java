@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -24,7 +25,7 @@ import util.BaseImport;
 public class Importerjson {
     private static String projectName = "";
     private static int projectID = 0;
-    private final static SortedSet<String> DEFAULT_TASKS = retrieveTasks(new String[]{
+    private final static List<String> DEFAULT_TASKS = Arrays.asList(new String[]{
         "issue", "issuetype", "status", "resolution", "relationshiptype",
         "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
         "metric_value", "metric_version", "metric_target",
@@ -141,7 +142,7 @@ public class Importerjson {
             tasks = retrieveTasks(args[1].trim().split(","));
         }
         else {
-            tasks = DEFAULT_TASKS;
+            tasks = new TreeSet<>(DEFAULT_TASKS);
         }
         
         Logger.getLogger("importer").log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
