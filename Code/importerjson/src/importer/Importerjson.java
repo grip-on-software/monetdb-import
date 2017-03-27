@@ -60,7 +60,7 @@ public class Importerjson {
         importers.put("commit", ImpCommit.class);
         importers.put("gitlab_repo", ImpGitLabRepo.class);
         importers.put("merge_request", ImpMergeRequest.class);
-        importers.put("mege_request_note", ImpMergeRequestNote.class);
+        importers.put("merge_request_note", ImpMergeRequestNote.class);
         importers.put("commit_comment", ImpCommitComment.class);
         importers.put("reservation", ImpReservation.class);
         return importers;
@@ -115,6 +115,7 @@ public class Importerjson {
                 tasks.remove(task.substring(1));
             }
             else {
+                Logger.getLogger("importerjson").log(Level.WARNING, "Task {0} not in the default tasks", task);
                 tasks.add(task);
             }
         }
