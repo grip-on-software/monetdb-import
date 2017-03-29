@@ -272,3 +272,11 @@ CREATE TABLE "gros"."reservation" (
 	"close_date" TIMESTAMP NULL,
 		CONSTRAINT "pk_reservation_id" PRIMARY KEY("reservation_id")
 );
+
+CREATE TABLE "gros"."update_tracker" (
+	"project_id" INTEGER NOT NULL,
+	"filename" VARCHAR(255) NOT NULL,
+	"contents" TEXT NOT NULL,
+	"update_date" TIMESTAMP NULL,
+		CONSTRAINT "pk_update_tracker_id" PRIMARY KEY("project_id", "filename")
+);

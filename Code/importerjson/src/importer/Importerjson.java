@@ -31,6 +31,7 @@ public class Importerjson {
         "metric_value", "metric_version", "metric_target",
         "sprint", "comment", "developer", "commit", "reservation",
         "gitlab_repo", "merge_request", "merge_request_note", "commit_comment",
+        "update",
         // Additional tasks
         "developerlink" //, "encrypt"
     });
@@ -63,6 +64,7 @@ public class Importerjson {
         importers.put("merge_request_note", ImpMergeRequestNote.class);
         importers.put("commit_comment", ImpCommitComment.class);
         importers.put("reservation", ImpReservation.class);
+        importers.put("update", ImpUpdateTracker.class);
         return importers;
     }
     
