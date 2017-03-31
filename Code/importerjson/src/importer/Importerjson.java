@@ -29,7 +29,7 @@ public class Importerjson {
         "issue", "issuetype", "status", "resolution", "relationshiptype",
         "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
         "metric_value", "metric_version", "metric_target",
-        "sprint", "comment", "developer", "commit", "reservation",
+        "sprint", "comment", "developer", "commit", "tag", "reservation",
         "gitlab_repo", "merge_request", "merge_request_note", "commit_comment",
         "update",
         // Additional tasks
@@ -59,6 +59,7 @@ public class Importerjson {
         importers.put("comment", ImpComment.class);
         importers.put("developer", ImpDeveloper.class);
         importers.put("commit", ImpCommit.class);
+        importers.put("tag", ImpTag.class);
         importers.put("gitlab_repo", ImpGitLabRepo.class);
         importers.put("merge_request", ImpMergeRequest.class);
         importers.put("merge_request_note", ImpMergeRequestNote.class);
