@@ -28,7 +28,7 @@ public class TagDb  extends BaseDb implements AutoCloseable {
     };
     
     public TagDb() {
-        String sql = "insert into gros.tag(repo_id,tag_name,version_id,message,tagged_date,tagger_id) values (?,?,?,?,?,?,?);";
+        String sql = "insert into gros.tag(repo_id,tag_name,version_id,message,tagged_date,tagger_id) values (?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
         sql = "update gros.tag set version_id=?, message=?, tagged_date=?, tagger_id=? where repo_id=? and tag_name=?;";
