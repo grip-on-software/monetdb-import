@@ -25,12 +25,16 @@ public class ImpUpdateTracker extends BaseImport {
     @Override
     public void parser() {
         int project_id = getProjectID();
-        String updateFiles = System.getProperty("importer.update", "");
-        String[] updateNames = updateFiles.trim().split(" ");
+        String updateFiles = System.getProperty("importer.update", "").trim();
+        if (updateFiles.isEmpty()) {
+            Logger.getLogger("importer").log(Level.WARNING, "No update tracker files specified");
+            return;
+        }
+        String[] updateNames = updateFiles.split(" ");
         try (UpdateDb updateDb = new UpdateDb()) {
             for (String updateFilename : updateNames) {
                 try {
-                    String pathName = getPath()+getProjectName()+updateFilename;
+                    String pathName = getPath()+getProjectName()+"/"+updateFilename;
                     Path path = Paths.get(pathName);
                     File file = new File(pathName);
                     Timestamp update_date = new Timestamp(file.lastModified());
@@ -43,7 +47,7 @@ public class ImpUpdateTracker extends BaseImport {
                     }
                 }
                 catch (IOException ex) {
-                    Logger.getLogger(ImpUpdateTracker.class.getName()).log(Level.WARNING, "Cannot import update tracking file " + updateFilename, ex);
+                    Logger.getLogger("importer").log(Level.WARNING, "Cannot import update tracking file " + updateFilename, ex);
                 }
             }
         }
