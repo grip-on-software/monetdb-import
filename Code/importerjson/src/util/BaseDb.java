@@ -36,7 +36,8 @@ public class BaseDb {
         File f = new File(System.getProperty("java.class.path"));
         File dir = f.getAbsoluteFile().getParentFile();
         rootPath = dir.toString() + "/";
-        path = rootPath + bundle.getString("relPath") + "/";
+        String relPath = System.getProperty("importer.relPath", bundle.getString("relPath"));
+        path = rootPath + relPath + "/";
     }
     
     /**
