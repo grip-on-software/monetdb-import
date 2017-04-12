@@ -26,11 +26,18 @@ public class Importerjson {
     private static String projectName = "";
     private static int projectID = 0;
     private final static List<String> DEFAULT_TASKS = Arrays.asList(new String[]{
+        // JIRA
         "issue", "issuetype", "status", "resolution", "relationshiptype",
         "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
+        "sprint", "comment", "developer",
+        // Quality dashboard metrics
         "metric_value", "metric_version", "metric_target",
-        "sprint", "comment", "developer", "commit", "tag", "reservation",
+        // Version control systems (Git, GitLab, SVN)
+        "commit", "change_path", "tag",
         "gitlab_repo", "merge_request", "merge_request_note", "commit_comment",
+        // Self-Service Desk
+        "reservation",
+        // Tracking
         "update",
         // Additional tasks
         "developerlink" //, "encrypt"
@@ -52,20 +59,25 @@ public class Importerjson {
         importers.put("ready_status", ImportTable.class);
         importers.put("test_execution", ImportTable.class);
         
-        importers.put("metric_value", ImpMetricValue.class);
-        importers.put("metric_version", ImpMetricVersion.class);
-        importers.put("metric_target", ImpMetricTarget.class);
         importers.put("sprint", ImpSprint.class);
         importers.put("comment", ImpComment.class);
         importers.put("developer", ImpDeveloper.class);
+        
+        importers.put("metric_value", ImpMetricValue.class);
+        importers.put("metric_version", ImpMetricVersion.class);
+        importers.put("metric_target", ImpMetricTarget.class);
+        
         importers.put("commit", ImpCommit.class);
+        importers.put("change_path", ImpChangePath.class);
         importers.put("tag", ImpTag.class);
         importers.put("gitlab_repo", ImpGitLabRepo.class);
         importers.put("merge_request", ImpMergeRequest.class);
         importers.put("merge_request_note", ImpMergeRequestNote.class);
         importers.put("commit_comment", ImpCommitComment.class);
+        
         importers.put("reservation", ImpReservation.class);
         importers.put("update", ImpUpdateTracker.class);
+        
         return importers;
     }
     
