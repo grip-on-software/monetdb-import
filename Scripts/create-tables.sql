@@ -213,6 +213,14 @@ CREATE TABLE "gros"."repo" (
         CONSTRAINT "pk_repo_id" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "gros"."change_path" (
+	"repo_id" INTEGER NOT NULL,
+	"version_id" VARCHAR(100) NOT NULL,
+	"file" VARCHAR(1000) NOT NULL,
+	"insertions" INTEGER NOT NULL,
+	"deletions" INTEGER NOT NULL
+);
+
 CREATE TABLE "gros"."tag" (
 	"repo_id" INTEGER NOT NULL,
 	"tag_name" VARCHAR(100) NOT NULL,
