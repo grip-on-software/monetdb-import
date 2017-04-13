@@ -27,7 +27,7 @@ such fields more thoroughly and uniformly.
     name from JIRA. These are usually not more than 6 characters, but
     the limit is currently 15 characters in some fields, and 100 or 200
     in others.
--   **VARCHAR(Git branch)**': A field containing a Git branch object
+-   **VARCHAR(Git branch)**: A field containing a Git branch object
     name. The maximum length limitation of this field is 255 characters.
 
 ## Issue tables (JIRA)
@@ -324,8 +324,9 @@ These tables include data from Gitlab/Git and Subversion.
 
 -   **commits**: Data from individual commits in VCS (Git or Subversion)
     repositories used by the development team.
-    -   **version_id** - VARCHAR(100): unique SHA hash or revision
-        number belonging to this code version.
+    -   **version_id** - VARCHAR(100): SHA hash or revision number
+        belonging to this code version. The version number is unique for
+        the repository the change is made in.
     -   **project_id** - INT - reference to project.project_id: The
         project this code version belongs to.
     -   **commit_date** - TIMESTAMP: point in time at which the commit
@@ -341,7 +342,8 @@ These tables include data from Gitlab/Git and Subversion.
         whether it includes the diff or other data.
     -   **insertions** - INT: Number of lines "added" or changed but not
         deleted in this commit.
-    -   **deletions** - INT: Number of lines deleted in this commit.
+    -   **deletions** - INT: Number of lines "deleted" or changed in
+        this commit.
     -   **number_of_files** - INT: Number of files touched by this
         commit.
     -   **number_of_lines** - INT: Number of lines touched by this
@@ -365,10 +367,43 @@ These tables include data from Gitlab/Git and Subversion.
 
 
 -   **repo**: Repository names
-    -   **repo_id** - INT - primary key: Auto-incrementing identifier
+    -   **repo_id** - INT - primary key: Auto-incrementing identifier.
     -   **repo_name** - VARCHAR(1000): Readable name of the repository
         extracted from one of the data sources (GitLab, project
-        definition, path name)
+        definition, path name).
+
+
+-   **change_path**: Statistics on files that are changed in versions in
+    the repository.
+    -   **repo_id** - INT - reference to repo.repo_id: The repository in
+        which the change was made.
+    -   **version_id** - VARCHAR(100) - reference to commits.version_id:
+        The version in which the change to the file was made.
+    -   **file** - VARCHAR(1000): Path to the file that was changed.
+    -   **insertions** - INT: Number of lines "added" or changed but not
+        deleted in the file during the commit.
+    -   **deletions** - INT: Number of lines "deleted" or changed in
+        this commit.
+
+
+-   **tag**: Release tags specified in the repository.
+    -   **repo_id** - INT - reference to repo.repo_id: The repository in
+        which the tag is added.
+    -   **tag_name** - VARCHAR(100): The name of the tag.
+    -   **version_id** - VARCHAR(100) - reference to commits.version_id:
+        The version in which the tag is added (Subversion) or which the
+        tag references (Git).
+    -   **message** - TEXT: Message that is added to the tag when it is
+        created, separate from the commit message. Only available for
+        Git repositories, and optional.
+    -   **tagged_date** - TIMESTAMP: Date on which the tag is created
+        (Git) or most recently updated (Subversion). Note that tags
+        should not be altered once they are created, so the tagged date
+        should reflect the commit date for Subversion. The date may be
+        missing for incomplete Git tags.
+    -   **tagger_id** - INT - reference to vcs_developer.id: The
+        developer that created the tag. If the developer cannot be
+        deduced from tag information, then this is null.
 
 ### GitLab tables
 
@@ -541,3 +576,17 @@ dashboard project definition.
     -   **close_date** - TIMESTAMP: Time (up to minute) until which the
         reservation is booked to break down any setup in the room. If no
         dismantling is needed, then this is the same as end_date.
+
+## Internal trackers
+
+-   **update_tracker**: Files that keep track of where to start
+    gathering data from for incremental updates and database
+    synchronization.
+    -   **project_id** - INT - reference to project.id: The project to
+        which the tracker file belongs.
+    -   **filename** - VARCHAR(255): The name of the file (without path)
+        that keeps track of the update state.
+    -   **contents** - TEXT: The textual (JSON or otherwise readable)
+        contents of the file that tracks the update state.
+    -   **update_date** - TIMESTAMP: The latest modification date of the
+        file.
