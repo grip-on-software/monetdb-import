@@ -12,6 +12,7 @@ import dao.RepositoryDb;
 import java.beans.PropertyVetoException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,6 +25,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
 import java.security.*;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -157,7 +161,6 @@ public class ImpCommit extends BaseImport{
                 
                 String display_name = (String) jsonObject.get("display_name");
                 String jira_user_name = (String) jsonObject.get("jira_user_name");
-                display_name = addSlashes(display_name);                
                 
                 selectStmt.setString(1, jira_user_name);
                 rs = selectStmt.executeQuery();
@@ -215,7 +218,7 @@ public class ImpCommit extends BaseImport{
         try{
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(base.getBytes("UTF-8"));
-            StringBuffer hexString = new StringBuffer();
+            StringBuilder hexString = new StringBuilder();
 
             for (int i = 0; i < hash.length; i++) {
                 String hex = Integer.toHexString(0xff & hash[i]);
@@ -224,7 +227,7 @@ public class ImpCommit extends BaseImport{
             }
 
             return hexString.toString();
-        } catch(Exception ex){
+        } catch(UnsupportedEncodingException | NoSuchAlgorithmException ex){
            throw new RuntimeException(ex);
         }
     }
@@ -236,84 +239,73 @@ public class ImpCommit extends BaseImport{
         String salt = "YOUR_SECURE_SALT_HERE";
         String pepper = "YOUR_SECURE_PEPPER_HERE";
         
+        // Primary keys of the tables to update
+        HashMap<String, String[]> hashKeys  = new HashMap<>();
+        hashKeys.put("vcs_developer", new String[]{"alias_id"});
+        hashKeys.put("developer", new String[]{"id"});
+        
+        hashKeys.put("metric_version", new String[]{"project_id", "version_id"});
+        hashKeys.put("reservation", new String[]{"reservation_id"});
+        
+        hashKeys.put("merge_request", new String[]{"repo_id", "request_id"});
+        hashKeys.put("merge_request_note", new String[]{"repo_id", "request_id", "note_id"});
+        hashKeys.put("commit_comment", new String[]{"repo_id", "version_id", "author", "comment", "file", "line", "line_type"});
+        
+        hashKeys.put("issue", new String[]{"issue_id", "changelog_id"});
+        hashKeys.put("comment", new String[]{"comment_id"});
+        
+        // Fields to hash
+        HashMap<String, String[]> hashFields = new HashMap<>();
+        hashFields.put("vcs_developer", new String[]{"display_name"});
+        hashFields.put("developer", new String[]{"name", "display_name"});
+        
+        hashFields.put("metric_version", new String[]{"developer"});
+        hashFields.put("reservation", new String[]{"requester"});
+
+        hashFields.put("merge_request", new String[]{"author", "assignee"});
+        hashFields.put("merge_request_note", new String[]{"author"});
+        hashFields.put("commit_comment", new String[]{"author"});
+        
+        hashFields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
+        hashFields.put("comment", new String[]{"author"});
+        
         try {
             con = DataSource.getInstance().getConnection();
+            
+            for (String table : hashKeys.keySet()) {
+                String[] keys = hashKeys.get(table);
+                String[] fields = hashFields.get(table);
+                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table;
 
-            /* Hash Git developers */
-            String sql = "SELECT * FROM gros.vcs_developer";
-            st = con.createStatement();
-            rs = st.executeQuery(sql);
-            while (rs.next()) {
-                int alias_id = rs.getInt("alias_id");
-                String dev_name = rs.getString("display_name");
-                dev_name = sha256(salt + dev_name + pepper);
-                
-                String sql2 = "UPDATE gros.vcs_developer SET display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
                 st = con.createStatement();
-                st.executeQuery(sql2);
-                
-            }
-            
-            /* Hash Jira Developers */
-            sql = "SELECT * FROM gros.developer";
-            st = con.createStatement();
-            rs = st.executeQuery(sql);
-            while (rs.next()) {
-                int alias_id = rs.getInt("alias_id");
-                String dev_name = rs.getString("display_name");
-                String user_name = rs.getString("name");
-                
-                dev_name = sha256(salt + dev_name + pepper);
-                user_name = sha256(salt + user_name + pepper);
-                
-                String sql2 = "UPDATE gros.developer SET name='" + user_name + "', display_name='" + dev_name + "' WHERE alias_id=" + alias_id;
-                st = con.createStatement();
-                st.executeQuery(sql2);
-            }
-            
-            /* Hash Developers in Issue */
-            sql = "SELECT * FROM gros.issue";
-            st = con.createStatement();
-            rs = st.executeQuery(sql);
-            while (rs.next()) {
-                int issue_id = rs.getInt("issue_id");
-                Timestamp ts = rs.getTimestamp("updated_by");
-                String reporter = rs.getString("reporter");
-                String assignee = rs.getString("assignee");
-                String updated_by = rs.getString("updated_by");
-                
-                if(!reporter.equals("None")) { 
-                    reporter = sha256(salt + reporter + pepper);
-                }
-                if(!assignee.equals("None")) { 
-                    assignee = sha256(salt + assignee + pepper);
-                }
-                if(!updated_by.equals("None")) { 
-                    updated_by = sha256(salt + updated_by + pepper);
+                rs = st.executeQuery(selectSql);
+                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=? WHERE " + String.join("=? AND ", keys) + "=?";
+
+                try (BatchedStatement bstmt = new BatchedStatement(updateSql)) {
+                    PreparedStatement pstmt = bstmt.getPreparedStatement();
+                    while (rs.next()) {
+                        int index = 1;
+                        for (String field : fields) {
+                            String value = rs.getString(field);
+                            String hashValue = sha256(salt + value + pepper);
+                            
+                            // Temporary solution: Make the hash value fit in all fields.
+                            pstmt.setString(index, hashValue.substring(0, 15));
+                            index++;
+                        }
+                        for (String key : keys) {
+                            pstmt.setObject(index, rs.getObject(key));
+                            index++;
+                        }
+                        bstmt.batch();
+                    }
+                    
+                    bstmt.execute();
                 }
                 
-                String sql2 = "UPDATE gros.issue SET reporter='" + reporter + "', assignee='" + assignee + "', '" + updated_by + "' WHERE issue_id=" + issue_id + " AND updated='" + ts + "'";
-                st = con.createStatement();
-                st.executeQuery(sql2);
+                Logger.getLogger("importer").log(Level.INFO, "Encrypted fields in {0} table", table);
+
             }
-            
-            /* Hash Developers in Comment*/
-            sql = "SELECT * FROM gros.comment";
-            st = con.createStatement();
-            rs = st.executeQuery(sql);
-            while (rs.next()) {
-                int comment_id = rs.getInt("comment_id");
-                String author = rs.getString("author");
-                
-                author = sha256(salt + author + pepper);
-                
-                String sql2 = "UPDATE gros.comment SET author='" + author + "' WHERE comment_id=" + comment_id;
-                st = con.createStatement();
-                st.executeQuery(sql2);
-            }
-            
-            System.out.println("Developers hashed.");
-            
         } catch (PropertyVetoException | IOException | SQLException ex) {
             logException(ex);
         } finally {
@@ -334,15 +326,6 @@ public class ImpCommit extends BaseImport{
         devDb.updateCommits();
     }
     
-    public static String addSlashes(String s) {
-        s = s.replaceAll("\\\\", "\\\\\\\\");
-        s = s.replaceAll("\\n", "\\\\n");
-        s = s.replaceAll("\\r", "\\\\r");
-        s = s.replaceAll("\\00", "\\\\0");
-        s = s.replaceAll("'", "\\\\'");
-        return s;
-    }
-
     @Override
     public String getImportName() {
         return "VCS commit versions";
