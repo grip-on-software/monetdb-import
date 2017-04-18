@@ -71,6 +71,7 @@ CREATE TABLE "gros"."developer" (
 	"id"              INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(64)   NOT NULL,
 	"display_name"     VARCHAR(100)   NULL,
+	"email"           VARCHAR(100)   NULL,
 	"encrypted"      BOOL    DEFAULT false,
         CONSTRAINT "pk_developer_id" PRIMARY KEY ("id")
 );
@@ -214,6 +215,7 @@ CREATE TABLE "gros"."vcs_developer" (
 	"alias_id"     INTEGER       NOT NULL AUTO_INCREMENT,
 	"jira_dev_id"  INTEGER,
 	"display_name" VARCHAR(500),
+	"email"        VARCHAR(100) NULL,
 	"encrypted"      BOOL    DEFAULT false,
         CONSTRAINT "pk_alias_id" PRIMARY KEY ("alias_id")
 );

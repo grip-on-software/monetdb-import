@@ -28,7 +28,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     HashMap<String, Integer> vcsNameCache = null;
     
     public DeveloperDb() {
-        String sql = "insert into gros.developer (name,display_name) values (?,?);";
+        String sql = "insert into gros.developer (name,display_name,email) values (?,?,?);";
         bstmt = new BatchedStatement(sql);
     }
     
@@ -36,12 +36,17 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * Inserts developer in the developer table. 
      * @param name the username in Jira
      * @param display_name The complete name of the user
+     * @param email The email address of the user, or null.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
      */
-    public void insert_developer(String name, String display_name) throws SQLException, IOException, PropertyVetoException{
+    public void insert_developer(String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException{
         PreparedStatement pstmt = bstmt.getPreparedStatement();
         
         pstmt.setString(1, name);
         pstmt.setString(2, display_name);
+        setString(pstmt, 3, email);
         
         // Insert immediately because we need to have the row available
         pstmt.execute();
@@ -75,7 +80,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkDeveloperStmt == null) {
             Connection con = bstmt.getConnection();
-            String sql = "SELECT id FROM gros.developer WHERE UPPER(name) = ? OR UPPER(display_name) = ?";
+            String sql = "SELECT id FROM gros.developer WHERE UPPER(name) = ? OR UPPER(display_name) = ? OR UPPER(email) = ?";
             checkDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -85,22 +90,27 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * table of the database. Else returns 0.
      * @param name the short alias of the developer in Jira.
      * @param display_name the complete name of the developer in Jira.
+     * @param email The email address of the developer, or null.
      * @return the Developer ID if found, otherwise 0.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
      */
-    public int check_developer(String name, String display_name) throws SQLException, IOException, PropertyVetoException {
+    public int check_developer(String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException {
         int idDeveloper = 0;
         getCheckDeveloperStmt();
-        ResultSet rs = null;
         
         checkDeveloperStmt.setString(1, name.toUpperCase().trim());
         checkDeveloperStmt.setString(2, display_name.toUpperCase().trim());
-        rs = checkDeveloperStmt.executeQuery();
- 
-        while (rs.next()) {
-            idDeveloper = rs.getInt("id");
+        if (email == null) {
+            email = name;
         }
-        
-        rs.close();
+        checkDeveloperStmt.setString(3, email.toUpperCase().trim());
+        try (ResultSet rs = checkDeveloperStmt.executeQuery()) {
+            while (rs.next()) {
+                idDeveloper = rs.getInt("id");
+            }
+        }
         
         return idDeveloper;
     } 
@@ -108,7 +118,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getInsertVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (insertVcsDeveloperStmt == null) {
             Connection con = bstmt.getConnection();
-            String sql = "insert into gros.vcs_developer (jira_dev_id, display_name) values (?,?);";
+            String sql = "insert into gros.vcs_developer (jira_dev_id, display_name, email) values (?,?,?);";
             insertVcsDeveloperStmt = con.prepareStatement(sql);
         } 
     }
@@ -119,12 +129,17 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * incremental by the database.
      * @param dev_id the corresponding developer id in Jira 
      * @param display_name the full name of the user in the version control system.
+     * @param email The email address of the developer, or null.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
      */
-    public void insert_vcs_developer(int dev_id, String display_name) throws SQLException, IOException, PropertyVetoException{
+    public void insert_vcs_developer(int dev_id, String display_name, String email) throws SQLException, IOException, PropertyVetoException{
         getInsertVcsDeveloperStmt();
         
         insertVcsDeveloperStmt.setInt(1, dev_id);
         insertVcsDeveloperStmt.setString(2, display_name);
+        setString(insertVcsDeveloperStmt, 3, email);
     
         insertVcsDeveloperStmt.execute();
     }
@@ -145,24 +160,26 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         Connection con = bstmt.getConnection();
         String sql = "SELECT UPPER(display_name), alias_id FROM gros.vcs_developer";
-        Statement stmt = con.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
-
-        while(rs.next()) {
-            String key = rs.getString(1);
-            Integer id = Integer.parseInt(rs.getString(2));
-            vcsNameCache.put(key, id);
+        try (
+                Statement stmt = con.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
+        ) {
+            while(rs.next()) {
+                String key = rs.getString(1);
+                Integer id = Integer.parseInt(rs.getString(2));
+                vcsNameCache.put(key, id);
+            }
         }
-
-        stmt.close();
-        rs.close();
     }
     
     /**
-    * Returns the Alias ID if the developer already exists in the VCS developer 
-    * table of the database. Else returns 0.
-    * @param display_name the complete name of the developer in the version control system.
-    * @return the Developer ID if found, otherwise 0.
+     * Returns the Alias ID if the developer already exists in the VCS developer 
+     * table of the database. Else returns 0.
+     * @param display_name the complete name of the developer in the version control system.
+     * @return the Developer ID if found, otherwise 0.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
     */
     public int check_vcs_developer(String display_name) throws SQLException, IOException, PropertyVetoException {
         fillVcsNameCache();
@@ -175,17 +192,14 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         Integer idDeveloper = null;
         getCheckVcsDeveloperStmt();
-        ResultSet rs = null;
         
         checkVcsDeveloperStmt.setString(1, key);
         
-        rs = checkVcsDeveloperStmt.executeQuery();
-        
-        while (rs.next()) {
-            idDeveloper = rs.getInt("alias_id");
+        try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {
+            while (rs.next()) {
+                idDeveloper = rs.getInt("alias_id");
+            }
         }
-        
-        rs.close();
         
         vcsNameCache.put(key, idDeveloper);
         
@@ -194,7 +208,22 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
         
         return idDeveloper;
-    }   
+    }
+    
+    public int update_vcs_developer(String display_name, String email) throws SQLException, IOException, PropertyVetoException {
+        int vcs_developer_id = check_vcs_developer(display_name);
+        if (vcs_developer_id == 0) {
+            // If the VCS developer does not exist, create a new VCS developer
+            // Check if JIRA developer exists with the same (short) name or email
+            // This may return 0, which indicates that it should be linked (manually) later.
+            int jira_developer_id = check_developer(display_name, display_name, email);
+            insert_vcs_developer(jira_developer_id, display_name, email);
+            // Retrieve new VCS developer ID
+            vcs_developer_id = check_vcs_developer(display_name);
+        }
+        
+        return vcs_developer_id;
+    }
     
     /**
      * Updates the entire commit table with the right jira dev id's instead of

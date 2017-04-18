@@ -43,6 +43,7 @@ public class ImpTag extends BaseImport {
                 String message = (String) jsonObject.get("message");
                 String tagged_date = (String) jsonObject.get("tagged_date");
                 String tagger = (String) jsonObject.get("tagger");
+                String tagger_email = (String) jsonObject.get("tagger_email");
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0){
@@ -60,16 +61,14 @@ public class ImpTag extends BaseImport {
                     tag_date = Timestamp.valueOf(tagged_date);
                 }
                 Integer tagger_id;
+                if (tagger_email.equals("0")) {
+                    tagger_email = null;
+                }
                 if (tagger.equals("0")) {
                     tagger_id = null;
                 }
                 else {
-                    tagger_id = devDb.check_vcs_developer(tagger);
-                    if (tagger_id == 0) {
-                        int dev_id = devDb.check_developer(tagger, tagger);
-                        devDb.insert_vcs_developer(dev_id, tagger);
-                        tagger_id = devDb.check_vcs_developer(tagger);
-                    }
+                    tagger_id = devDb.update_vcs_developer(tagger, tagger_email);
                 }
                 
                 TagDb.CheckResult result = tagDb.check_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);

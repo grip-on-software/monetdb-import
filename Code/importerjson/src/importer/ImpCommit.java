@@ -78,14 +78,11 @@ public class ImpCommit extends BaseImport{
                 if (developer.equals("unknown")) {
                     developer = developer_email;
                 }
-                
-                int developer_id = devDb.check_vcs_developer(developer);
-                if (developer_id == 0) { // if developer id does not exist, create VCS developer with new id
-                    // Check if developer exists with the same (short) name in JIRA developer table
-                    int dev_id = devDb.check_developer(developer, developer);
-                    devDb.insert_vcs_developer(dev_id, developer); // if dev id = 0 then link later.
-                    developer_id = devDb.check_vcs_developer(developer); // set new id of dev
+                if (developer_email.equals("0")) {
+                    developer_email = null;
                 }
+                
+                int developer_id = devDb.update_vcs_developer(developer, developer_email);
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 
@@ -267,8 +264,8 @@ public class ImpCommit extends BaseImport{
         
         // Fields to hash
         HashMap<String, String[]> hashFields = new HashMap<>();
-        hashFields.put("vcs_developer", new String[]{"display_name"});
-        hashFields.put("developer", new String[]{"name", "display_name"});
+        hashFields.put("vcs_developer", new String[]{"display_name", "email"});
+        hashFields.put("developer", new String[]{"name", "display_name", "email"});
         
         hashFields.put("metric_version", new String[]{"developer"});
         hashFields.put("reservation", new String[]{"requester"});
