@@ -48,6 +48,9 @@ def parse_args(config):
     parser.add_argument('-d', '--database',
                         default=config.get('monetdb', 'database'),
                         help='database name to create into')
+    parser.add_argument('-k', '--keep-jenkins', dest='delete_jenkins',
+                        action='store_false', default=True,
+                        help='Do not delete Jenkins workspace automatically')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
 
@@ -120,9 +123,12 @@ def main():
 
     connection.close()
 
-    logging.info('Deleting Jenkins workspace...')
-    url = config.get('jenkins', 'url') + 'doWipeOutWorkspace'
-    requests.post(url)
+    if args.delete_jenkins:
+        logging.info('Deleting Jenkins workspace...')
+        url = config.get('jenkins', 'url') + 'doWipeOutWorkspace'
+        requests.post(url)
+
+    logging.info('Done.')
 
 if __name__ == "__main__":
     main()
