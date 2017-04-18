@@ -5,7 +5,6 @@
  */
 package dao;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -13,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.Random;
 import util.BaseDb;
 
@@ -62,7 +62,8 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         byte[] pepper = new byte[24];
         source.nextBytes(pepper);
         
-        return new SaltPair(Base64.encode(salt), Base64.encode(pepper));
+        Base64.Encoder encoder = Base64.getEncoder();
+        return new SaltPair(encoder.encodeToString(salt), encoder.encodeToString(pepper));
     }
     
     public SaltPair get_salt(int project_id) throws SQLException, IOException, PropertyVetoException {
