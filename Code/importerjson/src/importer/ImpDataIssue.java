@@ -32,7 +32,7 @@ public class ImpDataIssue extends BaseImport{
         ResultSet rs = null;
         JSONParser parser = new JSONParser();
         int projectId = getProjectID();
-        String[] fields = new String[42];
+        String[] fields = new String[41];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
         
@@ -161,55 +161,54 @@ public class ImpDataIssue extends BaseImport{
 
                     pstmt.setInt(15, projectId);
                     pstmt.setInt(16, Integer.parseInt(status));
-                    pstmt.setString(17, "");
-                    pstmt.setString(18, reporter);
-                    pstmt.setString(19, assignee);
-                    pstmt.setInt(20, Integer.parseInt(attachment));
-                    pstmt.setString(21, additional_information);
-                    pstmt.setString(22, review_comments);
+                    pstmt.setString(17, reporter);
+                    pstmt.setString(18, assignee);
+                    pstmt.setInt(19, Integer.parseInt(attachment));
+                    pstmt.setString(20, additional_information);
+                    pstmt.setString(21, review_comments);
                     
                     if (storypoint != null) {
                         BigDecimal points = BigDecimal.valueOf(Double.parseDouble(storypoint));
-                        pstmt.setBigDecimal(23, points);
+                        pstmt.setBigDecimal(22, points);
                     }
                     else {
-                        pstmt.setNull(23, java.sql.Types.DECIMAL);
+                        pstmt.setNull(22, java.sql.Types.DECIMAL);
                     }
 
-                    setTimestamp(pstmt, 24, resolution_date);
+                    setTimestamp(pstmt, 23, resolution_date);
 
-                    pstmt.setInt(25, Integer.parseInt(sprint));                
+                    pstmt.setInt(24, Integer.parseInt(sprint));
 
                     if (updated_by.isEmpty()) {
                         updated_by = reporter;
                     }
 
-                    pstmt.setString(26, updated_by);
-                    setBoolean(pstmt, 27, rank_change);
+                    pstmt.setString(25, updated_by);
+                    setBoolean(pstmt, 26, rank_change);
                     
                     if (epic != null) {
-                        pstmt.setString(28, epic);
+                        pstmt.setString(27, epic);
                     }
                     else {
-                        pstmt.setNull(28, java.sql.Types.VARCHAR);
+                        pstmt.setNull(27, java.sql.Types.VARCHAR);
                     }
                     
-                    pstmt.setBoolean(29, flagged.equals("1"));
-                    pstmt.setInt(30, Integer.parseInt(ready_status));
-                    pstmt.setString(31, ready_status_reason);
-                    setBoolean(pstmt, 32, approved);
-                    setBoolean(pstmt, 33, approved_by_po);
+                    pstmt.setBoolean(28, flagged.equals("1"));
+                    pstmt.setInt(29, Integer.parseInt(ready_status));
+                    pstmt.setString(30, ready_status_reason);
+                    setBoolean(pstmt, 31, approved);
+                    setBoolean(pstmt, 32, approved_by_po);
                     
-                    pstmt.setInt(34, Integer.parseInt(labels));
-                    pstmt.setInt(35, Integer.parseInt(affectedVersion));
+                    pstmt.setInt(33, Integer.parseInt(labels));
+                    pstmt.setInt(34, Integer.parseInt(affectedVersion));
                     
-                    pstmt.setInt(36, Integer.parseInt(expected_ltcs));
-                    pstmt.setInt(37, Integer.parseInt(expected_phtcs));
-                    pstmt.setString(38, test_given);
-                    pstmt.setString(39, test_when);
-                    pstmt.setString(40, test_then);
-                    pstmt.setInt(41, Integer.parseInt(test_execution));
-                    pstmt.setInt(42, Integer.parseInt(test_execution_time));
+                    pstmt.setInt(35, Integer.parseInt(expected_ltcs));
+                    pstmt.setInt(36, Integer.parseInt(expected_phtcs));
+                    pstmt.setString(37, test_given);
+                    pstmt.setString(38, test_when);
+                    pstmt.setString(39, test_then);
+                    pstmt.setInt(40, Integer.parseInt(test_execution));
+                    pstmt.setInt(41, Integer.parseInt(test_execution_time));
 
                     bstmt.batch();
                 }

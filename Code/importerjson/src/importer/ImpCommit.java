@@ -289,8 +289,7 @@ public class ImpCommit extends BaseImport{
                             String value = rs.getString(field);
                             String hashValue = sha256(salt + value + pepper);
                             
-                            // Temporary solution: Make the hash value fit in all fields.
-                            pstmt.setString(index, hashValue.substring(0, 15));
+                            pstmt.setString(index, hashValue);
                             index++;
                         }
                         for (String key : keys) {

@@ -15,16 +15,15 @@ CREATE TABLE "gros"."issue" (
 	"duedate"        DATE  NULL,
 	"project_id"     INTEGER    NOT NULL,
 	"status"         INTEGER    NULL,
-	"delta_comments" TEXT  NULL,
-	"reporter"       VARCHAR(15)    NULL,
-	"assignee"       VARCHAR(15)    NULL,
+	"reporter"       VARCHAR(64)    NULL,
+	"assignee"       VARCHAR(64)    NULL,
 	"attachments"    INTEGER    NULL,
 	"additional_information" TEXT  NULL,
 	"review_comments" TEXT  NULL,
 	"story_points"   DECIMAL(4,2)    NULL,
 	"resolution_date"        TIMESTAMP,
 	"sprint_id"      INTEGER    NOT NULL,
-	"updated_by"     VARCHAR(100)    NOT NULL,
+	"updated_by"     VARCHAR(64)    NOT NULL,
 	"rank_change"    BOOL    NULL,
 	"epic"           VARCHAR(20)    NULL,
 	"impediment"     BOOL     NOT NULL,
@@ -69,7 +68,7 @@ CREATE TABLE "gros"."resolution" (
 
 CREATE TABLE "gros"."developer" (
 	"id"              INTEGER     NOT NULL AUTO_INCREMENT,
-	"name"            VARCHAR(100)   NOT NULL,
+	"name"            VARCHAR(64)   NOT NULL,
 	"display_name"     VARCHAR(100)   NULL,
         CONSTRAINT "pk_developer_id" PRIMARY KEY ("id")
 );
@@ -142,7 +141,7 @@ CREATE TABLE "gros"."metric_value" (
 CREATE TABLE "gros"."metric_version" (
 	"project_id"     INTEGER     NOT NULL,
 	"version_id"     INTEGER     NOT NULL,
-	"developer"      VARCHAR(100) NOT NULL,
+	"developer"      VARCHAR(64) NOT NULL,
 	"message"        TEXT      NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
         CONSTRAINT "pk_metric_version_id" PRIMARY KEY ("project_id","version_id")
@@ -193,9 +192,9 @@ CREATE TABLE "gros"."comment" (
 	"comment_id"     INTEGER        NOT NULL AUTO_INCREMENT,
 	"issue_id"       INTEGER        NOT NULL,
 	"message"        TEXT           NULL,
-	"author"         VARCHAR(200)   NOT NULL,
+	"author"         VARCHAR(64)   NOT NULL,
 	"date"           TIMESTAMP      NULL,
-	"updater"        VARCHAR(200)   NOT NULL,
+	"updater"        VARCHAR(64)   NOT NULL,
 	"updated_date"   TIMESTAMP      NULL,
         CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
 );
