@@ -9,6 +9,7 @@ import dao.BatchedStatement;
 import dao.DataSource;
 import dao.DeveloperDb;
 import dao.RepositoryDb;
+import dao.SaltDb;
 import java.beans.PropertyVetoException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -236,8 +237,16 @@ public class ImpCommit extends BaseImport{
         Connection con = null;
         Statement st = null;
         ResultSet rs = null;
-        String salt = "YOUR_SECURE_SALT_HERE";
-        String pepper = "YOUR_SECURE_PEPPER_HERE";
+
+        try (SaltDb saltDb = new SaltDb()) {
+            SaltDb.SaltPair pair = saltDb.get_salt(this.getProjectID());
+            String salt = pair.getSalt();
+            String pepper = pair.getPepper();
+        }
+        catch (PropertyVetoException | IOException | SQLException ex) {
+            logException(ex);
+            return;
+        }
         
         // Primary keys of the tables to update
         HashMap<String, String[]> hashKeys  = new HashMap<>();

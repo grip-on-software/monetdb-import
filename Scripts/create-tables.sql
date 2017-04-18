@@ -73,6 +73,13 @@ CREATE TABLE "gros"."developer" (
         CONSTRAINT "pk_developer_id" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "gros"."project_salt" (
+	"project_id"      INTEGER   NOT NULL,
+	"salt"       VARCHAR(32)    NOT NULL,
+	"pepper"     vARCHAR(32)    NOT NULL,
+		CONSTRAINT "pk_project_salt_id" PRIMARY KEY ("project_id")
+);
+
 CREATE TABLE "gros"."fixversion" (
 	"id"              INTEGER     NOT NULL,
 	"project_id"      INTEGER     NOT NULL,
