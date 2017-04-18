@@ -32,7 +32,7 @@ public class ImpDataIssue extends BaseImport{
         ResultSet rs = null;
         JSONParser parser = new JSONParser();
         int projectId = getProjectID();
-        String[] fields = new String[41];
+        String[] fields = new String[42];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
         
@@ -209,6 +209,8 @@ public class ImpDataIssue extends BaseImport{
                     pstmt.setString(39, test_then);
                     pstmt.setInt(40, Integer.parseInt(test_execution));
                     pstmt.setInt(41, Integer.parseInt(test_execution_time));
+                    // Encryption
+                    pstmt.setBoolean(42, false);
 
                     bstmt.batch();
                 }

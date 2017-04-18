@@ -237,11 +237,13 @@ public class ImpCommit extends BaseImport{
         Connection con = null;
         Statement st = null;
         ResultSet rs = null;
+        String salt;
+        String pepper;
 
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(this.getProjectID());
-            String salt = pair.getSalt();
-            String pepper = pair.getPepper();
+            salt = pair.getSalt();
+            pepper = pair.getPepper();
         }
         catch (PropertyVetoException | IOException | SQLException ex) {
             logException(ex);
@@ -284,11 +286,11 @@ public class ImpCommit extends BaseImport{
             for (String table : hashKeys.keySet()) {
                 String[] keys = hashKeys.get(table);
                 String[] fields = hashFields.get(table);
-                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table;
+                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table + " WHERE encrypted=false";
 
                 st = con.createStatement();
                 rs = st.executeQuery(selectSql);
-                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=? WHERE " + String.join("=? AND ", keys) + "=?";
+                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encrypted=true WHERE " + String.join("=? AND ", keys) + "=? AND encrypted=false";
 
                 try (BatchedStatement bstmt = new BatchedStatement(updateSql)) {
                     PreparedStatement pstmt = bstmt.getPreparedStatement();
