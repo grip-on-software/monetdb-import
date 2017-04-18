@@ -293,7 +293,13 @@ public class ImpCommit extends BaseImport{
                             index++;
                         }
                         for (String key : keys) {
-                            pstmt.setObject(index, rs.getObject(key));
+                            Object keyValue = rs.getObject(key);
+                            if (keyValue instanceof Integer) {
+                                pstmt.setInt(index, (int)keyValue);
+                            }
+                            else {
+                                pstmt.setObject(index, keyValue);
+                            }
                             index++;
                         }
                         bstmt.batch();
