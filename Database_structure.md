@@ -7,12 +7,8 @@ The structure will be shown as follows:
 -   **Table**: Description
     -   **Attribute** - TYPE - (pseudo)reference: Description
     -   **Attribute** - TYPE: Description
+    -   **Attribute** - TYPE(Special field type)
     -   **Attribute** - TYPE
-
-
--   Table
-    -   **Attribute**
-    -   **Attribute**
 
 ## Special field types
 
@@ -24,11 +20,20 @@ such fields more thoroughly and uniformly.
     maximum length limitation of this field is currently 20 characters,
     which should hold most project keys and issue sequence numbers.
 -   **VARCHAR(JIRA developer)**: A field containing a developer short
-    name from JIRA. These are usually not more than 6 characters, but
-    the limit is currently 15 characters in some fields, and 100 or 200
-    in others.
+    name from JIRA. These are usually not more than 6 characters in the
+    source data, but the limit is set to 64 characters for all fields
+    for encryption purposes.
 -   **VARCHAR(Git branch)**: A field containing a Git branch object
     name. The maximum length limitation of this field is 255 characters.
+-   **BOOLEAN(row encryption)**: A field specifying whether the given
+    row has encrypted fields in it. This field exists in tables with
+    [sensitive data](sensitive_data), specifically those with
+    personally identifying information. The field can be used to check
+    whether encryption needs to be done and that the sensitive fields
+    can only be used in an encrypted fashion. We can only check whether
+    such as field holds a certain value if we have the original value as
+    well as the project-specific salts. The field can be matched against
+    other (encrypted) fields.
 
 ## Issue tables (JIRA)
 
@@ -73,7 +78,6 @@ such fields more thoroughly and uniformly.
     -   **status** - INT - reference to status.id: The issue status
         (Open, In Progress, Resolved, Closed) as an internal JIRA
         identifier.
-    -   **delta_comments** - TEXT: **Currently unused.**
     -   **reporter** - VARCHAR(JIRA developer) - reference to
         developer.name: The reporter of the issue according to the issue
         data. Usually, this is the same developer as *updated_by* on the
@@ -157,6 +161,7 @@ such fields more thoroughly and uniformly.
         execution appears to take. This is often set after the use case
         is resolved and tested. If this is not set, then it is the
         integer 0.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 ### Context tables
 
@@ -200,6 +205,7 @@ such fields more thoroughly and uniformly.
         developer.name: Developer that edited the message most recently.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
         message was edited.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 ### Metadata tables
 
@@ -228,10 +234,33 @@ such fields more thoroughly and uniformly.
 
 -   **developer**: Names of JIRA users that performed some action in an
     issue, including short account name and long display name.
-    -   **id** - INT - primary key: Auto-incrementing idenfitier
-    -   **name** - VARCHAR(100): JIRA developer abbreviation
-    -   **display_name**: VARCHAR(100): Name as displayed in the JIRA
-        interface
+    -   **id** - INT - primary key: Auto-incrementing identifier.
+    -   **name** - VARCHAR(JIRA developer): Abbreviation of the JIRA
+        developer.
+    -   **display_name** - VARCHAR(100): Name of the JIRA developer as
+        displayed in the JIRA interface.
+    -   **email** - VARCHAR(100): The email address of the JIRA
+        developer.
+    -   **encrypted** - BOOLEAN(row encryption)
+
+
+-   **project_developer**: **Not yet used.** Names of JIRA users,
+    encrypted using the project-specific salt rather than a global salt.
+    Only use this for matching against (encrypted) developer names from
+    other sources. The fields duplicate those of *developer*, but the
+    values are encrypted differently and some of the fields of the
+    latter table may be removed.
+    -   **project_id** - INT - reference to project.id: Project that the
+        JIRA developer worked on.
+    -   **developer_id** - INT - reference to developer.id: Global
+        version of the developer.
+    -   **name** - VARCHAR(JIRA developer): Abbreviation of the JIRA
+        developer.
+    -   **display_name** - VARCHAR(100): Name of the JIRA developer as
+        displayed in the JIRA interface.
+    -   **email** - VARCHAR(100): The email address of the JIRA
+        developer.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 
 -   **fixversion**: Indicators in JIRA issues of the version to fix the
@@ -364,6 +393,8 @@ These tables include data from Gitlab/Git and Subversion.
         manually tweaked using data_gitdev_to_dev.json.
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
+    -   **email** - VARCHAR(100): Email address that the developer uses.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 
 -   **repo**: Repository names
@@ -453,6 +484,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **updated_date** - TIMESTAMP: Time at which the merge request
         received an update (a merge request note or update to the
         request details).
+    -   **encrypted** - BOOLEAN(row encryption)
 
 
 -   **merge_request_note**: A comment or automated message attached to a
@@ -474,6 +506,7 @@ These tables include data from Gitlab/Git and Subversion.
         remaining lines either empty or starting with star-bullets.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
         to the merge request.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 
 -   **commit_comment**: A comment attached to a version in the Git
@@ -492,6 +525,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **line_type** - VARCHAR(100): The type of line being discussed
         by the comment: 'old' or 'new'. If this is NULL, then the
         comment belongs to the entire version.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 ## Metrics tables (Quality dashboard history)
 
@@ -528,11 +562,12 @@ dashboard project definition.
     (project_id, version_id)
     -   **project_id** - INT - reference to project.project_id
     -   **version_id** - INT: Subversion revision number
-    -   **developer** - VARCHAR(100): Developer or quality lead that
-        made the change
+    -   **developer** - VARCHAR(64): Developer or quality lead that made
+        the change
     -   **message** - TEXT: Commit message describing the change
     -   **commit_date** - TIMESTAMP: Time at which the target change
         took place
+    -   **encrypted** - BOOLEAN(row encryption)
 
 
 -   **metric_target**: Manual changes to the metric targets of a project
@@ -576,6 +611,7 @@ dashboard project definition.
     -   **close_date** - TIMESTAMP: Time (up to minute) until which the
         reservation is booked to break down any setup in the room. If no
         dismantling is needed, then this is the same as end_date.
+    -   **encrypted** - BOOLEAN(row encryption)
 
 ## Internal trackers
 
@@ -590,3 +626,11 @@ dashboard project definition.
         contents of the file that tracks the update state.
     -   **update_date** - TIMESTAMP: The latest modification date of the
         file.
+
+
+-   **project_salt**: Project-specific hashes that are used for one-way
+    encryption of [sensitive data](sensitive_data).
+    -   **project_id** - INT - reference to project.id: The project for
+        which the hash holds.
+    -   **salt** - VARCHAR(32): First salt of the project data.
+    -   **pepper** - VARCHAR(32): Second salt of the project data.
