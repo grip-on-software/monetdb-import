@@ -36,7 +36,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricValueStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_version(project_id,version_id,developer,message,commit_date) values (?,?,?,?,?);";
         insertMetricVersionStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,message) values (?,?,?,?,?,?,?);";
+        sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
     }
     
@@ -107,17 +107,17 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         Connection con = insertMetricStmt.getConnection();
         String sql = "SELECT UPPER(name), metric_id FROM gros.metric";
-        Statement stmt = con.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
-
-        while(rs.next()) {
-            String key = rs.getString(1);
-            Integer id = Integer.parseInt(rs.getString(2));
-            nameCache.put(key, id);
+        
+        try (
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)
+        ) {
+            while(rs.next()) {
+                String key = rs.getString(1);
+                Integer id = Integer.parseInt(rs.getString(2));
+                nameCache.put(key, id);
+            }
         }
-
-        stmt.close();
-        rs.close();
     }
     
     public int check_metric(String name) throws SQLException, IOException, PropertyVetoException {
@@ -131,16 +131,13 @@ public class MetricDb extends BaseDb implements AutoCloseable {
 
         Integer idMetric = null;
         getCheckMetricStmt();
-        ResultSet rs = null;
         
         checkMetricStmt.setString(1, key);
-        rs = checkMetricStmt.executeQuery();
-        
-        while (rs.next()) {
-            idMetric = rs.getInt("metric_id");
+        try (ResultSet rs = checkMetricStmt.executeQuery()) {
+            while (rs.next()) {
+                idMetric = rs.getInt("metric_id");
+            }
         }
-        
-        rs.close();
         
         nameCache.put(key, idMetric);
         
@@ -162,17 +159,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     public int check_version(int projectId, int version) throws SQLException, IOException, PropertyVetoException {
         getCheckVersionStmt();
         int idVersion = 0;
-        ResultSet rs = null;
         
         checkMetricVersionStmt.setInt(1, projectId);
         checkMetricVersionStmt.setInt(2, version);
-        rs = checkMetricVersionStmt.executeQuery();
-        
-        while (rs.next()) {
-            idVersion = rs.getInt("version_id");
+        try (ResultSet rs = checkMetricVersionStmt.executeQuery()) {
+            while (rs.next()) {
+                idVersion = rs.getInt("version_id");
+            }
         }
-        
-        rs.close();
         
         return idVersion;
     }
