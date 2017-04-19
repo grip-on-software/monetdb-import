@@ -130,7 +130,9 @@ public class Importerjson {
                 tasks.remove(task.substring(1));
             }
             else {
-                Logger.getLogger("importerjson").log(Level.WARNING, "Task {0} not in the default tasks", task);
+                if (!DEFAULT_TASKS.contains(task)) {
+                    Logger.getLogger("importerjson").log(Level.WARNING, "Task {0} not in the default tasks", task);
+                }
                 tasks.add(task);
             }
         }
