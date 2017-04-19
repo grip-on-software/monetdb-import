@@ -249,5 +249,10 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
             checkStmt.close();
             checkStmt = null;
         }
+        
+        if (linkCache != null) {
+            linkCache.clear();
+            linkCache = null;
+        }
     }
 }
