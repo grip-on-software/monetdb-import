@@ -25,6 +25,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import util.BufferedJSONReader;
 import util.StringReplacer;
 
 /**
@@ -127,28 +128,15 @@ public class ImpMetricValue extends BaseImport{
             }
         }
 
-        public void readBufferedJSON(BufferedReader br) throws Exception {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.startsWith("\"") && line.endsWith("\"")) {
-                    String path = (String) parser.parse(line);
-                    readPath(path);
+        public void readBufferedJSON(BufferedJSONReader br) throws Exception {
+            Object object;
+            while ((object = br.readObject()) != null) {
+                if (object instanceof String) {
+                    readPath((String) object);
                     break;
                 }
-                if ("[".equals(line) || "]".equals(line)) {
-                    continue;
-                }
-                sb.append(line.trim());
-
-                if (sb.length() > 2) {
-                    if (sb.substring(sb.length()-2).equals("},")) {
-                        String json = sb.substring(0, sb.length()-1);
-                        JSONObject jsonObject = (JSONObject) parser.parse(json);
-                        handleObject(jsonObject);
-
-                        sb.setLength(0);
-                    }
+                else {
+                    handleObject((JSONObject) object);
                 }
             }
         }
@@ -185,7 +173,7 @@ public class ImpMetricValue extends BaseImport{
         try (
             MetricDb mDB = new MetricDb();
             // Read metrics JSON using buffered readers so that Java does not run out of memory
-            BufferedReader br = new BufferedReader(new FileReader(getPath()+getProjectName()+"/data_metrics.json"))
+            BufferedJSONReader br = new BufferedJSONReader(new FileReader(getPath()+getProjectName()+"/data_metrics.json"))
         ) {
             MetricReader reader = new MetricReader(mDB, this.getProjectID());
             reader.readBufferedJSON(br);

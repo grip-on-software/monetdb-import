@@ -16,9 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import util.BufferedJSONReader;
 
 /**
  *
@@ -38,6 +38,7 @@ public class ImpDataIssue extends BaseImport{
         
         try (
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data.json");
+            BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedStatement bstmt = new BatchedStatement(sql);
         ) {
             PreparedStatement pstmt = bstmt.getPreparedStatement();
@@ -46,12 +47,9 @@ public class ImpDataIssue extends BaseImport{
             
             sql = "SELECT issue_id,changelog_id FROM gros.issue WHERE issue_id=? AND changelog_id=?";
             existsStmt = con.prepareStatement(sql);
-                
-            JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
-      
+            Object o;
+            while ((o = br.readObject()) != null) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String additional_information = (String) jsonObject.get("additional_information");
