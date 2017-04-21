@@ -31,7 +31,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         String sql = "insert into gros.merge_request(repo_id,request_id,title,description,source_branch,target_branch,author,assignee,upvotes,downvotes,created_date,updated_date) values (?,?,?,?,?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.merge_request set title=?, description=?, source_branch=?, target_branch=?, author=? assignee=?, upvotes=?, downvotes=?, created_date=?, updated_date=? WHERE repo_id=? AND request_id=?;";
+        sql = "update gros.merge_request set title=?, description=?, source_branch=?, target_branch=?, author=?, assignee=?, upvotes=?, downvotes=?, created_date=?, updated_date=? WHERE repo_id=? AND request_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
