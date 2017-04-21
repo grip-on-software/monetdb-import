@@ -56,7 +56,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(2, value);
         pstmt.setString(3, category);
         pstmt.setTimestamp(4, date);
-        pstmt.setTimestamp(5, since_date);
+        setTimestamp(pstmt, 5, since_date);
         pstmt.setInt(6, project);
                     
         insertMetricValueStmt.batch();

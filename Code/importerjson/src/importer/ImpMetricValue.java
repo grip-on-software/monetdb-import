@@ -89,6 +89,7 @@ public class ImpMetricValue extends BaseImport{
                     if (line.isEmpty()) {
                         continue;
                     }
+                    
                     String row = replacer.execute(line);
                     try {
                         metric_row = (JSONObject) parser.parse(row);
@@ -96,18 +97,36 @@ public class ImpMetricValue extends BaseImport{
                     catch (ParseException e) {
                         throw new Exception("Could not parse row:\n" + row, e);
                     }
-                    Timestamp date = Timestamp.valueOf((String) metric_row.get("date"));
+                    
+                    Timestamp date;
+                    try {
+                        date = Timestamp.valueOf((String) metric_row.get("date"));
+                    }
+                    catch (IllegalArgumentException ex) {
+                        logException(ex);
+                        continue;
+                    }
+                    
                     for (Iterator it = metric_row.entrySet().iterator(); it.hasNext();) {
                         Map.Entry pair = (Map.Entry)it.next();
                         Object data = pair.getValue();
                         if (data instanceof JSONArray) {
                             JSONArray metric_data = (JSONArray) data;
                             String metric_name = (String) pair.getKey();
+                            
                             String value = (String) metric_data.get(0);
                             String category = (String) metric_data.get(1);
-                            String since_date = (String) metric_data.get(2);
+                            
+                            Timestamp since_date;
+                            if (metric_data.size() > 2) {
+                                String since_time = (String) metric_data.get(2);
+                                since_date = Timestamp.valueOf(since_time);
+                            }
+                            else {
+                                since_date = null;
+                            }
 
-                            insert(metric_name, value, category, date, Timestamp.valueOf(since_date));
+                            insert(metric_name, value, category, date, since_date);
                         }
                     }
                 }
