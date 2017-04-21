@@ -17,7 +17,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import util.BufferedJSONReader;
 
 /**
@@ -30,7 +29,6 @@ public class ImpDataIssue extends BaseImport{
     public void parser() {
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
-        JSONParser parser = new JSONParser();
         int projectId = getProjectID();
         String[] fields = new String[42];
         Arrays.fill(fields, "?");

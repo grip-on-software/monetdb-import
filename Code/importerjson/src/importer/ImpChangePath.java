@@ -13,11 +13,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
+import util.BufferedJSONReader;
 
 /**
  *
@@ -27,22 +26,19 @@ public class ImpChangePath extends BaseImport{
     
     @Override
     public void parser() {
-        JSONParser parser = new JSONParser();
-        int projectID = getProjectID();
         String sql = "insert into gros.change_path values (?,?,?,?,?);";
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_change_path.json");
+            BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedStatement bstmt = new BatchedStatement(sql)
         ) {
                 
             PreparedStatement pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(fr);
-            
-            for (Object o : a)
-            {
+            Object o;
+            while ((o = br.readObject()) != null) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String version_id = (String) jsonObject.get("version_id");

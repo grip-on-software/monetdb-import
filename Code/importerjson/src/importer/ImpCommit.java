@@ -29,6 +29,7 @@ import java.security.*;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import util.BufferedJSONReader;
 
 /**
  *
@@ -38,7 +39,6 @@ public class ImpCommit extends BaseImport{
     
     @Override
     public void parser() {
-        JSONParser parser = new JSONParser();
         int projectID = getProjectID();
         String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
@@ -46,15 +46,14 @@ public class ImpCommit extends BaseImport{
             DeveloperDb devDb = new DeveloperDb();
             RepositoryDb repoDb = new RepositoryDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json");
+            BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedStatement bstmt = new BatchedStatement(sql)
         ) {
                 
             PreparedStatement pstmt = bstmt.getPreparedStatement();
             
-            JSONArray a = (JSONArray) parser.parse(fr);
-            
-            for (Object o : a)
-            {
+            Object o;
+            while ((o = br.readObject()) != null) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String version_id = (String) jsonObject.get("version_id");
