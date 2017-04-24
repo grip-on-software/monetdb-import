@@ -20,7 +20,7 @@ CREATE TABLE "gros"."issue" (
 	"attachments"    INTEGER    NULL,
 	"additional_information" TEXT  NULL,
 	"review_comments" TEXT  NULL,
-	"story_points"   DECIMAL(4,2)    NULL,
+	"story_points"   DECIMAL(5,2)    NULL,
 	"resolution_date"        TIMESTAMP,
 	"sprint_id"      INTEGER    NOT NULL,
 	"updated_by"     VARCHAR(64)    NOT NULL,
@@ -80,6 +80,8 @@ CREATE TABLE "gros"."project_developer" (
 	"project_id"     INTEGER NOT NULL,
 	"developer_id"   INTEGER NOT NULL,
 	"name"          VARCHAR(64) NOT NULL,
+	"display_name"     VARCHAR(100)   NULL,
+	"email"           VARCHAR(100)   NULL,
 	"encrypted"    BOOL    DEFAULT false,
 	    CONSTRAINT "pk_project_developer_id" PRIMARY KEY("project_id", "developer_id")
 );
