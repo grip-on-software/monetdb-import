@@ -156,14 +156,19 @@ public class ImpCommit extends BaseImport{
             {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String display_name = (String) jsonObject.get("display_name");
-                String jira_user_name = (String) jsonObject.get("jira_user_name");
-                
-                selectStmt.setString(1, jira_user_name);
-                rs = selectStmt.executeQuery();
                 int jira_id = 0;
-                while (rs.next()) {
-                    jira_id = (rs.getInt("id"));
+                String display_name = (String) jsonObject.get("display_name");
+                if (jsonObject.containsKey("id")) {
+                    jira_id = Integer.parseInt((String) jsonObject.get("id"));
+                }
+                else {
+                    String jira_user_name = (String) jsonObject.get("jira_user_name");
+
+                    selectStmt.setString(1, jira_user_name);
+                    rs = selectStmt.executeQuery();
+                    while (rs.next()) {
+                        jira_id = (rs.getInt("id"));
+                    }
                 }
                                 
                 pstmt.setInt(1, jira_id);
