@@ -48,6 +48,9 @@ def parse_args(config):
     parser.add_argument('-d', '--database',
                         default=config.get('monetdb', 'database'),
                         help='database name to create into')
+    parser.add_argument('-i', '--no-table-import', dest='import_tables',
+                        action='store_false', default=True,
+                        help='Do not create table structures (for imports)')
     parser.add_argument('-k', '--keep-jenkins', dest='delete_jenkins',
                         action='store_false', default=True,
                         help='Do not delete Jenkins workspace automatically')
@@ -110,16 +113,18 @@ def main():
     logging.info('Creating schema and tables...')
     connection.execute('CREATE SCHEMA "gros";')
     connection.execute('SET SCHEMA "gros";')
-    with open('create-tables.sql', 'r') as table_file:
-        command = ""
-        for line in table_file:
-            if line.strip() == "":
-                continue
 
-            command += line
-            if line.rstrip().endswith(';'):
-                connection.execute(command)
-                command = ""
+    if args.import_tables:
+        with open('create-tables.sql', 'r') as table_file:
+            command = ""
+            for line in table_file:
+                if line.strip() == "":
+                    continue
+
+                command += line
+                if line.rstrip().endswith(';'):
+                    connection.execute(command)
+                    command = ""
 
     connection.close()
 
