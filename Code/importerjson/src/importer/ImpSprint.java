@@ -37,6 +37,7 @@ public class ImpSprint extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 String start = (String) jsonObject.get("start_date");
                 String end = (String) jsonObject.get("end_date");
+                String complete = (String) jsonObject.get("complete_date");
                 
                 int sprint_id = Integer.valueOf(id);
                 Timestamp start_date;
@@ -55,12 +56,20 @@ public class ImpSprint extends BaseImport{
                     end_date = Timestamp.valueOf(end);
                 }
                                 
-                SprintDb.CheckResult result = sprintDb.check_sprint(sprint_id, project, name, start_date, end_date);
+                Timestamp complete_date;
+                if (complete == null || (complete.trim()).equals("0") || (end.trim()).equals("None")){
+                    complete_date = null;
+                }
+                else {
+                    complete_date = Timestamp.valueOf(complete);
+                }
+                                
+                SprintDb.CheckResult result = sprintDb.check_sprint(sprint_id, project, name, start_date, end_date, complete_date);
                 if (result == SprintDb.CheckResult.MISSING) {
-                    sprintDb.insert_sprint(sprint_id, project, name, start_date, end_date);
+                    sprintDb.insert_sprint(sprint_id, project, name, start_date, end_date, complete_date);
                 }
                 else if (result == SprintDb.CheckResult.DIFFERS) {
-                    sprintDb.update_sprint(sprint_id, project, name, start_date, end_date);
+                    sprintDb.update_sprint(sprint_id, project, name, start_date, end_date, complete_date);
                 }
             }
         }

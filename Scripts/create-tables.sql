@@ -184,6 +184,7 @@ CREATE TABLE "gros"."sprint" (
 	"name"           VARCHAR(500)   NOT NULL,
 	"start_date"     TIMESTAMP      NULL,
 	"end_date"       TIMESTAMP      NULL,
+	"complete_date"  TIMESTAMP      NULL,
         CONSTRAINT "pk_sprint_id" PRIMARY KEY ("sprint_id", "project_id")
 );
 
@@ -241,7 +242,8 @@ CREATE TABLE "gros"."change_path" (
 	"version_id" VARCHAR(100) NOT NULL,
 	"file" VARCHAR(1000) NOT NULL,
 	"insertions" INTEGER NOT NULL,
-	"deletions" INTEGER NOT NULL
+	"deletions" INTEGER NOT NULL,
+	"type" VARCHAR(1) NOT NULL default 'M'
 );
 
 CREATE TABLE "gros"."tag" (

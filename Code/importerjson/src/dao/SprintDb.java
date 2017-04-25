@@ -28,17 +28,17 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     };
 
     public SprintDb() {
-        String sql = "insert into gros.sprint(sprint_id,project_id,name,start_date,end_date) values (?,?,?,?,?);";
+        String sql = "insert into gros.sprint(sprint_id,project_id,name,start_date,end_date,complete_date) values (?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.sprint set name=?, start_date=?, end_date=? where sprint_id=? and project_id=?;";
+        sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=? where sprint_id=? and project_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
     private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
-            checkStmt = con.prepareStatement("select name, start_date, end_date from gros.sprint where sprint_id=? and project_id=?;");
+            checkStmt = con.prepareStatement("select name, start_date, end_date, complete_date from gros.sprint where sprint_id=? and project_id=?;");
         }
     }
     
@@ -49,7 +49,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         return date.equals(current_date);
     }
     
-    public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
+    public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, sprint_id);
@@ -60,7 +60,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             while (rs.next()) {
                 if (name.equals(rs.getString("name")) &&
                         compareTimestamps(start_date, rs.getTimestamp("start_date")) &&
-                        compareTimestamps(end_date, rs.getTimestamp("end_date"))) {
+                        compareTimestamps(end_date, rs.getTimestamp("end_date")) &&
+                        compareTimestamps(complete_date, rs.getTimestamp("complete_date"))) {
                     result = CheckResult.EXISTS;
                 }
                 else {
@@ -72,25 +73,27 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException{    
+    public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, sprint_id);
         pstmt.setInt(2, project_id);
         pstmt.setString(3, name);
         setTimestamp(pstmt, 4, start_date);
         setTimestamp(pstmt, 5, end_date);
-                             
+        setTimestamp(pstmt, 6, complete_date);
+
         insertStmt.batch();
     }
     
-    public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
+    public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
         setTimestamp(pstmt, 2, start_date);
         setTimestamp(pstmt, 3, end_date);
+        setTimestamp(pstmt, 4, complete_date);
         
-        pstmt.setInt(4, sprint_id);
-        pstmt.setInt(5, project_id);
+        pstmt.setInt(5, sprint_id);
+        pstmt.setInt(6, project_id);
         
         updateStmt.batch();
     }
