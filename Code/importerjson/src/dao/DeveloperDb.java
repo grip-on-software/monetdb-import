@@ -21,15 +21,16 @@ import util.BaseDb;
  */
 public class DeveloperDb extends BaseDb implements AutoCloseable {
     
+    BatchedStatement insertDeveloperStmt = null;
     PreparedStatement checkDeveloperStmt = null;
-    PreparedStatement checkVcsDeveloperStmt = null;
     PreparedStatement insertVcsDeveloperStmt = null;
-    BatchedStatement bstmt = null;
+    PreparedStatement checkVcsDeveloperStmt = null;
+    BatchedStatement insertProjectDeveloperStmt = null;
     HashMap<String, Integer> vcsNameCache = null;
     
     public DeveloperDb() {
         String sql = "insert into gros.developer (name,display_name,email) values (?,?,?);";
-        bstmt = new BatchedStatement(sql);
+        insertDeveloperStmt = new BatchedStatement(sql);
     }
     
     /**
@@ -42,7 +43,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws java.beans.PropertyVetoException
      */
     public void insert_developer(String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException{
-        PreparedStatement pstmt = bstmt.getPreparedStatement();
+        PreparedStatement pstmt = insertDeveloperStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
         pstmt.setString(2, display_name);
@@ -58,8 +59,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      */
     @Override
     public void close() throws SQLException {
-        bstmt.execute();
-        bstmt.close();
+        insertDeveloperStmt.execute();
+        insertDeveloperStmt.close();
         
         if (checkDeveloperStmt != null) {
             checkDeveloperStmt.close();
@@ -70,6 +71,10 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         if (checkVcsDeveloperStmt != null) {
             checkVcsDeveloperStmt.close();
         }
+        if (insertProjectDeveloperStmt != null) {
+            insertProjectDeveloperStmt.execute();
+            insertProjectDeveloperStmt.close();
+        }
         
         if (vcsNameCache != null) {
             vcsNameCache.clear();
@@ -79,7 +84,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     
     private void getCheckDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkDeveloperStmt == null) {
-            Connection con = bstmt.getConnection();
+            Connection con = insertDeveloperStmt.getConnection();
             String sql = "SELECT id FROM gros.developer WHERE UPPER(name) = ? OR UPPER(display_name) = ? OR UPPER(email) = ?";
             checkDeveloperStmt = con.prepareStatement(sql);
         }
@@ -117,7 +122,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     
     private void getInsertVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (insertVcsDeveloperStmt == null) {
-            Connection con = bstmt.getConnection();
+            Connection con = insertDeveloperStmt.getConnection();
             String sql = "insert into gros.vcs_developer (jira_dev_id, display_name, email) values (?,?,?);";
             insertVcsDeveloperStmt = con.prepareStatement(sql);
         } 
@@ -146,7 +151,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
    
     private void getCheckVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkVcsDeveloperStmt == null) {
-            Connection con = bstmt.getConnection();
+            Connection con = insertDeveloperStmt.getConnection();
             String sql = "SELECT alias_id FROM gros.vcs_developer WHERE UPPER(display_name) = ?";
             checkVcsDeveloperStmt = con.prepareStatement(sql);
         }
@@ -158,7 +163,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
         vcsNameCache = new HashMap<>();
         
-        Connection con = bstmt.getConnection();
+        Connection con = insertDeveloperStmt.getConnection();
         String sql = "SELECT UPPER(display_name), alias_id FROM gros.vcs_developer";
         try (
                 Statement stmt = con.createStatement();
@@ -224,45 +229,41 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         return vcs_developer_id;
     }
+
+    private void getInsertProjectDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
+        if (insertProjectDeveloperStmt == null) {
+            String sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encrypted) values (?,?,?,?,?,?);";
+            insertProjectDeveloperStmt = new BatchedStatement(sql);
+        } 
+    }
     
     /**
-     * Updates the entire commit table with the right jira dev id's instead of
-     * the alias ids. ONLY RUN THIS IF THE GIT DEVELOPER TABLE IS COMPLETELY UPDATED!
+     * Inserts developers in the project developer table of the database.
+     * @param project_id the project the developer works on.
+     * @param dev_id the corresponding developer id in Jira 
+     * @param name 
+     * @param display_name the full name of the user in the version control system.
+     * @param email The email address of the developer, or null.
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     * @throws java.beans.PropertyVetoException
      */
-    public void updateCommits() {
-        Connection con = null;
-        Statement st = null;
-        Statement st2 = null;
-        ResultSet rs = null;
-        ResultSet rs2 = null;
+    public void insert_project_developer(int project_id, int dev_id, String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException{
+        getInsertVcsDeveloperStmt();
+        PreparedStatement pstmt = insertProjectDeveloperStmt.getPreparedStatement();
         
-        try {
-            con = DataSource.getInstance().getConnection();
+        try (SaltDb saltDb = new SaltDb()) {
+            SaltDb.SaltPair pair = saltDb.get_salt(project_id);
             
-            st = con.createStatement();
-            String sql_var = "SELECT c.commit_id, c.developer_id, g.alias_id, g.jira_dev_id" +
-                            "FROM gros.commits c, gros.vcs_developer g" +
-                            "WHERE c.developer_id = g.alias_id;";
-            rs = st.executeQuery(sql_var);
- 
-            while (rs.next()) {
-                String commit_id = rs.getString("c.commit_id");
-                int jira_id = rs.getInt("g.jira_dev_id");
-                st2 = con.createStatement();
-                String sql = "UPDATE gros.commits SET developer_id="+jira_id+" WHERE commit_id="+commit_id+";";
-                st2.executeQuery(sql);
-            }
-        }
-        catch (PropertyVetoException | IOException | SQLException ex) {
-            logException(ex);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
-            if (rs2 != null) try { rs2.close(); } catch (SQLException ex) {logException(ex);}
-            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
-            if (st2 != null) try { st2.close(); } catch (SQLException ex) {logException(ex);}
-            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
-        }
-    }   
+            pstmt.setInt(1, project_id);
+            pstmt.setInt(2, dev_id);
+            pstmt.setString(3, saltDb.hash(name, pair));
+            setString(pstmt, 4, saltDb.hash(display_name, pair));
+            setString(pstmt, 5, saltDb.hash(email, pair));
+            pstmt.setBoolean(6, true);
     
+            insertProjectDeveloperStmt.batch();
+        }
+    }
 }
     

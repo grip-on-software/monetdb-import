@@ -42,6 +42,9 @@ public class Importerjson {
         // Additional tasks
         "developerlink" //, "encrypt"
     });
+    private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
+        "developerlink", "developerproject", "encrypt"
+    });
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
 
@@ -153,7 +156,6 @@ public class Importerjson {
         if (args.length <= 0 || "--help".equals(args[0])) {
             throw new RuntimeException(usage);
         }
-        projectName = args[0].trim();
         
         SortedSet<String> tasks;
         if (args.length > 1) {
@@ -163,13 +165,25 @@ public class Importerjson {
             tasks = new TreeSet<>(DEFAULT_TASKS);
         }
         
+        if ("--".equals(args[0])) {
+            // Only allow special tasks that may run project-independently
+            if (!SPECIAL_TASKS.containsAll(tasks)) {
+                throw new RuntimeException("Project must given for the provided tasks" + usage);
+            }
+        }
+        else {
+            projectName = args[0].trim();
+        }
+        
         Logger.getLogger("importer").log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
         
-        // Always perform project import so that project ID is known to exist
-        ImpProject impProject = new ImpProject();
-        performTask(impProject, "project");
-        projectID = impProject.getProjectID();
-        
+        // Perform project import so that project ID is known to exist
+        if (!projectName.isEmpty()) {
+            ImpProject impProject = new ImpProject();
+            performTask(impProject, "project");
+            projectID = impProject.getProjectID();
+        }
+    
         for (String task : DEFAULT_TASKS) {
             if (tasks.contains(task)) {
                 if (TASK_IMPORTERS.containsKey(task)) {
@@ -210,6 +224,14 @@ public class Importerjson {
             impCommit.printUnknownDevs();
             
             showCompleteTask("Fixed JIRA and Git developer linking", startTime);
+        }
+        
+        if (tasks.contains("developerproject")) {
+            long startTime = System.currentTimeMillis();
+            
+            impCommit.fillProjectDevelopers();
+            
+            showCompleteTask("Fixed project-specific developer linking", startTime);
         }
         
         if (tasks.contains("encrypt")) {        

@@ -13,7 +13,6 @@ import dao.SaltDb;
 import java.beans.PropertyVetoException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,7 +24,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
-import java.security.*;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -216,40 +214,11 @@ public class ImpCommit extends BaseImport{
         }
     }
     
-    private static String sha256(String base) {
-        try{
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(base.getBytes("UTF-8"));
-            StringBuilder hexString = new StringBuilder();
-
-            for (int i = 0; i < hash.length; i++) {
-                String hex = Integer.toHexString(0xff & hash[i]);
-                if(hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch(UnsupportedEncodingException | NoSuchAlgorithmException ex){
-           throw new RuntimeException(ex);
-        }
-    }
-    
     public void hashNames() {
         Connection con = null;
         Statement st = null;
         ResultSet rs = null;
-        String salt;
-        String pepper;
-
-        try (SaltDb saltDb = new SaltDb()) {
-            SaltDb.SaltPair pair = saltDb.get_salt(this.getProjectID());
-            salt = pair.getSalt();
-            pepper = pair.getPepper();
-        }
-        catch (PropertyVetoException | IOException | SQLException ex) {
-            logException(ex);
-            return;
-        }
+        SaltDb.SaltPair pair;
         
         // Primary keys of the tables to update
         HashMap<String, String[]> hashKeys  = new HashMap<>();
@@ -281,7 +250,9 @@ public class ImpCommit extends BaseImport{
         hashFields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
         hashFields.put("comment", new String[]{"author"});
         
-        try {
+        try (SaltDb saltDb = new SaltDb()) {
+            pair = saltDb.get_salt(this.getProjectID());
+            
             con = DataSource.getInstance().getConnection();
             
             for (String table : hashKeys.keySet()) {
@@ -299,7 +270,7 @@ public class ImpCommit extends BaseImport{
                         int index = 1;
                         for (String field : fields) {
                             String value = rs.getString(field);
-                            String hashValue = sha256(salt + value + pepper);
+                            String hashValue = saltDb.hash(value, pair);
                             
                             pstmt.setString(index, hashValue);
                             index++;
@@ -334,15 +305,41 @@ public class ImpCommit extends BaseImport{
     }
     
     /**
-     * Updates the entire commit table with the right jira dev id's instead of
-     * the alias ids. ONLY RUN THIS IF THE GIT DEVELOPER TABLE IS COMPLETELY UPDATED!
+     * Generate a table of project-specific developers from the JIRA and VCS
+     * developers tables.
+     * This project-specific table is to be used for matching developers once
+     * they are encrypted.
      */
-    public void updateDevelopers() {
-        DeveloperDb devDb = new DeveloperDb();
- 
-        devDb.updateCommits();
+    public void fillProjectDevelopers() {
+        Connection con = null;
+        Statement st = null;
+        ResultSet rs = null;
+        
+        try (DeveloperDb devDb = new DeveloperDb()) {
+            con = DataSource.getInstance().getConnection();
+            
+            String selectSql = "SELECT developer.id, developer.name, developer.display_name, developer.email, issue.project_id FROM gros.developer JOIN gros.issue ON (developer.name = issue.updated_by OR developer.name = issue.reporter OR developer.name = issue.assignee) WHERE developer.encrypted = false GROUP BY developer.id, developer.name, developer.display_name, developer.email, issue.project_id";
+            st = con.createStatement();
+            rs = st.executeQuery(selectSql);
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                String display_name = rs.getString("display_name");
+                String email = rs.getString("email");
+                int project_id = rs.getInt("project_id");
+                
+                devDb.insert_project_developer(project_id, id, name, display_name, email);
+            }
+        }
+        catch (Exception ex) {
+            logException(ex);
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
+            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
+            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
+        }
     }
-    
+        
     @Override
     public String getImportName() {
         return "VCS commit versions";
