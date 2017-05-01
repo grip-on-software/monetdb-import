@@ -106,13 +106,10 @@ public class ImpDataIssue extends BaseImport{
                         resolution = "0";
                     }
                     if ((assignee.trim()).equals("0") || (assignee.trim()).equals("None")){
-                        assignee = "None";
+                        assignee = null;
                     }
                     if ((reporter.trim()).equals("0") || (reporter.trim()).equals("None")){
-                        reporter = "None";
-                    }
-                    if ((assignee.trim()).equals("0") || (assignee.trim()).equals("None")){
-                        assignee = "None";
+                        reporter = null;
                     }
                     if ((created.trim()).equals("0") || (created.trim()).equals("None") ){
                         created = null;
@@ -129,8 +126,8 @@ public class ImpDataIssue extends BaseImport{
                     if ((storypoint.trim()).equals("0") || (storypoint.trim()).equals("None")){
                         storypoint = null;
                     }
-                    if ((bugfix.trim()).equals("None")){
-                        bugfix = "0";
+                    if ((bugfix.trim()).equals("0") || (bugfix.trim()).equals("None")){
+                        bugfix = null;
                     }
                     if (epic.equals("0")) {
                         epic = null;
@@ -157,8 +154,8 @@ public class ImpDataIssue extends BaseImport{
 
                     pstmt.setInt(15, projectId);
                     pstmt.setInt(16, Integer.parseInt(status));
-                    pstmt.setString(17, reporter);
-                    pstmt.setString(18, assignee);
+                    setString(pstmt, 17, reporter);
+                    setString(pstmt, 18, assignee);
                     pstmt.setInt(19, Integer.parseInt(attachment));
                     pstmt.setString(20, additional_information);
                     pstmt.setString(21, review_comments);
@@ -174,10 +171,6 @@ public class ImpDataIssue extends BaseImport{
                     setTimestamp(pstmt, 23, resolution_date);
 
                     pstmt.setInt(24, Integer.parseInt(sprint));
-
-                    if (updated_by.isEmpty()) {
-                        updated_by = reporter;
-                    }
 
                     pstmt.setString(25, updated_by);
                     setBoolean(pstmt, 26, rank_change);

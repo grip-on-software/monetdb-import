@@ -305,7 +305,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         checkProjectDeveloperStmt.setInt(1, project_id);
         checkProjectDeveloperStmt.setString(2, display_name);
-        checkProjectDeveloperStmt.setString(3, email);
+        setString(checkProjectDeveloperStmt, 3, email);
 
         int idDeveloper = 0;
         try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {
