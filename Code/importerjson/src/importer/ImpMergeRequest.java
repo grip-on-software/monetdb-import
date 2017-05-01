@@ -48,6 +48,7 @@ public class ImpMergeRequest extends BaseImport {
                 String downvotes = (String) jsonObject.get("downvotes");
                 String created_at = (String) jsonObject.get("created_at");
                 String updated_at = (String) jsonObject.get("updated_at");
+                String encrypted = (String) jsonObject.get("encrypted");
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) {
@@ -62,13 +63,14 @@ public class ImpMergeRequest extends BaseImport {
                 if (assignee.equals("0")) {
                     assignee = null;
                 }
+                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
                 
-                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date);
+                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, is_encrypted);
                 if (result == MergeRequestDb.CheckResult.MISSING) {
-                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date);
+                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, is_encrypted);
                 }
                 else if (result == MergeRequestDb.CheckResult.DIFFERS) {
-                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date);
+                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, is_encrypted);
                 }
             }
             

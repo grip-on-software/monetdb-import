@@ -43,6 +43,7 @@ public class ImpCommitComment extends BaseImport {
                 String file = (String) jsonObject.get("file");
                 String line_number = (String) jsonObject.get("line");
                 String line_type = (String) jsonObject.get("line_type");
+                String encrypted = (String) jsonObject.get("encrypted");
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) {
@@ -59,9 +60,10 @@ public class ImpCommitComment extends BaseImport {
                 if (line_type.equals("0")) {
                     line_type = null;
                 }
+                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
                 
-                if (!noteDb.check_commit_note(repo_id, version_id, author, comment, file, line, line_type)) {
-                    noteDb.insert_commit_note(repo_id, version_id, author, comment, file, line, line_type);
+                if (!noteDb.check_commit_note(repo_id, version_id, author, comment, file, line, line_type, is_encrypted)) {
+                    noteDb.insert_commit_note(repo_id, version_id, author, comment, file, line, line_type, is_encrypted);
                 }
             }
             

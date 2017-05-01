@@ -23,6 +23,7 @@ public class ImpDeveloper extends BaseImport{
     public void parser(){
 
         JSONParser parser = new JSONParser();
+        int project_id = this.getProjectID();
  
         try (
             DeveloperDb devDb = new DeveloperDb();
@@ -41,6 +42,7 @@ public class ImpDeveloper extends BaseImport{
                 // check whether the developer does not already exist
                 if(dev_id == 0) {
                     devDb.insert_developer(name, display_name, email);
+                    devDb.insert_project_developer(project_id, dev_id, name, display_name, email);
                 }
 
             }                  

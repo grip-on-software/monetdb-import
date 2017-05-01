@@ -24,6 +24,7 @@ public class ImpTag extends BaseImport {
     @Override
     public void parser() {
         JSONParser parser = new JSONParser();
+        int projectID = getProjectID();
 
         try (
                 DeveloperDb devDb = new DeveloperDb();
@@ -44,11 +45,14 @@ public class ImpTag extends BaseImport {
                 String tagged_date = (String) jsonObject.get("tagged_date");
                 String tagger = (String) jsonObject.get("tagger");
                 String tagger_email = (String) jsonObject.get("tagger_email");
+                String encrypted = (String) jsonObject.get("encrypted");
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0){
                     throw new Exception("Cannot determine repository: " + repo_name);
                 }
+                
+                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
                 
                 if (message.equals("0")) {
                     message = null;
@@ -68,7 +72,7 @@ public class ImpTag extends BaseImport {
                     tagger_id = null;
                 }
                 else {
-                    tagger_id = devDb.update_vcs_developer(tagger, tagger_email);
+                    tagger_id = devDb.update_vcs_developer(projectID, tagger, tagger_email, is_encrypted);
                 }
                 
                 TagDb.CheckResult result = tagDb.check_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);

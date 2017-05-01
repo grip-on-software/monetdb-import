@@ -42,6 +42,7 @@ public class ImpMergeRequestNote extends BaseImport {
                 String author = (String) jsonObject.get("author");
                 String comment = (String) jsonObject.get("comment");
                 String created_at = (String) jsonObject.get("created_at");
+                String encrypted = (String) jsonObject.get("encrypted");
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) {
@@ -49,11 +50,12 @@ public class ImpMergeRequestNote extends BaseImport {
                 }
                 int request_id = Integer.parseInt(merge_request_id);
                 int note_id = Integer.parseInt(note);
+                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
                 
-                if (!noteDb.check_request_note(repo_id, request_id, note_id)) {
+                if (!noteDb.check_request_note(repo_id, request_id, note_id, is_encrypted)) {
                     Timestamp created_date = Timestamp.valueOf(created_at);
                 
-                    noteDb.insert_request_note(repo_id, request_id, note_id, author, comment, created_date);
+                    noteDb.insert_request_note(repo_id, request_id, note_id, author, comment, created_date, is_encrypted);
                 }
             }
             

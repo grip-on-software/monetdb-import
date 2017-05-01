@@ -38,7 +38,7 @@ public class ImpCommit extends BaseImport{
     @Override
     public void parser() {
         int projectID = getProjectID();
-        String sql = "insert into gros.commits values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
         try (
             DeveloperDb devDb = new DeveloperDb();
@@ -67,6 +67,7 @@ public class ImpCommit extends BaseImport{
                 String number_of_lines = (String) jsonObject.get("number_of_lines");
                 String type = (String) jsonObject.get("type");
                 String repo_name = (String) jsonObject.get("repo_name");
+                String encrypted = (String) jsonObject.get("encrypted");
                 
                 if ((sprint_id.trim()).equals("null") ){ // In case not in between dates of sprint
                     sprint_id = "0";
@@ -78,8 +79,9 @@ public class ImpCommit extends BaseImport{
                 if (developer_email.equals("0")) {
                     developer_email = null;
                 }
+                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
                 
-                int developer_id = devDb.update_vcs_developer(developer, developer_email);
+                int developer_id = devDb.update_vcs_developer(projectID, developer, developer_email, is_encrypted);
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 
