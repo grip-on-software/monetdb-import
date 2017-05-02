@@ -134,21 +134,18 @@ public class ImpCommit extends BaseImport{
      * Best is to do this after collecting all the records of all the projects.
      */
     public void updateJiraID() {
-        PreparedStatement pstmt = null;
-        Connection con = null;
-        PreparedStatement selectStmt = null;
         JSONParser parser = new JSONParser();
-        ResultSet rs = null;
-        //DeveloperDb devDb = new DeveloperDb();
+        int projectID = this.getProjectID();
  
-        try (FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json")) {
-            con = DataSource.getInstance().getConnection();
-
-            String sql = "SELECT id FROM gros.developer WHERE name = ?;";
-            selectStmt = con.prepareStatement(sql);
-
-            sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE display_name=?;";
-            pstmt = con.prepareStatement(sql);
+        String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE ((display_name=? AND encrypted=false) OR (display_name=? AND encrypted=true));";
+        try (
+            FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json");
+            DeveloperDb devDb = new DeveloperDb();
+            SaltDb saltDb = new SaltDb();
+            BatchedStatement bstmt = new BatchedStatement(sql)
+        ) {
+            SaltDb.SaltPair pair = saltDb.get_salt(projectID);
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
             
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -161,32 +158,26 @@ public class ImpCommit extends BaseImport{
                 if (jsonObject.containsKey("id")) {
                     jira_id = Integer.parseInt((String) jsonObject.get("id"));
                 }
-                else {
-                    String jira_user_name = (String) jsonObject.get("jira_user_name");
-
-                    selectStmt.setString(1, jira_user_name);
-                    rs = selectStmt.executeQuery();
-                    while (rs.next()) {
-                        jira_id = (rs.getInt("id"));
-                    }
+                else if (projectID == 0) {
+                    jira_id = devDb.check_developer(null, display_name, null);
                 }
-                                
-                pstmt.setInt(1, jira_id);
-                pstmt.setString(2, display_name);
+                else {
+                    jira_id = devDb.check_project_developer(projectID, display_name, null, false);
+                }
+                
+                if (jira_id != 0) {
+                    pstmt.setInt(1, jira_id);
+                    pstmt.setString(2, display_name);
+                    pstmt.setString(3, saltDb.hash(display_name, pair));
 
-                pstmt.executeUpdate();
+                    bstmt.batch();
+                }
             }
             
-                  
+            bstmt.execute();
         }
-            
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
             logException(ex);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
-            if (selectStmt != null) try { selectStmt.close(); } catch (SQLException ex) {logException(ex);}
-            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
-            if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) {logException(ex);}
         }
     }
     

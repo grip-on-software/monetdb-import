@@ -113,6 +113,10 @@ public class SaltDb extends BaseDb implements AutoCloseable {
     }
     
     public String hash(String value, SaltPair pair) {
+        // Keep null values as is, since there is no sensitive information in this case.
+        if (value == null) {
+            return null;
+        }
         return sha256(pair.getSalt() + value + pair.getPepper());
     }
 

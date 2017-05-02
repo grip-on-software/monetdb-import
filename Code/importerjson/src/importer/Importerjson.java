@@ -43,7 +43,7 @@ public class Importerjson {
         "developerlink" //, "encrypt"
     });
     private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
-        "developerlink", "developerproject", "encrypt"
+        "developerproject", "developerlink", "encrypt"
     });
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
@@ -217,21 +217,21 @@ public class Importerjson {
         ImpCommit impCommit = new ImpCommit();
         impCommit.setProjectName(projectName);
         impCommit.setProjectID(projectID);
-        if (tasks.contains("developerlink")) {
-            long startTime = System.currentTimeMillis();
-            
-            impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
-            impCommit.printUnknownDevs();
-            
-            showCompleteTask("Fixed JIRA and Git developer linking", startTime);
-        }
-        
         if (tasks.contains("developerproject")) {
             long startTime = System.currentTimeMillis();
             
             impCommit.fillProjectDevelopers();
             
             showCompleteTask("Fixed project-specific developer linking", startTime);
+        }
+        
+        if (tasks.contains("developerlink")) {
+            long startTime = System.currentTimeMillis();
+            
+            impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
+            impCommit.printUnknownDevs();
+            
+            showCompleteTask("Fixed JIRA and VCS developer linking", startTime);
         }
         
         if (tasks.contains("encrypt")) {        
