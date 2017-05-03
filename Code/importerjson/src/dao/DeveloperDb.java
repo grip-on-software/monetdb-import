@@ -88,10 +88,17 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    private static String caseFold(String name) {
+        if (name == null) {
+            return null;
+        }
+        return name.toUpperCase().trim();
+    }
+    
     private void getCheckDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT id FROM gros.developer WHERE ((encryption=? AND (UPPER(name) = ? OR UPPER(display_name) = ? OR UPPER(email) = ?)) OR (encryption=? AND (name=? OR display_name=? OR email=?))";
+            String sql = "SELECT id FROM gros.developer WHERE ((encryption=? AND (UPPER(name) = ? OR UPPER(display_name) = ? OR UPPER(email) = ?)) OR (encryption=? AND (name=? OR display_name=? OR email=?)))";
             checkDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -121,16 +128,16 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
         
         checkDeveloperStmt.setInt(1, SaltDb.Encryption.NONE);
-        checkDeveloperStmt.setString(2, name.toUpperCase().trim());
-        checkDeveloperStmt.setString(3, display_name.toUpperCase().trim());
-        checkDeveloperStmt.setString(4, email.toUpperCase().trim());
+        setString(checkDeveloperStmt, 2, caseFold(name));
+        setString(checkDeveloperStmt, 3, caseFold(display_name));
+        setString(checkDeveloperStmt, 4, caseFold(email));
         
         checkDeveloperStmt.setInt(5, SaltDb.Encryption.GLOBAL);
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(0);
-            checkDeveloperStmt.setString(6, saltDb.hash(name, pair));
-            checkDeveloperStmt.setString(7, saltDb.hash(display_name, pair));
-            checkDeveloperStmt.setString(8, saltDb.hash(email, pair));
+            setString(checkDeveloperStmt, 6, saltDb.hash(name, pair));
+            setString(checkDeveloperStmt, 7, saltDb.hash(display_name, pair));
+            setString(checkDeveloperStmt, 8, saltDb.hash(email, pair));
         }
         
         try (ResultSet rs = checkDeveloperStmt.executeQuery()) {
@@ -141,7 +148,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         return idDeveloper;
     } 
-    
+
     private void getInsertVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (insertVcsDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
@@ -200,7 +207,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
                 Integer id = rs.getInt("alias_id");
                 int encryption = rs.getInt("encryption");
                 if (encryption == SaltDb.Encryption.NONE) {
-                    display_name = display_name.toUpperCase().trim();
+                    display_name = caseFold(display_name);
                 }
                 vcsNameCache.put(display_name, id);
             }
@@ -225,7 +232,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         String plain_name;
         String encrypted_name;
         if (encryption == SaltDb.Encryption.NONE) {
-            plain_name = display_name.toUpperCase().trim();
+            plain_name = caseFold(display_name);
             try (SaltDb saltDb = new SaltDb()) {
                 SaltDb.SaltPair pair = saltDb.get_salt(0);
                 encrypted_name = saltDb.hash(display_name, pair);
@@ -358,8 +365,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         checkProjectDeveloperStmt.setInt(1, project_id);
         checkProjectDeveloperStmt.setInt(2, encryption);
-        checkProjectDeveloperStmt.setString(3, display_name);
-        checkProjectDeveloperStmt.setString(4, display_name);
+        setString(checkProjectDeveloperStmt, 3, display_name);
+        setString(checkProjectDeveloperStmt, 4, display_name);
         setString(checkProjectDeveloperStmt, 5, email);
 
         int idDeveloper = 0;
