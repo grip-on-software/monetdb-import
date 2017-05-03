@@ -25,15 +25,22 @@ such fields more thoroughly and uniformly.
     for encryption purposes.
 -   **VARCHAR(Git branch)**: A field containing a Git branch object
     name. The maximum length limitation of this field is 255 characters.
--   **BOOLEAN(row encryption)**: A field specifying whether the given
-    row has encrypted fields in it. This field exists in tables with
-    [sensitive data](sensitive_data), specifically those with
-    personally identifying information. The field can be used to check
-    whether encryption needs to be done and that the sensitive fields
-    can only be used in an encrypted fashion. We can only check whether
-    such as field holds a certain value if we have the original value as
-    well as the project-specific salts. The field can be matched against
-    other (encrypted) fields.
+-   **INTEGER(row encryption)**: A field specifying which encryption
+    level is applied to certain fields in the given row has encrypted
+    fields. This field exists in tables with [sensitive
+    data](sensitive_data), specifically those with personally
+    identifying information. The field levels bitmask is simply an
+    integer, where 0 means no encryption, 1 is encryption using
+    project-specific salts, 2 is encryption with global
+    (project-independent) salt and 3 means project-specific then global
+    salt encryption. This can be extended later on with other masks to
+    indicate which parts of the row are encrypted, e.g., only personal
+    names, project-identifying data. The field can be used to check
+    whether encryption still needs to be done, or that the sensitive
+    fields can only be used in an encrypted fashion. We can only check
+    whether such as field holds a certain value if we have the original
+    value as well as the global or project-specific salts. The field can
+    be matched against other fields with the same encryption level.
 
 ## Issue tables (JIRA)
 
@@ -96,11 +103,11 @@ such fields more thoroughly and uniformly.
         a Review tab beside the description, or '0' if it is not filled
         in. Updated by reviewing developers to check whether the story
         is complete enough to start with it or that an issue is fixed.
-    -   **story_points** - DECIMAL: The number of points assigned to a
-        story after the developers meet in a refinement and determine
-        the difficulty of the story. If not yet set, then this is NULL.
-        Maximum value is 100 and one digit after the decimal point is
-        allowed.
+    -   **story_points** - DECIMAL(5,2): The number of points assigned
+        to a story after the developers meet in a refinement and
+        determine the difficulty of the story. If not yet set, then this
+        is NULL. Maximum value is 100 and two digits after the decimal
+        point is allowed.
     -   **resolution_date** - TIMESTAMP: The time at which the issue was
         marked as resolved. This may be manually adjusted, but should
         match roughly with the time at which a change is made to mark
@@ -161,7 +168,7 @@ such fields more thoroughly and uniformly.
         execution appears to take. This is often set after the use case
         is resolved and tested. If this is not set, then it is the
         integer 0.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 ### Context tables
 
@@ -181,6 +188,10 @@ such fields more thoroughly and uniformly.
         ends or is set to end. May be a projected date from the start
         and thus has a time which is not always correct, but is usually
         close to the real date.
+    -   **complete_date** - TIMESTAMP: Moment in time at which the tasks
+        in the sprint are completed. This may be different than the
+        latest change to an issue within the sprint, and may be not
+        provided for all sprints.
 
 
 -   **project**: The projects that were collected. The name is the JIRA
@@ -205,7 +216,7 @@ such fields more thoroughly and uniformly.
         developer.name: Developer that edited the message most recently.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
         message was edited.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 ### Metadata tables
 
@@ -241,7 +252,7 @@ such fields more thoroughly and uniformly.
         displayed in the JIRA interface.
     -   **email** - VARCHAR(100): The email address of the JIRA
         developer.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 
 -   **project_developer**: **Not yet used.** Names of JIRA users,
@@ -260,7 +271,7 @@ such fields more thoroughly and uniformly.
         displayed in the JIRA interface.
     -   **email** - VARCHAR(100): The email address of the JIRA
         developer.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 
 -   **fixversion**: Indicators in JIRA issues of the version to fix the
@@ -394,7 +405,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
     -   **email** - VARCHAR(100): Email address that the developer uses.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 
 -   **repo**: Repository names
@@ -415,6 +426,9 @@ These tables include data from Gitlab/Git and Subversion.
         deleted in the file during the commit.
     -   **deletions** - INT: Number of lines "deleted" or changed in
         this commit.
+    -   **type** - VARCHAR(1): The type of change made to the file. This
+        may be 'M' (Modified), 'A' (Added), 'D' (Deleted) or 'R'
+        (Replaced, Git only indicator for moved or copied files).
 
 
 -   **tag**: Release tags specified in the repository.
@@ -484,7 +498,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **updated_date** - TIMESTAMP: Time at which the merge request
         received an update (a merge request note or update to the
         request details).
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 
 -   **merge_request_note**: A comment or automated message attached to a
@@ -506,7 +520,7 @@ These tables include data from Gitlab/Git and Subversion.
         remaining lines either empty or starting with star-bullets.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
         to the merge request.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 
 -   **commit_comment**: A comment attached to a version in the Git
@@ -525,7 +539,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **line_type** - VARCHAR(100): The type of line being discussed
         by the comment: 'old' or 'new'. If this is NULL, then the
         comment belongs to the entire version.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 ## Metrics tables (Quality dashboard history)
 
@@ -567,7 +581,7 @@ dashboard project definition.
     -   **message** - TEXT: Commit message describing the change
     -   **commit_date** - TIMESTAMP: Time at which the target change
         took place
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 
 -   **metric_target**: Manual changes to the metric targets of a project
@@ -611,7 +625,7 @@ dashboard project definition.
     -   **close_date** - TIMESTAMP: Time (up to minute) until which the
         reservation is booked to break down any setup in the room. If no
         dismantling is needed, then this is the same as end_date.
-    -   **encrypted** - BOOLEAN(row encryption)
+    -   **encryption** - INTEGER(row encryption)
 
 ## Internal trackers
 
@@ -628,9 +642,10 @@ dashboard project definition.
         file.
 
 
--   **project_salt**: Project-specific hashes that are used for one-way
-    encryption of [sensitive data](sensitive_data).
+-   **project_salt**: Project-specific hash pairs that are used for
+    one-way encryption of [sensitive data](sensitive_data).
     -   **project_id** - INT - reference to project.id: The project for
-        which the hash holds.
+        which the hash holds. If this is 0, then it indicates a global
+        hash pair.
     -   **salt** - VARCHAR(32): First salt of the project data.
     -   **pepper** - VARCHAR(32): Second salt of the project data.
