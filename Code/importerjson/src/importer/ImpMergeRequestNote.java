@@ -7,6 +7,7 @@ package importer;
 
 import dao.NoteDb;
 import dao.RepositoryDb;
+import dao.SaltDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.Timestamp;
@@ -50,12 +51,12 @@ public class ImpMergeRequestNote extends BaseImport {
                 }
                 int request_id = Integer.parseInt(merge_request_id);
                 int note_id = Integer.parseInt(note);
-                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                if (!noteDb.check_request_note(repo_id, request_id, note_id, is_encrypted)) {
+                if (!noteDb.check_request_note(repo_id, request_id, note_id, encryption)) {
                     Timestamp created_date = Timestamp.valueOf(created_at);
                 
-                    noteDb.insert_request_note(repo_id, request_id, note_id, author, comment, created_date, is_encrypted);
+                    noteDb.insert_request_note(repo_id, request_id, note_id, author, comment, created_date, encryption);
                 }
             }
             

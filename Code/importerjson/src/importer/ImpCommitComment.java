@@ -7,6 +7,7 @@ package importer;
 
 import dao.NoteDb;
 import dao.RepositoryDb;
+import dao.SaltDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import org.json.simple.JSONArray;
@@ -39,7 +40,6 @@ public class ImpCommitComment extends BaseImport {
                 String version_id = (String) jsonObject.get("commit_id");
                 String author = (String) jsonObject.get("author");
                 String comment = (String) jsonObject.get("comment");
-                String upvotes = (String) jsonObject.get("upvotes");
                 String file = (String) jsonObject.get("file");
                 String line_number = (String) jsonObject.get("line");
                 String line_type = (String) jsonObject.get("line_type");
@@ -60,10 +60,10 @@ public class ImpCommitComment extends BaseImport {
                 if (line_type.equals("0")) {
                     line_type = null;
                 }
-                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                if (!noteDb.check_commit_note(repo_id, version_id, author, comment, file, line, line_type, is_encrypted)) {
-                    noteDb.insert_commit_note(repo_id, version_id, author, comment, file, line, line_type, is_encrypted);
+                if (!noteDb.check_commit_note(repo_id, version_id, author, comment, file, line, line_type, encryption)) {
+                    noteDb.insert_commit_note(repo_id, version_id, author, comment, file, line, line_type, encryption);
                 }
             }
             

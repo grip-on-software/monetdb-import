@@ -7,6 +7,7 @@ package importer;
 
 import dao.MergeRequestDb;
 import dao.RepositoryDb;
+import dao.SaltDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.Timestamp;
@@ -63,14 +64,14 @@ public class ImpMergeRequest extends BaseImport {
                 if (assignee.equals("0")) {
                     assignee = null;
                 }
-                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, is_encrypted);
+                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, encryption);
                 if (result == MergeRequestDb.CheckResult.MISSING) {
-                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, is_encrypted);
+                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, encryption);
                 }
                 else if (result == MergeRequestDb.CheckResult.DIFFERS) {
-                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, is_encrypted);
+                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, encryption);
                 }
             }
             

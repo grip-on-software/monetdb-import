@@ -28,21 +28,21 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
     };
     
     public MergeRequestDb() {
-        String sql = "insert into gros.merge_request(repo_id,request_id,title,description,source_branch,target_branch,author,assignee,upvotes,downvotes,created_date,updated_date,encrypted) values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.merge_request(repo_id,request_id,title,description,source_branch,target_branch,author,assignee,upvotes,downvotes,created_date,updated_date,encryption) values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.merge_request set title=?, description=?, source_branch=?, target_branch=?, author=?, assignee=?, upvotes=?, downvotes=?, created_date=?, updated_date=?, encrypted=? WHERE repo_id=? AND request_id=?;";
+        sql = "update gros.merge_request set title=?, description=?, source_branch=?, target_branch=?, author=?, assignee=?, upvotes=?, downvotes=?, created_date=?, updated_date=?, encryption=? WHERE repo_id=? AND request_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
     private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
-            checkStmt = con.prepareStatement("select title, description, source_branch, target_branch, author, assignee, upvotes, downvotes, created_date, updated_date, encrypted from gros.merge_request where repo_id=? AND request_id=?;");
+            checkStmt = con.prepareStatement("select title, description, source_branch, target_branch, author, assignee, upvotes, downvotes, created_date, updated_date, encryption from gros.merge_request where repo_id=? AND request_id=?;");
         }
     }
     
-    public CheckResult check_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, String author, String assignee, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, boolean encrypted) throws SQLException, IOException, PropertyVetoException {
+    public CheckResult check_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, String author, String assignee, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int encryption) throws SQLException, IOException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, repo_id);
@@ -61,7 +61,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
                         downvotes == rs.getInt("downvotes") &&
                         created_date.equals(rs.getTimestamp("created_date")) &&
                         updated_date.equals(rs.getTimestamp("updated_date")) &&
-                        encrypted == rs.getBoolean("encrypted")) {
+                        encryption == rs.getInt("encryption")) {
                     result = CheckResult.EXISTS;
                 }
                 else {
@@ -73,7 +73,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void insert_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, String author, String assignee, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, boolean encrypted) throws SQLException, IOException, PropertyVetoException {
+    public void insert_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, String author, String assignee, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int encryption) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setInt(2, request_id);
@@ -87,12 +87,12 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(10, downvotes);
         pstmt.setTimestamp(11, created_date);
         pstmt.setTimestamp(12, updated_date);
-        pstmt.setBoolean(13, encrypted);
+        pstmt.setInt(13, encryption);
                              
         insertStmt.batch();
     }
     
-    public void update_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, String author, String assignee, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, boolean encrypted) throws SQLException, IOException, PropertyVetoException {
+    public void update_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, String author, String assignee, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int encryption) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, title);
         pstmt.setString(2, description);
@@ -104,7 +104,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(8, downvotes);
         pstmt.setTimestamp(9, created_date);
         pstmt.setTimestamp(10, updated_date);
-        pstmt.setBoolean(11, encrypted);
+        pstmt.setInt(11, encryption);
         
         pstmt.setInt(12, repo_id);
         pstmt.setInt(13, request_id);

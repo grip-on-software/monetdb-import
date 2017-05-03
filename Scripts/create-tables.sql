@@ -40,7 +40,7 @@ CREATE TABLE "gros"."issue" (
 	"test_then"      TEXT    NULL,
 	"test_execution" INTEGER NULL,
 	"test_execution_time" INTEGER   NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 
@@ -72,7 +72,7 @@ CREATE TABLE "gros"."developer" (
 	"name"            VARCHAR(64)   NOT NULL,
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_developer_id" PRIMARY KEY ("id")
 );
 
@@ -82,7 +82,7 @@ CREATE TABLE "gros"."project_developer" (
 	"name"          VARCHAR(64) NOT NULL,
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
-	"encrypted"    BOOL    DEFAULT false,
+	"encryption"   INTEGER   DEFAULT 0,
 	    CONSTRAINT "pk_project_developer_id" PRIMARY KEY("project_id", "developer_id")
 );
 
@@ -164,7 +164,7 @@ CREATE TABLE "gros"."metric_version" (
 	"developer"      VARCHAR(64) NOT NULL,
 	"message"        TEXT      NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_metric_version_id" PRIMARY KEY ("project_id","version_id")
 );
 
@@ -218,7 +218,7 @@ CREATE TABLE "gros"."comment" (
 	"date"           TIMESTAMP      NULL,
 	"updater"        VARCHAR(64)   NOT NULL,
 	"updated_date"   TIMESTAMP      NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
 );
 
@@ -227,7 +227,7 @@ CREATE TABLE "gros"."vcs_developer" (
 	"jira_dev_id"  INTEGER,
 	"display_name" VARCHAR(500),
 	"email"        VARCHAR(100) NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_alias_id" PRIMARY KEY ("alias_id")
 );
 
@@ -280,7 +280,7 @@ CREATE TABLE "gros"."merge_request" (
 	"downvotes" INTEGER NULL,
 	"created_date" TIMESTAMP NULL,
 	"updated_date" TIMESTAMP NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
 		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
 );
 
@@ -291,7 +291,7 @@ CREATE TABLE "gros"."merge_request_note" (
 	"author" VARCHAR(500) NOT NULL,
 	"comment" TEXT NULL,
 	"created_date" TIMESTAMP NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
 		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "note_id")
 );
 
@@ -303,7 +303,7 @@ CREATE TABLE "gros"."commit_comment" (
 	"file" VARCHAR(1000) NULL,
 	"line" INTEGER NULL,
 	"line_type" VARCHAR(100) NULL,
-	"encrypted"      BOOL    DEFAULT false
+	"encryption"     INTEGER   DEFAULT 0
 );
 
 CREATE TABLE "gros"."reservation" (
@@ -316,7 +316,7 @@ CREATE TABLE "gros"."reservation" (
 	"end_date" TIMESTAMP NOT NULL,
 	"prepare_date" TIMESTAMP NULL,
 	"close_date" TIMESTAMP NULL,
-	"encrypted"      BOOL    DEFAULT false,
+	"encryption"     INTEGER   DEFAULT 0,
 		CONSTRAINT "pk_reservation_id" PRIMARY KEY("reservation_id")
 );
 

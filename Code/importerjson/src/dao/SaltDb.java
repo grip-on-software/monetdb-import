@@ -26,6 +26,28 @@ import util.BaseDb;
 public class SaltDb extends BaseDb implements AutoCloseable {
     BatchedStatement insertStmt = null;
     PreparedStatement checkStmt = null;
+    
+    public final static class Encryption {
+        public final static int NONE = 0;
+        public final static int PROJECT = 1;
+        public final static int GLOBAL = 2;
+        public final static int BOTH = 3;
+
+        public static int parseInt(String encrypted) throws NumberFormatException {
+            if (encrypted == null) {
+                return NONE;
+            }
+            
+            int encryption = Integer.parseInt(encrypted);
+            if (encryption < NONE || encryption > BOTH) {
+                throw new NumberFormatException("Encryption level " + encrypted + " is not supported");
+            }
+            return encryption;
+        }
+                
+        private Encryption() {
+        }
+    }
 
     public class SaltPair {
         private String salt;

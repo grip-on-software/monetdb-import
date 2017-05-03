@@ -7,6 +7,7 @@ package importer;
 
 import dao.DeveloperDb;
 import dao.RepositoryDb;
+import dao.SaltDb;
 import dao.TagDb;
 import java.io.FileReader;
 import java.sql.Timestamp;
@@ -52,7 +53,7 @@ public class ImpTag extends BaseImport {
                     throw new Exception("Cannot determine repository: " + repo_name);
                 }
                 
-                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
                 if (message.equals("0")) {
                     message = null;
@@ -72,7 +73,7 @@ public class ImpTag extends BaseImport {
                     tagger_id = null;
                 }
                 else {
-                    tagger_id = devDb.update_vcs_developer(projectID, tagger, tagger_email, is_encrypted);
+                    tagger_id = devDb.update_vcs_developer(projectID, tagger, tagger_email, encryption);
                 }
                 
                 TagDb.CheckResult result = tagDb.check_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);

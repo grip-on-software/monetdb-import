@@ -126,7 +126,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getInsertVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (insertVcsDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "insert into gros.vcs_developer (jira_dev_id, display_name, email, encrypted) values (?,?,?,?);";
+            String sql = "insert into gros.vcs_developer (jira_dev_id, display_name, email, encryption) values (?,?,?,?);";
             insertVcsDeveloperStmt = con.prepareStatement(sql);
         } 
     }
@@ -138,18 +138,20 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @param dev_id the corresponding developer id in Jira 
      * @param display_name the full name of the user in the version control system.
      * @param email The email address of the developer, or null.
-     * @param encrypted whether the name and email address of the developer are already encrypted.
+     * @param encryption the encryption level of the provided display_name and
+     * email address of the developer (0=no encryption, 1=project encryption,
+     * 2=global encrption, 3=project-then-global encryption).
      * @throws java.sql.SQLException
      * @throws java.io.IOException
      * @throws java.beans.PropertyVetoException
      */
-    public void insert_vcs_developer(int dev_id, String display_name, String email, boolean encrypted) throws SQLException, IOException, PropertyVetoException{
+    public void insert_vcs_developer(int dev_id, String display_name, String email, int encryption) throws SQLException, IOException, PropertyVetoException{
         getInsertVcsDeveloperStmt();
         
         insertVcsDeveloperStmt.setInt(1, dev_id);
         insertVcsDeveloperStmt.setString(2, display_name);
         setString(insertVcsDeveloperStmt, 3, email);
-        insertVcsDeveloperStmt.setBoolean(4, encrypted);
+        insertVcsDeveloperStmt.setInt(4, encryption);
     
         insertVcsDeveloperStmt.execute();
     }
@@ -220,14 +222,14 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         return idDeveloper;
     }
     
-    public int update_vcs_developer(int project_id, String display_name, String email, boolean encrypted) throws SQLException, IOException, PropertyVetoException {
+    public int update_vcs_developer(int project_id, String display_name, String email, int encryption) throws SQLException, IOException, PropertyVetoException {
         int vcs_developer_id = check_vcs_developer(display_name);
         if (vcs_developer_id == 0) {
             // If the VCS developer does not exist, create a new VCS developer
             // Check if JIRA developer exists with the same (short) name or email
             // This may return 0, which indicates that it should be linked (manually) later.
-            int jira_developer_id = check_project_developer(project_id, display_name, email, encrypted);
-            insert_vcs_developer(jira_developer_id, display_name, email, encrypted);
+            int jira_developer_id = check_project_developer(project_id, display_name, email, encryption);
+            insert_vcs_developer(jira_developer_id, display_name, email, encryption);
             // Retrieve new VCS developer ID
             vcs_developer_id = check_vcs_developer(display_name);
         }
@@ -238,7 +240,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getInsertProjectDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (insertProjectDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encrypted) values (?,?,?,?,?,?);";
+            String sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encryption) values (?,?,?,?,?,?);";
             insertProjectDeveloperStmt = con.prepareStatement(sql);
         } 
     }
@@ -246,7 +248,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckProjectDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkProjectDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT developer_id, name, email FROM gros.project_developer WHERE project_id = ? AND (display_name = ? OR (email IS NOT NULL AND email = ?))";
+            String sql = "SELECT developer_id, name, email FROM gros.project_developer WHERE project_id = ? AND (display_name = ? OR (email IS NOT NULL AND email = ?)) AND encryption = ?";
             checkProjectDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -273,7 +275,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             insertProjectDeveloperStmt.setString(3, saltDb.hash(name, pair));
             setString(insertProjectDeveloperStmt, 4, saltDb.hash(display_name, pair));
             setString(insertProjectDeveloperStmt, 5, saltDb.hash(email, pair));
-            insertProjectDeveloperStmt.setBoolean(6, true);
+            insertProjectDeveloperStmt.setInt(6, SaltDb.Encryption.PROJECT);
     
             insertProjectDeveloperStmt.execute();
         }
@@ -286,16 +288,18 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @param project_id the project the developer works on.
      * @param display_name the full name of the user in the version control system.
      * @param email the email address of the developer, or null.
-     * @param encrypted whether the full name and email address of the developer is already encrypted.
+     * @param encryption the encryption level of the provided display_name and
+     * email address of the developer (0=no encryption, 1=project encryption,
+     * 2=global encrption, 3=project-then-global encryption).
      * @return The ID in the developer table, or 0 if the developer was not found.
      * @throws SQLException
      * @throws IOException
      * @throws PropertyVetoException 
      */
-    public int check_project_developer(int project_id, String display_name, String email, boolean encrypted) throws SQLException, IOException, PropertyVetoException {
+    public int check_project_developer(int project_id, String display_name, String email, int encryption) throws SQLException, IOException, PropertyVetoException {
         getCheckProjectDeveloperStmt();
         
-        if (!encrypted) {
+        if (encryption == SaltDb.Encryption.NONE) {
             try (SaltDb saltDb = new SaltDb()) {
                 SaltDb.SaltPair pair = saltDb.get_salt(project_id);
                 display_name = saltDb.hash(display_name, pair);
@@ -306,6 +310,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         checkProjectDeveloperStmt.setInt(1, project_id);
         checkProjectDeveloperStmt.setString(2, display_name);
         setString(checkProjectDeveloperStmt, 3, email);
+        checkProjectDeveloperStmt.setInt(4, encryption);
 
         int idDeveloper = 0;
         try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {

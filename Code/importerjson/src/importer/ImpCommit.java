@@ -79,9 +79,9 @@ public class ImpCommit extends BaseImport{
                 if (developer_email.equals("0")) {
                     developer_email = null;
                 }
-                boolean is_encrypted = (encrypted == null ? false : !encrypted.equals("0"));
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                int developer_id = devDb.update_vcs_developer(projectID, developer, developer_email, is_encrypted);
+                int developer_id = devDb.update_vcs_developer(projectID, developer, developer_email, encryption);
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 
@@ -137,7 +137,7 @@ public class ImpCommit extends BaseImport{
         JSONParser parser = new JSONParser();
         int projectID = this.getProjectID();
  
-        String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE ((display_name=? AND encrypted=false) OR (display_name=? AND encrypted=true));";
+        String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE ((display_name=? AND encryption=?) OR (display_name=? AND encryption=?));";
         try (
             FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json");
             DeveloperDb devDb = new DeveloperDb();
@@ -162,13 +162,15 @@ public class ImpCommit extends BaseImport{
                     jira_id = devDb.check_developer(null, display_name, null);
                 }
                 else {
-                    jira_id = devDb.check_project_developer(projectID, display_name, null, false);
+                    jira_id = devDb.check_project_developer(projectID, display_name, null, SaltDb.Encryption.NONE);
                 }
                 
                 if (jira_id != 0) {
                     pstmt.setInt(1, jira_id);
                     pstmt.setString(2, display_name);
-                    pstmt.setString(3, saltDb.hash(display_name, pair));
+                    pstmt.setInt(3, SaltDb.Encryption.NONE);
+                    pstmt.setString(4, saltDb.hash(display_name, pair));
+                    pstmt.setInt(5, projectID == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
 
                     bstmt.batch();
                 }
@@ -212,6 +214,7 @@ public class ImpCommit extends BaseImport{
         Statement st = null;
         ResultSet rs = null;
         SaltDb.SaltPair pair;
+        int projectID = getProjectID();
         
         // Primary keys of the tables to update
         HashMap<String, String[]> hashKeys  = new HashMap<>();
@@ -251,11 +254,11 @@ public class ImpCommit extends BaseImport{
             for (String table : hashKeys.keySet()) {
                 String[] keys = hashKeys.get(table);
                 String[] fields = hashFields.get(table);
-                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table + " WHERE encrypted=false";
+                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table + " WHERE encryption=" + SaltDb.Encryption.NONE;
 
                 st = con.createStatement();
                 rs = st.executeQuery(selectSql);
-                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encrypted=true WHERE " + String.join("=? AND ", keys) + "=? AND encrypted=false";
+                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=" + SaltDb.Encryption.NONE;
 
                 try (BatchedStatement bstmt = new BatchedStatement(updateSql)) {
                     PreparedStatement pstmt = bstmt.getPreparedStatement();
@@ -268,6 +271,8 @@ public class ImpCommit extends BaseImport{
                             pstmt.setString(index, hashValue);
                             index++;
                         }
+                        pstmt.setInt(index, projectID == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
+                        index++;
                         for (String key : keys) {
                             Object keyValue = rs.getObject(key);
                             if (keyValue instanceof Integer) {
@@ -311,7 +316,7 @@ public class ImpCommit extends BaseImport{
         try (DeveloperDb devDb = new DeveloperDb()) {
             con = DataSource.getInstance().getConnection();
             
-            String selectSql = "SELECT developer.id, developer.name, developer.display_name, developer.email, issue.project_id FROM gros.developer JOIN gros.issue ON (developer.name = issue.updated_by OR developer.name = issue.reporter OR developer.name = issue.assignee) WHERE developer.encrypted = false GROUP BY developer.id, developer.name, developer.display_name, developer.email, issue.project_id";
+            String selectSql = "SELECT developer.id, developer.name, developer.display_name, developer.email, issue.project_id FROM gros.developer JOIN gros.issue ON (developer.name = issue.updated_by OR developer.name = issue.reporter OR developer.name = issue.assignee) WHERE developer.encryption = 0 GROUP BY developer.id, developer.name, developer.display_name, developer.email, issue.project_id";
             st = con.createStatement();
             rs = st.executeQuery(selectSql);
             while (rs.next()) {
