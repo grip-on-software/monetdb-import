@@ -252,12 +252,20 @@ public class ImpCommit extends BaseImport{
         hashFields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
         hashFields.put("comment", new String[]{"author"});
         
+        String[] tables;
+        if (projectID == 0) {
+            tables = new String[]{"developer", "metric_version"};
+        }
+        else {
+            tables = new String[]{"vcs_developer", "merge_request", "merge_request_note", "commit_comment", "issue", "comment"};
+        }
+        
         try (SaltDb saltDb = new SaltDb()) {
-            pair = saltDb.get_salt(this.getProjectID());
+            pair = saltDb.get_salt(projectID);
             
             con = DataSource.getInstance().getConnection();
             
-            for (String table : hashKeys.keySet()) {
+            for (String table : tables) {
                 String[] keys = hashKeys.get(table);
                 String[] fields = hashFields.get(table);
                 String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table + " WHERE encryption=" + SaltDb.Encryption.NONE;
