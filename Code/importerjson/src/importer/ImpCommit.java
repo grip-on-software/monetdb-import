@@ -137,7 +137,8 @@ public class ImpCommit extends BaseImport{
         JSONParser parser = new JSONParser();
         int projectID = this.getProjectID();
  
-        String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE ((display_name=? AND encryption=?) OR (display_name=? AND encryption=?));";
+        String condition = "(encryption=? AND (display_name=? OR (email IS NOT NULL AND email=?)))";
+        String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
         try (
             FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json");
             DeveloperDb devDb = new DeveloperDb();
@@ -155,22 +156,27 @@ public class ImpCommit extends BaseImport{
                 
                 int jira_id = 0;
                 String display_name = (String) jsonObject.get("display_name");
+                String email = (String) jsonObject.get("email");
                 if (jsonObject.containsKey("id")) {
                     jira_id = Integer.parseInt((String) jsonObject.get("id"));
                 }
                 else if (projectID == 0) {
-                    jira_id = devDb.check_developer(null, display_name, null);
+                    jira_id = devDb.check_developer(null, display_name, email);
                 }
                 else {
-                    jira_id = devDb.check_project_developer(projectID, display_name, null, SaltDb.Encryption.NONE);
+                    jira_id = devDb.check_project_developer(projectID, display_name, email, SaltDb.Encryption.NONE);
                 }
                 
                 if (jira_id != 0) {
                     pstmt.setInt(1, jira_id);
-                    pstmt.setString(2, display_name);
-                    pstmt.setInt(3, SaltDb.Encryption.NONE);
-                    pstmt.setString(4, saltDb.hash(display_name, pair));
+                    
+                    pstmt.setInt(2, SaltDb.Encryption.NONE);
+                    pstmt.setString(3, display_name);
+                    setString(pstmt, 4, email);
+                    
                     pstmt.setInt(5, projectID == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
+                    pstmt.setString(6, saltDb.hash(display_name, pair));
+                    setString(pstmt, 7, saltDb.hash(email, pair));
 
                     bstmt.batch();
                 }

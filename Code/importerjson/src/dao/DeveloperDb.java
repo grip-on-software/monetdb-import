@@ -67,16 +67,19 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         if (checkDeveloperStmt != null) {
             checkDeveloperStmt.close();
+            checkDeveloperStmt = null;
         }
         if (insertVcsDeveloperStmt != null) {
             insertVcsDeveloperStmt.close();
+            insertVcsDeveloperStmt = null;
         }
         if (checkVcsDeveloperStmt != null) {
             checkVcsDeveloperStmt.close();
+            checkVcsDeveloperStmt = null;
         }
         if (insertProjectDeveloperStmt != null) {
-            insertProjectDeveloperStmt.execute();
             insertProjectDeveloperStmt.close();
+            insertProjectDeveloperStmt = null;
         }
         
         if (vcsNameCache != null) {
@@ -294,7 +297,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckProjectDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkProjectDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT developer_id, name, email FROM gros.project_developer WHERE project_id = ? AND (display_name = ? OR (email IS NOT NULL AND email = ?)) AND encryption = ?";
+            String sql = "SELECT developer_id, name, email FROM gros.project_developer WHERE project_id = ? AND encryption = ? AND (name = ? OR display_name = ? OR (email IS NOT NULL AND email = ?))";
             checkProjectDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -354,9 +357,10 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
         
         checkProjectDeveloperStmt.setInt(1, project_id);
-        checkProjectDeveloperStmt.setString(2, display_name);
-        setString(checkProjectDeveloperStmt, 3, email);
-        checkProjectDeveloperStmt.setInt(4, encryption);
+        checkProjectDeveloperStmt.setInt(2, encryption);
+        checkProjectDeveloperStmt.setString(3, display_name);
+        checkProjectDeveloperStmt.setString(4, display_name);
+        setString(checkProjectDeveloperStmt, 5, email);
 
         int idDeveloper = 0;
         try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {
