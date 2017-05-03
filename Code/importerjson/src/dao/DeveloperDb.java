@@ -45,7 +45,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws java.io.IOException
      * @throws java.beans.PropertyVetoException
      */
-    public void insert_developer(String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException{
+    public void insert_developer(String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertDeveloperStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
@@ -88,7 +88,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT id FROM gros.developer WHERE UPPER(name) = ? OR UPPER(display_name) = ? OR UPPER(email) = ?";
+            String sql = "SELECT id FROM gros.developer WHERE ((encryption=? AND (UPPER(name) = ? OR UPPER(display_name) = ? OR UPPER(email) = ?)) OR (encryption=? AND (name=? OR display_name=? OR email=?))";
             checkDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -96,9 +96,11 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     /**
      * Returns the developer ID if the developer already exists in the developer 
      * table of the database. Else returns 0.
-     * @param name the short alias of the developer in Jira.
-     * @param display_name the complete name of the developer in Jira.
-     * @param email The email address of the developer, or null.
+     * @param name the short alias of the developer in JIRA, or null to fall back
+     * to the display name.
+     * @param display_name the complete name of the developer in JIRA.
+     * @param email The email address of the developer, or null to fall back to
+     * the (display) name.
      * @return the Developer ID if found, otherwise 0.
      * @throws java.sql.SQLException
      * @throws java.io.IOException
@@ -108,12 +110,26 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         int idDeveloper = 0;
         getCheckDeveloperStmt();
         
-        checkDeveloperStmt.setString(1, name.toUpperCase().trim());
-        checkDeveloperStmt.setString(2, display_name.toUpperCase().trim());
+        if (name == null) {
+            name = display_name;
+        }
         if (email == null) {
             email = name;
         }
-        checkDeveloperStmt.setString(3, email.toUpperCase().trim());
+        
+        checkDeveloperStmt.setInt(1, SaltDb.Encryption.NONE);
+        checkDeveloperStmt.setString(2, name.toUpperCase().trim());
+        checkDeveloperStmt.setString(3, display_name.toUpperCase().trim());
+        checkDeveloperStmt.setString(4, email.toUpperCase().trim());
+        
+        checkDeveloperStmt.setInt(5, SaltDb.Encryption.GLOBAL);
+        try (SaltDb saltDb = new SaltDb()) {
+            SaltDb.SaltPair pair = saltDb.get_salt(0);
+            checkDeveloperStmt.setString(6, saltDb.hash(name, pair));
+            checkDeveloperStmt.setString(7, saltDb.hash(display_name, pair));
+            checkDeveloperStmt.setString(8, saltDb.hash(email, pair));
+        }
+        
         try (ResultSet rs = checkDeveloperStmt.executeQuery()) {
             while (rs.next()) {
                 idDeveloper = rs.getInt("id");
@@ -159,7 +175,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckVcsDeveloperStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkVcsDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT alias_id FROM gros.vcs_developer WHERE UPPER(display_name) = ?";
+            String sql = "SELECT alias_id FROM gros.vcs_developer WHERE ((encryption=? AND UPPER(display_name) = ?) OR (encryption=? AND display_name=?))";
             checkVcsDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -171,15 +187,19 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         vcsNameCache = new HashMap<>();
         
         Connection con = insertDeveloperStmt.getConnection();
-        String sql = "SELECT UPPER(display_name), alias_id FROM gros.vcs_developer";
+        String sql = "SELECT display_name, alias_id, encryption FROM gros.vcs_developer";
         try (
                 Statement stmt = con.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)
         ) {
-            while(rs.next()) {
-                String key = rs.getString(1);
-                Integer id = Integer.parseInt(rs.getString(2));
-                vcsNameCache.put(key, id);
+            while (rs.next()) {
+                String display_name = rs.getString("display_name");
+                Integer id = rs.getInt("alias_id");
+                int encryption = rs.getInt("encryption");
+                if (encryption == SaltDb.Encryption.NONE) {
+                    display_name = display_name.toUpperCase().trim();
+                }
+                vcsNameCache.put(display_name, id);
             }
         }
     }
@@ -188,16 +208,38 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * Returns the Alias ID if the developer already exists in the VCS developer 
      * table of the database. Else returns 0.
      * @param display_name the complete name of the developer in the version control system.
+     * @param encryption the encryption level of the provided display_name
+     * of the developer (0=no encryption, 1=project encryption,
+     * 2=global encrption, 3=project-then-global encryption).
      * @return the Developer ID if found, otherwise 0.
      * @throws java.sql.SQLException
      * @throws java.io.IOException
      * @throws java.beans.PropertyVetoException
     */
-    public int check_vcs_developer(String display_name) throws SQLException, IOException, PropertyVetoException {
+    public int check_vcs_developer(String display_name, int encryption) throws SQLException, IOException, PropertyVetoException {
         fillVcsNameCache();
         
-        String key = display_name.toUpperCase().trim();
-        Integer cacheId = vcsNameCache.get(key);
+        String plain_name;
+        String encrypted_name;
+        if (encryption == SaltDb.Encryption.NONE) {
+            plain_name = display_name.toUpperCase().trim();
+            try (SaltDb saltDb = new SaltDb()) {
+                SaltDb.SaltPair pair = saltDb.get_salt(0);
+                encrypted_name = saltDb.hash(display_name, pair);
+                encryption = SaltDb.Encryption.GLOBAL;
+            }
+        }
+        else {
+            // Cannot decrypt the display name at this point
+            plain_name = display_name;
+            encrypted_name = display_name;
+        }
+        
+        Integer cacheId = vcsNameCache.get(plain_name);
+        if (cacheId != null) {
+            return cacheId;
+        }
+        cacheId = vcsNameCache.get(encrypted_name);
         if (cacheId != null) {
             return cacheId;
         }
@@ -205,7 +247,10 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         Integer idDeveloper = null;
         getCheckVcsDeveloperStmt();
         
-        checkVcsDeveloperStmt.setString(1, key);
+        checkVcsDeveloperStmt.setInt(1, SaltDb.Encryption.NONE);
+        checkVcsDeveloperStmt.setString(2, plain_name);
+        checkVcsDeveloperStmt.setInt(3, encryption);
+        checkVcsDeveloperStmt.setString(4, encrypted_name);
         
         try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {
             while (rs.next()) {
@@ -213,7 +258,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             }
         }
         
-        vcsNameCache.put(key, idDeveloper);
+        vcsNameCache.put(plain_name, idDeveloper);
+        vcsNameCache.put(encrypted_name, idDeveloper);
         
         if (idDeveloper == null) {
             return 0;
@@ -223,7 +269,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     }
     
     public int update_vcs_developer(int project_id, String display_name, String email, int encryption) throws SQLException, IOException, PropertyVetoException {
-        int vcs_developer_id = check_vcs_developer(display_name);
+        int vcs_developer_id = check_vcs_developer(display_name, encryption);
         if (vcs_developer_id == 0) {
             // If the VCS developer does not exist, create a new VCS developer
             // Check if JIRA developer exists with the same (short) name or email
@@ -231,7 +277,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             int jira_developer_id = check_project_developer(project_id, display_name, email, encryption);
             insert_vcs_developer(jira_developer_id, display_name, email, encryption);
             // Retrieve new VCS developer ID
-            vcs_developer_id = check_vcs_developer(display_name);
+            vcs_developer_id = check_vcs_developer(display_name, encryption);
         }
 
         return vcs_developer_id;
@@ -265,7 +311,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws java.beans.PropertyVetoException
      */
     public void insert_project_developer(int project_id, int dev_id, String name, String display_name, String email) throws SQLException, IOException, PropertyVetoException{
-        getInsertVcsDeveloperStmt();
+        getInsertProjectDeveloperStmt();
         
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(project_id);
