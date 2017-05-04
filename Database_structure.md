@@ -484,11 +484,11 @@ These tables include data from Gitlab/Git and Subversion.
         from which commits should be merged.
     -   **target_branch** - VARCHAR(Git branch): The (main) branch at
         which the commits should be merged into.
-    -   **author** - VARCHAR(500): The GitLab user name of the developer
-        that started the request.
-    -   **assignee** - VARCHAR(500): The GitLab user name of the
-        developer that should review the request. This is NULL if nobody
-        is assigned.
+    -   **author_id** - INT - reference to vcs_developer.alias_id: The
+        GitLab account of the developer that started the request.
+    -   **assignee_id** - INT - reference to vcs_developer.alias_id: The
+        GitLab account of he developer that should review the request.
+        This is NULL if nobody is assigned.
     -   **upvotes** - INT: Number of votes from the development team in
         support of the merge request.
     -   **downvotes** - INT: Number of votes from the development team
@@ -498,7 +498,6 @@ These tables include data from Gitlab/Git and Subversion.
     -   **updated_date** - TIMESTAMP: Time at which the merge request
         received an update (a merge request note or update to the
         request details).
-    -   **encryption** - INTEGER(row encryption)
 
 
 -   **merge_request_note**: A comment or automated message attached to a
@@ -511,25 +510,28 @@ These tables include data from Gitlab/Git and Subversion.
         Merge request to which this note is added.
     -   **note_id** - INT: Internal GitLab identifier which is unique
         for the GitLab instance.
-    -   **author** - VARCHAR(500): The GitLab user name of the developer
-        that wrote the comment or on whose regard the automated comment
-        is added.
+    -   **author_id** - INT - reference to vcs_developer.alias_id: The
+        GitLab account of the developer that wrote the comment or on
+        whose regard the automated comment is added.
     -   **comment** - TEXT: Plain text comment message of the note.
         Automated notes have a first line which is surrounded with
         underscores, or matches the regex "Added \\d commits?:" with the
         remaining lines either empty or starting with star-bullets.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
         to the merge request.
-    -   **encryption** - INTEGER(row encryption)
 
 
 -   **commit_comment**: A comment attached to a version in the Git
     repository. Note that the comment may be part of a review of a merge
-    request, but this is not directly visible from the data.
+    request, but this is not directly visible from the data. The table
+    has no keys; in order to check if a certain row already exists, all
+    fields should be included into the query.
     -   **repo_id** - INT - reference to repo.id: Repository for which
         this note is added.
     -   **version_id** - VACHAR(100) - reference to commits.version_id:
         Commit to which this note is added.
+    -   **author_id** - INT - reference to vcs_developer.alias_id: The
+        GitLab account of the developer who wrote the commit comment.
     -   **file** - VARCHAR(1000): Path to a file in the repository that
         is changed in the commit and is discussed by the comment. If
         this is NULL, then the comment belongs to the entire version.
@@ -539,7 +541,6 @@ These tables include data from Gitlab/Git and Subversion.
     -   **line_type** - VARCHAR(100): The type of line being discussed
         by the comment: 'old' or 'new'. If this is NULL, then the
         comment belongs to the entire version.
-    -   **encryption** - INTEGER(row encryption)
 
 ## Metrics tables (Quality dashboard history)
 
