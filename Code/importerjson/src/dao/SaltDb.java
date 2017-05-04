@@ -39,12 +39,22 @@ public class SaltDb extends BaseDb implements AutoCloseable {
             }
             
             int encryption = Integer.parseInt(encrypted);
-            if (encryption < NONE || encryption > BOTH) {
-                throw new NumberFormatException("Encryption level " + encrypted + " is not supported");
-            }
+            check(encryption);
             return encryption;
         }
+        
+        public static void check(int encryption) throws NumberFormatException {
+            if (encryption < NONE || encryption > BOTH) {
+                throw new NumberFormatException("Encryption level " + encryption + " is not supported");
+            }
+        }
                 
+        public static int add(int encryption, int new_encryption) {
+            check(encryption);
+            check(new_encryption);
+            return encryption | new_encryption;
+        }
+        
         private Encryption() {
         }
     }

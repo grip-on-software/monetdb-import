@@ -11,6 +11,7 @@ import dao.DeveloperDb;
 import dao.DeveloperDb.Developer;
 import dao.RepositoryDb;
 import dao.SaltDb;
+import dao.SaltDb.Encryption;
 import java.beans.PropertyVetoException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -20,12 +21,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.BufferedJSONReader;
@@ -80,7 +83,7 @@ public class ImpCommit extends BaseImport{
                 if (developer_email.equals("0")) {
                     developer_email = null;
                 }
-                int encryption = SaltDb.Encryption.parseInt(encrypted);
+                int encryption = Encryption.parseInt(encrypted);
                 
                 Developer dev = new Developer(developer, developer_email);
                 int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
@@ -167,17 +170,17 @@ public class ImpCommit extends BaseImport{
                     jira_id = devDb.check_developer(dev);
                 }
                 else {
-                    jira_id = devDb.check_project_developer(projectID, dev, SaltDb.Encryption.NONE);
+                    jira_id = devDb.check_project_developer(projectID, dev, Encryption.NONE);
                 }
                 
                 if (jira_id != 0) {
                     pstmt.setInt(1, jira_id);
                     
-                    pstmt.setInt(2, SaltDb.Encryption.NONE);
+                    pstmt.setInt(2, Encryption.NONE);
                     pstmt.setString(3, display_name);
                     setString(pstmt, 4, email);
                     
-                    pstmt.setInt(5, projectID == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
+                    pstmt.setInt(5, projectID == 0 ? Encryption.GLOBAL : Encryption.PROJECT);
                     pstmt.setString(6, saltDb.hash(display_name, pair));
                     setString(pstmt, 7, saltDb.hash(email, pair));
 
@@ -233,10 +236,6 @@ public class ImpCommit extends BaseImport{
         hashKeys.put("metric_version", new String[]{"project_id", "version_id"});
         hashKeys.put("reservation", new String[]{"reservation_id"});
         
-        hashKeys.put("merge_request", new String[]{"repo_id", "request_id"});
-        hashKeys.put("merge_request_note", new String[]{"repo_id", "request_id", "note_id"});
-        hashKeys.put("commit_comment", new String[]{"repo_id", "version_id", "author", "comment", "file", "line", "line_type"});
-        
         hashKeys.put("issue", new String[]{"issue_id", "changelog_id"});
         hashKeys.put("comment", new String[]{"comment_id"});
         
@@ -247,20 +246,29 @@ public class ImpCommit extends BaseImport{
         
         hashFields.put("metric_version", new String[]{"developer"});
         hashFields.put("reservation", new String[]{"requester"});
-
-        hashFields.put("merge_request", new String[]{"author", "assignee"});
-        hashFields.put("merge_request_note", new String[]{"author"});
-        hashFields.put("commit_comment", new String[]{"author"});
         
         hashFields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
         hashFields.put("comment", new String[]{"author"});
         
         String[] tables;
-        if (projectID == 0) {
-            tables = new String[]{"developer", "metric_version"};
+
+        String encryptTables = System.getProperty("importer.encrypt_tables", "").trim();
+        List<String> encryptionLevels = new ArrayList<>();
+        encryptionLevels.add(String.valueOf(Encryption.NONE));
+        if (encryptTables.isEmpty()) {
+            if (projectID == 0) {
+                tables = new String[]{"developer", "metric_version"};
+            }
+            else {
+                tables = new String[]{"vcs_developer", "issue", "comment"};
+            }
         }
         else {
-            tables = new String[]{"vcs_developer", "merge_request", "merge_request_note", "commit_comment", "issue", "comment"};
+            tables = encryptTables.split(",");
+            if (projectID == 0) {
+                // Project-then-global encryption
+                encryptionLevels.add(String.valueOf(Encryption.PROJECT));
+            }
         }
         
         try (SaltDb saltDb = new SaltDb()) {
@@ -269,13 +277,16 @@ public class ImpCommit extends BaseImport{
             con = DataSource.getInstance().getConnection();
             
             for (String table : tables) {
+                if (!hashKeys.containsKey(table)) {
+                    throw new RuntimeException("Table " + table + " cannot be encrypted");
+                }
                 String[] keys = hashKeys.get(table);
                 String[] fields = hashFields.get(table);
-                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + " FROM gros." + table + " WHERE encryption=" + SaltDb.Encryption.NONE;
+                String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + ", encryption FROM gros." + table + " WHERE encryption IN (" + String.join(", ", encryptionLevels) + ")";
 
                 st = con.createStatement();
                 rs = st.executeQuery(selectSql);
-                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=" + SaltDb.Encryption.NONE;
+                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=" + Encryption.NONE;
 
                 try (BatchedStatement bstmt = new BatchedStatement(updateSql)) {
                     PreparedStatement pstmt = bstmt.getPreparedStatement();
@@ -288,7 +299,8 @@ public class ImpCommit extends BaseImport{
                             pstmt.setString(index, hashValue);
                             index++;
                         }
-                        pstmt.setInt(index, projectID == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
+                        int encryption = rs.getInt("encryption");
+                        pstmt.setInt(index, Encryption.add(encryption, projectID == 0 ? Encryption.GLOBAL : Encryption.PROJECT));
                         index++;
                         for (String key : keys) {
                             Object keyValue = rs.getObject(key);
