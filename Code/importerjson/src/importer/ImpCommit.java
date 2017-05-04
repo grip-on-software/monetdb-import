@@ -8,6 +8,7 @@ package importer;
 import dao.BatchedStatement;
 import dao.DataSource;
 import dao.DeveloperDb;
+import dao.DeveloperDb.Developer;
 import dao.RepositoryDb;
 import dao.SaltDb;
 import java.beans.PropertyVetoException;
@@ -81,7 +82,8 @@ public class ImpCommit extends BaseImport{
                 }
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                int developer_id = devDb.update_vcs_developer(projectID, developer, developer_email, encryption);
+                Developer dev = new Developer(developer, developer_email);
+                int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 
@@ -157,14 +159,15 @@ public class ImpCommit extends BaseImport{
                 int jira_id = 0;
                 String display_name = (String) jsonObject.get("display_name");
                 String email = (String) jsonObject.get("email");
+                Developer dev = new Developer(display_name, email);
                 if (jsonObject.containsKey("id")) {
                     jira_id = Integer.parseInt((String) jsonObject.get("id"));
                 }
                 else if (projectID == 0) {
-                    jira_id = devDb.check_developer(null, display_name, email);
+                    jira_id = devDb.check_developer(dev);
                 }
                 else {
-                    jira_id = devDb.check_project_developer(projectID, display_name, email, SaltDb.Encryption.NONE);
+                    jira_id = devDb.check_project_developer(projectID, dev, SaltDb.Encryption.NONE);
                 }
                 
                 if (jira_id != 0) {
@@ -339,8 +342,9 @@ public class ImpCommit extends BaseImport{
                 String display_name = rs.getString("display_name");
                 String email = rs.getString("email");
                 int project_id = rs.getInt("project_id");
+                Developer dev = new Developer(name, display_name, email);
                 
-                devDb.insert_project_developer(project_id, id, name, display_name, email);
+                devDb.insert_project_developer(project_id, id, dev);
             }
         }
         catch (Exception ex) {

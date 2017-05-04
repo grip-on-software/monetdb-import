@@ -6,8 +6,8 @@
 package importer;
 
 import dao.DeveloperDb;
+import dao.DeveloperDb.Developer;
 import java.io.FileReader;
-import java.sql.SQLException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -38,11 +38,12 @@ public class ImpDeveloper extends BaseImport{
                 String name = (String) jsonObject.get("name");
                 String email = (String) jsonObject.get("email");
                 
-                int dev_id = devDb.check_developer(name, display_name, email);
+                Developer dev = new Developer(name, display_name, email);
+                int dev_id = devDb.check_developer(dev);
                 // check whether the developer does not already exist
                 if(dev_id == 0) {
-                    devDb.insert_developer(name, display_name, email);
-                    devDb.insert_project_developer(project_id, dev_id, name, display_name, email);
+                    devDb.insert_developer(dev);
+                    devDb.insert_project_developer(project_id, dev_id, dev);
                 }
 
             }                  

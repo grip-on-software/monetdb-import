@@ -6,6 +6,7 @@
 package importer;
 
 import dao.DeveloperDb;
+import dao.DeveloperDb.Developer;
 import dao.RepositoryDb;
 import dao.SaltDb;
 import dao.TagDb;
@@ -65,15 +66,18 @@ public class ImpTag extends BaseImport {
                 else {
                     tag_date = Timestamp.valueOf(tagged_date);
                 }
+                
                 Integer tagger_id;
                 if (tagger_email.equals("0")) {
                     tagger_email = null;
                 }
+                
                 if (tagger.equals("0")) {
                     tagger_id = null;
                 }
                 else {
-                    tagger_id = devDb.update_vcs_developer(projectID, tagger, tagger_email, encryption);
+                    Developer dev = new Developer(tagger, tagger_email);
+                    tagger_id = devDb.update_vcs_developer(projectID, dev, encryption);
                 }
                 
                 TagDb.CheckResult result = tagDb.check_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);
