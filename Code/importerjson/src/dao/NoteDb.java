@@ -29,27 +29,26 @@ public class NoteDb extends BaseDb implements AutoCloseable {
     };
     
     public NoteDb() {
-        String sql = "insert into gros.merge_request_note(repo_id,request_id,note_id,author,comment,created_date,encryption) values (?,?,?,?,?,?,?);";
+        String sql = "insert into gros.merge_request_note(repo_id,request_id,note_id,developer_id,comment,created_date) values (?,?,?,?,?,?);";
         insertRequestStmt = new BatchedStatement(sql);
         
-        sql = "insert into gros.commit_comment(repo_id,version_id,author,comment,file,line,line_type,encryption) values (?,?,?,?,?,?,?,?)";
+        sql = "insert into gros.commit_comment(repo_id,version_id,developer_id,comment,file,line,line_type) values (?,?,?,?,?,?,?)";
         insertCommitStmt = new BatchedStatement(sql);
     }
     
     private void getCheckRequestStmt() throws SQLException, IOException, PropertyVetoException {
         if (checkRequestStmt == null) {
             Connection con = insertRequestStmt.getConnection();
-            checkRequestStmt = con.prepareStatement("select note_id from gros.merge_request_note where repo_id=? AND request_id=? AND note_id=? AND encryption=?;");
+            checkRequestStmt = con.prepareStatement("select note_id from gros.merge_request_note where repo_id=? AND request_id=? AND note_id=?;");
         }
     }
     
-    public boolean check_request_note(int repo_id, int request_id, int note_id, int encryption) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_request_note(int repo_id, int request_id, int note_id) throws SQLException, IOException, PropertyVetoException {
         getCheckRequestStmt();
         
         checkRequestStmt.setInt(1, repo_id);
         checkRequestStmt.setInt(2, request_id);
         checkRequestStmt.setInt(3, note_id);
-        checkRequestStmt.setInt(4, encryption);
         try (ResultSet rs = checkRequestStmt.executeQuery()) {
             if (rs.next()) {
                 return true;
@@ -59,15 +58,14 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_request_note(int repo_id, int request_id, int note_id, String author, String comment, Timestamp created_date, int encryption) throws SQLException, IOException, PropertyVetoException {
+    public void insert_request_note(int repo_id, int request_id, int note_id, int dev_id, String comment, Timestamp created_date) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertRequestStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setInt(2, request_id);
         pstmt.setInt(3, note_id);
-        pstmt.setString(4, author);
+        pstmt.setInt(4, dev_id);
         pstmt.setString(5, comment);
         pstmt.setTimestamp(6, created_date);
-        pstmt.setInt(7, encryption);
                              
         insertRequestStmt.batch();
     }
@@ -79,17 +77,16 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    public boolean check_commit_note(int repo_id, String version_id, String author, String comment, String file, Integer line, String line_type, int encryption) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type) throws SQLException, IOException, PropertyVetoException {
         getCheckCommitStmt();
         
         checkCommitStmt.setInt(1, repo_id);
         checkCommitStmt.setString(2, version_id);
-        checkCommitStmt.setString(3, author);
+        checkCommitStmt.setInt(3, dev_id);
         checkCommitStmt.setString(4, comment);
         setString(checkCommitStmt, 5, file);
         setInteger(checkCommitStmt, 6, line);
         setString(checkCommitStmt, 7, line_type);
-        checkCommitStmt.setInt(8, encryption);
         try (ResultSet rs = checkCommitStmt.executeQuery()) {
             if (rs.next()) {
                 return true;
@@ -99,16 +96,15 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_commit_note(int repo_id, String version_id, String author, String comment, String file, Integer line, String line_type, int encryption) throws SQLException, IOException, PropertyVetoException {
+    public void insert_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertCommitStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setString(2, version_id);
-        pstmt.setString(3, author);
+        pstmt.setInt(3, dev_id);
         pstmt.setString(4, comment);
         setString(pstmt, 5, file);
         setInteger(pstmt, 6, line);
         setString(pstmt, 7, line_type);
-        pstmt.setInt(8, encryption);
                              
         insertCommitStmt.batch();
     }

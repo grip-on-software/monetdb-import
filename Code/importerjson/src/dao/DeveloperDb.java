@@ -41,7 +41,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
         
         public Developer(String display_name, String email) {
-            this(display_name, display_name, email);
+            this(null, display_name, email);
         }
         
         /**
@@ -52,7 +52,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
          * @param email The email address of the developer, may be null.
          */
         public Developer(String name, String display_name, String email) {
-            this.name = name;
+            this.name = (name == null ? display_name : name);
             this.display_name = display_name;
             this.email = email;
         }

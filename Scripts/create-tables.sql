@@ -274,13 +274,12 @@ CREATE TABLE "gros"."merge_request" (
 	"description" TEXT NULL,
 	"source_branch" VARCHAR(255) NOT NULL,
 	"target_branch" VARCHAR(255) NOT NULL,
-	"author" VARCHAR(500) NOT NULL,
-	"assignee" VARCHAR(500) NULL,
+	"author_id" INTEGER NOT NULL,
+	"assignee_id" INTEGER NULL,
 	"upvotes" INTEGER NULL,
 	"downvotes" INTEGER NULL,
 	"created_date" TIMESTAMP NULL,
-	"updated_date" TIMESTAMP NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"updated_date" TIMESTAMP NULL
 		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
 );
 
@@ -288,22 +287,20 @@ CREATE TABLE "gros"."merge_request_note" (
 	"repo_id" INTEGER NOT NULL,
 	"request_id" INTEGER NOT NULL,
 	"note_id" INTEGER NOT NULL,
-	"author" VARCHAR(500) NOT NULL,
+	"author_id" INTEGER NOT NULL,
 	"comment" TEXT NULL,
-	"created_date" TIMESTAMP NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"created_date" TIMESTAMP NULL
 		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "note_id")
 );
 
 CREATE TABLE "gros"."commit_comment" (
 	"repo_id" INTEGER NOT NULL,
 	"version_id" VARCHAR(100) NOT NULL,
-	"author" VARCHAR(500) NOT NULL,
+	"author_id" INTEGER NOT NULL,
 	"comment" TEXT NULL,
 	"file" VARCHAR(1000) NULL,
 	"line" INTEGER NULL,
-	"line_type" VARCHAR(100) NULL,
-	"encryption"     INTEGER   DEFAULT 0
+	"line_type" VARCHAR(100) NULL
 );
 
 CREATE TABLE "gros"."reservation" (

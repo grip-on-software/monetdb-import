@@ -5,6 +5,8 @@
  */
 package importer;
 
+import dao.DeveloperDb;
+import dao.DeveloperDb.Developer;
 import dao.NoteDb;
 import dao.RepositoryDb;
 import dao.SaltDb;
@@ -24,9 +26,11 @@ public class ImpCommitComment extends BaseImport {
     @Override
     public void parser() {
         JSONParser parser = new JSONParser();
+        int project_id = this.getProjectID();
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
+            DeveloperDb devDb = new DeveloperDb();
             NoteDb noteDb = new NoteDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_commit_comment.json")
         ) {
@@ -39,16 +43,21 @@ public class ImpCommitComment extends BaseImport {
                 String repo_name = (String) jsonObject.get("repo_name");
                 String version_id = (String) jsonObject.get("commit_id");
                 String author = (String) jsonObject.get("author");
+                String author_username = (String) jsonObject.get("author_username");
                 String comment = (String) jsonObject.get("comment");
                 String file = (String) jsonObject.get("file");
                 String line_number = (String) jsonObject.get("line");
                 String line_type = (String) jsonObject.get("line_type");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) {
                     throw new Exception("Cannot determine repository: " + repo_name);
                 }
+                
+                Developer dev = new Developer(author_username, author, null);
+                int dev_id = devDb.check_project_developer(project_id, dev, encryption);
                 
                 if (file.equals("0")) {
                     file = null;
@@ -60,10 +69,9 @@ public class ImpCommitComment extends BaseImport {
                 if (line_type.equals("0")) {
                     line_type = null;
                 }
-                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                if (!noteDb.check_commit_note(repo_id, version_id, author, comment, file, line, line_type, encryption)) {
-                    noteDb.insert_commit_note(repo_id, version_id, author, comment, file, line, line_type, encryption);
+                if (!noteDb.check_commit_note(repo_id, version_id, dev_id, comment, file, line, line_type)) {
+                    noteDb.insert_commit_note(repo_id, version_id, dev_id, comment, file, line, line_type);
                 }
             }
             

@@ -5,6 +5,8 @@
  */
 package importer;
 
+import dao.DeveloperDb;
+import dao.DeveloperDb.Developer;
 import dao.MergeRequestDb;
 import dao.RepositoryDb;
 import dao.SaltDb;
@@ -25,9 +27,11 @@ public class ImpMergeRequest extends BaseImport {
     @Override
     public void parser() {
         JSONParser parser = new JSONParser();
+        int project_id = this.getProjectID();
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
+            DeveloperDb devDb = new DeveloperDb();
             MergeRequestDb requestDb = new MergeRequestDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_merge_request.json")
         ) {
@@ -44,13 +48,16 @@ public class ImpMergeRequest extends BaseImport {
                 String source_branch = (String) jsonObject.get("source_branch");
                 String target_branch = (String) jsonObject.get("target_branch");
                 String author = (String) jsonObject.get("author");
+                String author_username = (String) jsonObject.get("author_username");
                 String assignee = (String) jsonObject.get("assignee");
+                String assignee_username = (String) jsonObject.get("assignee_username");
                 String upvotes = (String) jsonObject.get("upvotes");
                 String downvotes = (String) jsonObject.get("downvotes");
                 String created_at = (String) jsonObject.get("created_at");
                 String updated_at = (String) jsonObject.get("updated_at");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) {
                     throw new Exception("Cannot determine repository: " + repo_name);
@@ -61,17 +68,25 @@ public class ImpMergeRequest extends BaseImport {
                 int number_of_downvotes = Integer.parseInt(downvotes);
                 Timestamp created_date = Timestamp.valueOf(created_at);
                 Timestamp updated_date = Timestamp.valueOf(updated_at);
-                if (assignee.equals("0")) {
-                    assignee = null;
-                }
-                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, encryption);
+                Developer author_dev = new Developer(author_username, author, null);
+                int author_id = devDb.update_vcs_developer(project_id, author_dev, encryption);
+                
+                Integer assignee_id;
+                if (assignee.equals("0")) {
+                    assignee_id = null;
+                }
+                else {
+                    Developer assignee_dev = new Developer(assignee_username, assignee, null);
+                    assignee_id = devDb.update_vcs_developer(project_id, assignee_dev, encryption);
+                }
+                
+                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
                 if (result == MergeRequestDb.CheckResult.MISSING) {
-                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, encryption);
+                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
                 }
                 else if (result == MergeRequestDb.CheckResult.DIFFERS) {
-                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author, assignee, number_of_upvotes, number_of_downvotes, created_date, updated_date, encryption);
+                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
                 }
             }
             
