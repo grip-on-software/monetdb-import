@@ -72,6 +72,7 @@ CREATE TABLE "gros"."developer" (
 	"name"            VARCHAR(64)   NOT NULL,
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
+	"local_domain"    BOOLEAN NOT NULL,
 	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_developer_id" PRIMARY KEY ("id")
 );

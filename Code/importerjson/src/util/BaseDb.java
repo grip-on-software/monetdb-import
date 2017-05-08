@@ -19,6 +19,7 @@ import java.util.logging.Logger;
  * @author Leon Helwerda
  */
 public class BaseDb {
+    private final ResourceBundle bundle;
     private String url;
     private String user;
     private String password;
@@ -26,7 +27,7 @@ public class BaseDb {
     private String path;
     
     public BaseDb() {
-        ResourceBundle bundle = ResourceBundle.getBundle("util.import");
+        bundle = ResourceBundle.getBundle("util.import");
         url = bundle.getString("url").trim();
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();
@@ -58,6 +59,14 @@ public class BaseDb {
                 next = prev.getNextException();
             }
         }
+    }
+    
+    /**
+     * Retrieve the ResourceBundle of the importer.
+     * @return the resource bundle
+     */
+    public final ResourceBundle getBundle() {
+        return bundle;
     }
     
     /**

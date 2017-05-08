@@ -20,6 +20,7 @@ import util.BaseDb;
  * @author Enrique & Thomas
  */
 public class DeveloperDb extends BaseDb implements AutoCloseable {
+    private final String localDomain;
     BatchedStatement insertDeveloperStmt = null;
     PreparedStatement checkDeveloperStmt = null;
     
@@ -68,11 +69,16 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         public String getEmail() {
             return this.email;
         }
+
+        private boolean matchEmailDomain(String localDomain) {
+            return this.email.endsWith("@" + localDomain);
+        }
     }
     
     public DeveloperDb() {
-        String sql = "insert into gros.developer (name,display_name,email) values (?,?,?);";
+        String sql = "insert into gros.developer (name,display_name,email,local_domain) values (?,?,?,?);";
         insertDeveloperStmt = new BatchedStatement(sql);
+        localDomain = getBundle().getString("email_domain");
     }
     
     /**
@@ -88,6 +94,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         pstmt.setString(1, dev.getName());
         pstmt.setString(2, dev.getDisplayName());
         setString(pstmt, 3, dev.getEmail());
+        pstmt.setBoolean(4, dev.matchEmailDomain(localDomain));
         
         // Insert immediately because we need to have the row available
         pstmt.execute();
