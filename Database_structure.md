@@ -252,6 +252,10 @@ such fields more thoroughly and uniformly.
         displayed in the JIRA interface.
     -   **email** - VARCHAR(100): The email address of the JIRA
         developer.
+    -   **local_domain** - BOOLEAN: Whether the email address of the
+        developer has a local domain as defined in the importer
+        properties. In this case, whether the email ends with
+        '@ictu.nl'.
     -   **encryption** - INTEGER(row encryption)
 
 
