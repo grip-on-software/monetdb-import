@@ -46,8 +46,8 @@ public class ImpGitLabRepo extends BaseImport{
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) {
-                    Logger.getLogger("importer").log(Level.WARNING, "Repository '{0}' not found in repo table", repo_name);
-                    continue;
+                    repoDb.insert_repo(repo_name);
+                    repo_id = repoDb.check_repo(repo_name);
                 }
                 
                 if (description.equals("0")) {

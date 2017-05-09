@@ -62,6 +62,9 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         insertGitLabRepoStmt.execute();
         insertGitLabRepoStmt.close();
         
+        updateGitLabRepoStmt.execute();
+        updateGitLabRepoStmt.close();
+        
         if (checkGitLabRepoStmt != null) {
             checkGitLabRepoStmt.close();
             checkGitLabRepoStmt = null;

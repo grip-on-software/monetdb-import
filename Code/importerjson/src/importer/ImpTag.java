@@ -51,7 +51,8 @@ public class ImpTag extends BaseImport {
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0){
-                    throw new Exception("Cannot determine repository: " + repo_name);
+                    repoDb.insert_repo(repo_name);
+                    repo_id = repoDb.check_repo(repo_name);
                 }
                 
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
