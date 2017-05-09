@@ -399,13 +399,17 @@ These tables include data from Gitlab/Git and Subversion.
         which the code change is made.
 
 
--   **git_developer**: User names from VCS commits
+-   **vcs_developer**: User names from VCS commits. The same developer
+    (with the same *jira_dev_id*) may appear multiple times in the table
+    if they have changed their name or email, for example in their Git
+    configuration.
     -   **alias_id** - INT - primary key: Sequential number assigned to
         the developer.
     -   **jira_dev_id** - INT - reference to developer.id. The matching
-        is based on the VCS developer's display name and the JIRA
-        developer display name or short name. The matching is also
-        manually tweaked using data_gitdev_to_dev.json.
+        is based on the VCS developer's display name and email, and the
+        JIRA developer display name, short name or email. The matching
+        is also manually tweaked using the file data_vcsdev_to_dev.json
+        in the monetdb-script repository.
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
     -   **email** - VARCHAR(100): Email address that the developer uses.
