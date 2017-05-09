@@ -370,14 +370,17 @@ These tables include data from Gitlab/Git and Subversion.
     repositories used by the development team.
     -   **version_id** - VARCHAR(100): SHA hash or revision number
         belonging to this code version. The version number is unique for
-        the repository the change is made in.
+        the repository the change is made in (indicated by the *repo_id*
+        field).
     -   **project_id** - INT - reference to project.project_id: The
         project this code version belongs to.
-    -   **commit_date** - TIMESTAMP: point in time at which the commit
-        was made (in case of Git: the commit date, not the push date).
+    -   **commit_date** - TIMESTAMP: Point in time at which the commit
+        was made. The commit date is when the latest publicly visible
+        version of the changes made in the commit are finalized.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
-        in which this commit was made, based on date intervals.
-    -   **developer_id** - INT - reference to git_developer.alias_id:
+        in which this commit was made, based on date intervals. If the
+        commit is not matched to a sprint, then this is 0.
+    -   **developer_id** - INT - reference to vcs_developer.alias_id:
         The developer that made the commit.
     -   **message** - TEXT: The full commit message that is shown in
         version control logs.
@@ -397,6 +400,9 @@ These tables include data from Gitlab/Git and Subversion.
         commit message.
     -   **repo_id** - INT - reference to repo.id: The repository in
         which the code change is made.
+    -   **author_date** - TIMESTAMP: Point in time that the developer
+        initially made the commit. This is NULL for version control
+        systems that do not know a separate authored date.
 
 
 -   **vcs_developer**: User names from VCS commits. The same developer
