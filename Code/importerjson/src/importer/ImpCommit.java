@@ -42,7 +42,7 @@ public class ImpCommit extends BaseImport{
     @Override
     public void parser() {
         int projectID = getProjectID();
-        String sql = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id,author_date) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
         try (
             DeveloperDb devDb = new DeveloperDb();
@@ -60,6 +60,7 @@ public class ImpCommit extends BaseImport{
                 
                 String version_id = (String) jsonObject.get("version_id");
                 String commit_date = (String) jsonObject.get("commit_date");
+                String author_date = (String) jsonObject.get("author_date");
                 String sprint_id = (String) jsonObject.get("sprint_id").toString();
                 String developer = (String) jsonObject.get("developer");
                 String developer_email = (String) jsonObject.get("developer_email");
@@ -98,14 +99,8 @@ public class ImpCommit extends BaseImport{
                 pstmt.setString(1, version_id);
                 pstmt.setInt(2, projectID);
 
-                Timestamp ts_created;              
-                if (commit_date != null){
-                    ts_created = Timestamp.valueOf(commit_date); 
-                    pstmt.setTimestamp(3,ts_created);
-                } else{
-                    //ts_created = null;
-                    pstmt.setNull(3, java.sql.Types.TIMESTAMP);
-                }
+                Timestamp ts_created = Timestamp.valueOf(commit_date); 
+                pstmt.setTimestamp(3,ts_created);
 
                 pstmt.setInt(4, Integer.parseInt(sprint_id));
 
@@ -119,6 +114,14 @@ public class ImpCommit extends BaseImport{
                 pstmt.setInt(11, Integer.parseInt(number_of_lines));
                 pstmt.setString(12, type);
                 pstmt.setInt(13, repo_id);
+                
+                if (author_date == null || author_date.equals("0")) {
+                    pstmt.setNull(14, java.sql.Types.TIMESTAMP);
+                }
+                else {
+                    Timestamp authored = Timestamp.valueOf(author_date);
+                    pstmt.setTimestamp(14, authored);
+                }
 
                 bstmt.batch();
             }

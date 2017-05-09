@@ -208,7 +208,8 @@ CREATE TABLE "gros"."commits" (
 	"number_of_files"   INTEGER     NOT NULL,
 	"number_of_lines"   INTEGER     NOT NULL,
 	"type"              VARCHAR(100)  NOT NULL,
-	"repo_id"       INTEGER         NOT NULL
+	"repo_id"       INTEGER         NOT NULL,
+	"author_date"   TIMESTAMP       NULL
 );
 
 CREATE TABLE "gros"."comment" (
