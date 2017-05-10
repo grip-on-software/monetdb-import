@@ -49,19 +49,19 @@ such fields more thoroughly and uniformly.
     -   **issue_id** - INT: Internal JIRA identifier. **There may be
         multiple rows with the same issue_id.**
     -   **changelog_id** - INT: Version number deduced from the
-        changelog. The earliest version is has a changelog id of zero.
-    -   **key** - VARCHAR (Issue key): The JIRA issue key. **There may
-        be multiple rows with the same key.**
+        changelog. The earliest version is has a changelog id of 0.
+    -   **key** - VARCHAR(Issue key): The JIRA issue key. **There may be
+        multiple rows with the same key.**
     -   **title** - VARCHAR(250): The human-readable title of the issue.
         Can be updated in changes.
     -   **type** - INT - reference to issuetype.id: The issue type
-        (Story, Bug, Use Case) as an internal JIRa identifier.
+        (Story, Bug, Use Case) as an internal JIRA identifier.
     -   **priority** - INT - reference to priority.id: The issue
         priority (Low, Medium High) as an internal scale.
     -   **resolution** - INT - reference to resolution.id: The issue
         resolution (Fixed, Duplicate, Works as designed) as an internal
-        JIRA identifier
-    -   **fixVersion** - INT - reference to fixversion.id: The earliest
+        JIRA identifier.
+    -   **fixversion** - INT - reference to fixversion.id: The earliest
         version in which the issue is fixed as an internal JIRA
         identifier, or NULL if not provided.
     -   **bugfix** - BOOL: Whether this is a bugfix issue (possibly
@@ -94,7 +94,7 @@ such fields more thoroughly and uniformly.
         developer.name: The developer that should resolve the issue, or
         NULL if none is assigned thus far.
     -   **attachments** - INT: The number of attachments in the issue.
-        Updated according to changed in the changelog.
+        This tracks updates in the changelog.
     -   **additional_information** - TEXT: Human-readable text that is
         shown within a tab beside the description, or NULL if it is not
         filled in. Often used for extra implementation/functional
@@ -117,8 +117,11 @@ such fields more thoroughly and uniformly.
         that this issue is pulled into. The sprint can differ by version
         if a change is made or if the issue has multiple sprints
         attached to it (due to mismatch with parent tasks or manual
-        changes). If the issue is not yet (explicitly) added into a
-        sprint, then this is the integer 0.
+        changes). In the case of multiple candidate sprints, the latest
+        sprint which contains the changelog version updated date is
+        used. If the issue is not yet explicitly added into a sprint,
+        then this is the integer 0. For example, subtasks may have a
+        sprint ID of 0 while only the parent task is in a sprint.
     -   **updated_by** - VARCHAR(JIRA developer) - reference to
         developer.name: The developer that made a change in this version
         of the issue.
@@ -174,13 +177,17 @@ such fields more thoroughly and uniformly.
 
 -   **sprint**: Data regarding a sprint registered in JIRA, including
     the start and end dates.
-    -   **sprint_id** - INT - primary key: identifier for the given
-        sprint
+    -   **sprint_id** - INT - primary key: Internal JIRA identifier of
+        the sprint.
     -   **project_id** - INT - reference to project.project_id: Project
-        in which the given sprint occurs
-    -   **name** - VARCHAR(500): Human-readable name of the sprint, may
-        include a sequence number (not unique) and/or the sprint topic
-        if it is a specialized sprint
+        in which the sprint occurs. There may be multiple projects which
+        use the same sprint ID, for example in subprojects and projects
+        that are being developed by the same teams.
+    -   **name** - VARCHAR(500): Human-readable name of the sprint.
+        Depending on the project and the person who creates the sprints,
+        this may include a sequence number (not unique), the
+        sprint/story owner (Scrum master), and/or the sprint topic if it
+        is a specialized sprint.
     -   **start_date** - TIMESTAMP: Moment in time at which the sprint
         starts or is set to start. May differ from the actual start time
         (but usually not by more than a day).
@@ -215,14 +222,16 @@ such fields more thoroughly and uniformly.
     -   **updater** - VARCHAR(JIRA developer) - reference to
         developer.name: Developer that edited the message most recently.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
-        message was edited.
+        message was edited. This is equal to *date* if the comment has
+        not been updated.
     -   **encryption** - INTEGER(row encryption)
 
 ### Metadata tables
 
 -   **issuetype**: The types of issues and their descriptive names,
     e.g., Bug, Task, Story or Epic.
-    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **id** - INT - primary key: Internal JIRA identifier for the
+        issue type.
     -   **name** - VARCHAR(100)
     -   **description** - VARCHAR(500)
 
@@ -230,7 +239,8 @@ such fields more thoroughly and uniformly.
 -   **status**: The statuses that issues can have, such as Closed,
     Resolved, Opened or In Progress. Actual use may differ between
     project based on Sprint board setup.
-    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **id** - INT - primary key: Internal JIRA identifier for the
+        status.
     -   **name** - VARCHAR(100)
     -   **description** - VARCHAR(500)
 
@@ -238,7 +248,8 @@ such fields more thoroughly and uniformly.
 -   **resolution**: Once an issue receives a status of Resolved or
     Closed, an indicator of why it was closed (such as Fixed, Duplicate
     or Works as designed).
-    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **id** - INT - primary key: Internal JIRA identifier for the
+        resolution.
     -   **name** - VARCHAR(100)
     -   **description** - VARCHAR(500)
 
@@ -298,7 +309,8 @@ such fields more thoroughly and uniformly.
 -   **priority**: An indicator of the priority of the issue, on a scale
     of 1-5, with names like Low, Medium, High. This is not necessarily
     related to user story points or backlog prioritization.
-    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **id** - INT - primary key: Internal JIRA identifier for the
+        priority.
     -   **name** - VARCHAR(100)
 
 
@@ -306,15 +318,19 @@ such fields more thoroughly and uniformly.
     Whether the user story can be pulled into the next stage such as
     Workshops, Design meetings, and Refinements. It may also be Blocked
     for or by any of these stages.
-    -   **id** - INT - primary key: Internal JIRA identifier
+    -   **id** - INT - primary key: Internal JIRA identifier for the
+        ready status.
     -   **name** - VARCHAR(100): Human-readable short description of the
-        ready status: 'Ready for refinement', 'Blocked for design'
+        ready status. Examples: 'Ready for refinement', 'Blocked for
+        design'
 
 
 -   **test_execution**: The state of how a use case is tested.
-    -   **id** - INT - primary key: Internal JIRA identifier
-    -   **value** - VARCHAR(100): 'Manual', 'Automated' or 'Will not be
-        executed'
+    -   **id** - INT - primary key: Internal JIRA identifier for the
+        execution state.
+    -   **value** - VARCHAR(100): Human-readable short description of
+        the execution state: 'Manual', 'Automated' or 'Will not be
+        executed'.
 
 ### Relationship tables
 
@@ -341,18 +357,18 @@ such fields more thoroughly and uniformly.
 
 -   **relationshiptype**: The types of relationships that can exist
     between issues, such as Blocks, Details or Duplicate
-    -   **id** - INT - primary key: The Jira identifier of this issue
-        link relationship type
+    -   **id** - INT - primary key: The JIRA identifier of this issue
+        link relationship type.
     -   **name** - VARCHAR(100): Textual name of the relationship, as a
-        noun or verb
+        noun or verb.
 
     :   **The following fields do not yet exist, but may be added at a
         later stage:**
 
     -   **outward** - VARCHAR: Phrase used to describe the outward
-        relation, such as 'blocks' or 'duplicates'
+        relation, such as 'blocks' or 'duplicates'.
     -   **inward** - VARCHAR: Phrase used to describe the inward
-        relation, such as 'is blocked by' or 'is duplicated by'
+        relation, such as 'is blocked by' or 'is duplicated by'.
 
 
 -   **subtasks**: Links that exists between issues and their subtasks,
@@ -360,7 +376,7 @@ such fields more thoroughly and uniformly.
     -   **id_parent** - INT - reference to issue.issue_id: The parent
         issue.
     -   **id_subtask** - INT - reference to issue.issue_id: The subtask
-        issue
+        issue.
 
 ## Version control system tables (Git, Subversion)
 
@@ -379,7 +395,9 @@ These tables include data from Gitlab/Git and Subversion.
         version of the changes made in the commit are finalized.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which this commit was made, based on date intervals. If the
-        commit is not matched to a sprint, then this is 0.
+        commit is not matched to a sprint, then this is 0. In the case
+        of overlapping sprints, the latest sprint that still contains
+        the commit is used.
     -   **developer_id** - INT - reference to vcs_developer.alias_id:
         The developer that made the commit.
     -   **message** - TEXT: The full commit message that is shown in
@@ -588,30 +606,34 @@ dashboard project definition.
 
 -   **metric_version**: Versions of the project definition in which
     changes to target norms of a project are made. Primary key is
-    (project_id, version_id)
-    -   **project_id** - INT - reference to project.project_id
-    -   **version_id** - INT: Subversion revision number
+    (project_id, version_id).
+    -   **project_id** - INT - reference to project.project_id: The
+        project to which the norm changes apply.
+    -   **version_id** - INT: Subversion revision number.
     -   **developer** - VARCHAR(64): Developer or quality lead that made
-        the change
-    -   **message** - TEXT: Commit message describing the change
+        the change.
+    -   **message** - TEXT: Commit message describing the change.
     -   **commit_date** - TIMESTAMP: Time at which the target change
-        took place
+        took place.
     -   **encryption** - INTEGER(row encryption)
 
 
--   **metric_target**: Manual changes to the metric targets of a project
-    -   **project_id** - INT - reference to project.project_id
-    -   **version_id** - INT - reference to metric_version.version_id
+-   **metric_target**: Manual changes to the metric targets of a
+    project.
+    -   **project_id** - INT - reference to project.project_id: The
+        project to which the target changes apply.
+    -   **version_id** - INT - reference to metric_version.version_id:
+        The version in which the changes were made.
     -   **metric_id** - INT - reference to metric.metric_id: Metric
-        whose norms are changed
+        whose norms are changed.
     -   **type** - VARCHAR(100): Type of change: 'options',
-        'old_options', 'TechnicalDebtTarget'
+        'old_options' or 'TechnicalDebtTarget'.
     -   **target** - INT: Norm value at which the category changes from
         green to yellow.
     -   **low_target** - INT: Norm value at which the category changes
         from yellow to red.
     -   **comment** - TEXT: Comment for technical debt targets
-        describing the reason of the norm change
+        describing the reason of the norm change.
 
 ## Reservation tables (Topdesk)
 
