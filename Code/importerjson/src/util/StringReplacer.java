@@ -17,11 +17,14 @@ import org.ahocorasick.trie.Trie.TrieBuilder;
  * @author Leon Helwerda
  */
 public class StringReplacer {
-    Map<String, String> definitions;
-    TrieBuilder builder;
-    Trie trie;
-    boolean elongating;
+    private final Map<String, String> definitions;
+    private final TrieBuilder builder;
+    private Trie trie;
+    private boolean elongating;
     
+    /**
+     * Create the string replacer.
+     */
     public StringReplacer() {
         definitions = new HashMap<>();
         builder = Trie.builder();
@@ -29,6 +32,14 @@ public class StringReplacer {
         elongating = false;
     }
     
+    /**
+     * Add a new search-and-replace pair to the replacer.
+     * @param search The substring to search for in the provided text
+     * @param replace The string to replace each found substring with in the
+     * result of the replacement operation.
+     * @return A reference to the current replacer, for the purpose of chaining
+     * multiple calls to this method.
+     */
     public StringReplacer add(String search, String replace) {
         builder.addKeyword(search);
         definitions.put(search, replace);
@@ -40,6 +51,21 @@ public class StringReplacer {
         return this;
     }
     
+    /**
+     * Check whether the replacements may cause resulting strings to be longer
+     * than the input string, depending on their content.
+     * @return A boolean indicating the elongating nature of the replacements.
+     */
+    public boolean isElongating() {
+        return elongating;
+    }
+    
+    /**
+     * Replace the registered search substrings with their replacement strings,
+     * and emit the resulting string.
+     * @param text The string to replace the substrings in.
+     * @return The string with all replacements performed.
+     */
     public String execute(String text) {
         // Based on code from http://stackoverflow.com/a/40836618
         // Create a buffer sufficiently large that re-allocations are minimized.
