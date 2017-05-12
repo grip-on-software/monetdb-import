@@ -96,6 +96,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         
         sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=? where sprint_id=? and project_id=?;";
         updateStmt = new BatchedStatement(sql);
+        
+        sprintCache = new HashMap<>();
     }
         
     /**
@@ -257,13 +259,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             checkStmt = null;
         }
 
-        if (sprintCache != null) {
-            for (HashMap<Integer, Sprint> cache : sprintCache.values()) {
-                cache.clear();
-            }
-            sprintCache.clear();
-            sprintCache = null;
+        for (HashMap<Integer, Sprint> cache : sprintCache.values()) {
+            cache.clear();
         }
+        sprintCache.clear();
     }
     
 }
