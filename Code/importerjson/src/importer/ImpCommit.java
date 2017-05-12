@@ -12,6 +12,7 @@ import dao.DeveloperDb.Developer;
 import dao.RepositoryDb;
 import dao.SaltDb;
 import dao.SaltDb.Encryption;
+import dao.SprintDb;
 import java.beans.PropertyVetoException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class ImpCommit extends BaseImport{
         try (
             DeveloperDb devDb = new DeveloperDb();
             RepositoryDb repoDb = new RepositoryDb();
+            SprintDb sprintDb = new SprintDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json");
             BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedStatement bstmt = new BatchedStatement(sql)
@@ -61,7 +63,7 @@ public class ImpCommit extends BaseImport{
                 String version_id = (String) jsonObject.get("version_id");
                 String commit_date = (String) jsonObject.get("commit_date");
                 String author_date = (String) jsonObject.get("author_date");
-                String sprint_id = (String) jsonObject.get("sprint_id").toString();
+                String sprint = (String) jsonObject.get("sprint_id");
                 String developer = (String) jsonObject.get("developer");
                 String developer_email = (String) jsonObject.get("developer_email");
                 String message = (String) jsonObject.get("message");
@@ -74,8 +76,12 @@ public class ImpCommit extends BaseImport{
                 String repo_name = (String) jsonObject.get("repo_name");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
-                if ((sprint_id.trim()).equals("null") ){ // In case not in between dates of sprint
-                    sprint_id = "0";
+                int sprint_id;
+                if ((sprint.trim()).equals("null")) { // In case not in between dates of sprint
+                    sprint_id = 0;
+                }
+                else {
+                    sprint_id = Integer.parseInt(sprint);
                 }
                 
                 if (developer.equals("unknown")) {
@@ -90,7 +96,6 @@ public class ImpCommit extends BaseImport{
                 int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
                 
                 int repo_id = repoDb.check_repo(repo_name);
-                
                 if (repo_id == 0) { // if repo id does not exist, create repo with new id
                     repoDb.insert_repo(repo_name);
                     repo_id = repoDb.check_repo(repo_name); // set new id of repo
@@ -100,9 +105,13 @@ public class ImpCommit extends BaseImport{
                 pstmt.setInt(2, projectID);
 
                 Timestamp ts_created = Timestamp.valueOf(commit_date); 
-                pstmt.setTimestamp(3,ts_created);
+                pstmt.setTimestamp(3, ts_created);
+                
+                if (sprint_id == 0) {
+                    sprint_id = sprintDb.find_sprint(projectID, ts_created);
+                }
 
-                pstmt.setInt(4, Integer.parseInt(sprint_id));
+                pstmt.setInt(4, sprint_id);
 
                 // Calculate developerid Int or String?
                 pstmt.setInt(5, developer_id);
