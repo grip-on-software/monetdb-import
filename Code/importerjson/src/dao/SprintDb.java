@@ -12,7 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Objects;
@@ -28,7 +28,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkStmt = null;
     private BatchedStatement updateStmt = null;
     private PreparedStatement cacheStmt = null;
-    private HashMap<Integer, HashMap<Integer, Sprint>> sprintCache;
+    private final HashMap<Integer, HashMap<Integer, Sprint>> keyCache;
+    private final HashMap<Integer, Sprint[]> dateCache;
     
     private static class Sprint implements Comparable<Timestamp> {
         int sprint_id;
@@ -97,7 +98,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=? where sprint_id=? and project_id=?;";
         updateStmt = new BatchedStatement(sql);
         
-        sprintCache = new HashMap<>();
+        keyCache = new HashMap<>();
+        dateCache = new HashMap<>();
     }
         
     /**
@@ -119,10 +121,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      */
     public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
         fillCache(project_id);
-        if (!sprintCache.containsKey(project_id)) {
+        if (!keyCache.containsKey(project_id)) {
             return CheckResult.MISSING;
         }
-        HashMap<Integer, Sprint> sprints = sprintCache.get(project_id);
+        HashMap<Integer, Sprint> sprints = keyCache.get(project_id);
         Sprint currentSprint = sprints.get(sprint_id);
         if (currentSprint != null) {
             Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date);
@@ -188,7 +190,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     }
     
     private void fillCache(int project_id) throws SQLException, IOException, PropertyVetoException {
-        if (sprintCache.containsKey(project_id)) {
+        if (keyCache.containsKey(project_id)) {
             return;
         }
         
@@ -199,6 +201,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         }
         
         HashMap<Integer, Sprint> sprints = new HashMap<>();
+        ArrayList<Sprint> dateSprints = new ArrayList<>();
         cacheStmt.setInt(1, project_id);
         try (ResultSet rs = cacheStmt.executeQuery()) {
             while (rs.next()) {
@@ -207,10 +210,13 @@ public class SprintDb extends BaseDb implements AutoCloseable {
                 Timestamp start_date = rs.getTimestamp("start_date");
                 Timestamp end_date = rs.getTimestamp("end_date");
                 Timestamp complete_date = rs.getTimestamp("complete_date");
-                sprints.put(sprint_id, new Sprint(sprint_id, name, start_date, end_date, complete_date));
+                Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date);
+                sprints.put(sprint_id, sprint);
+                dateSprints.add(sprint);
            }
         }
-        sprintCache.put(project_id, sprints);
+        keyCache.put(project_id, sprints);
+        dateCache.put(project_id, dateSprints.toArray(new Sprint[dateSprints.size()]));
         
     }
     
@@ -226,8 +232,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      */
     public int find_sprint(int project_id, Timestamp date) throws SQLException, IOException, PropertyVetoException {
         fillCache(project_id);
-        Collection<Sprint> values = sprintCache.get(project_id).values();
-        Sprint[] sprints = values.toArray(new Sprint[values.size()]);
+        Sprint[] sprints = dateCache.get(project_id);
         
         int index = Bisect.bisectRight(sprints, date);
         if (index == 0) {
@@ -259,10 +264,11 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             checkStmt = null;
         }
 
-        for (HashMap<Integer, Sprint> cache : sprintCache.values()) {
+        for (HashMap<Integer, Sprint> cache : keyCache.values()) {
             cache.clear();
         }
-        sprintCache.clear();
+        keyCache.clear();
+        dateCache.clear();
     }
     
 }
