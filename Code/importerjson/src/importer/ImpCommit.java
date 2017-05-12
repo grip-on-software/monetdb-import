@@ -149,7 +149,7 @@ public class ImpCommit extends BaseImport{
      * Update links to sprints for rows that do not have a sprint ID.
      */
     public void updateSprintLink() {
-        String sql = "select project_id, repo_id, version_id, commit_date from gros.commits join gros.sprint on commits.project_id = sprint.project_id and commits.commit_date between sprint.start_date and sprint.end_date where commits.sprint_id = 0";
+        String sql = "select commits.project_id, commits.repo_id, commits.version_id, commits.commit_date from gros.commits join gros.sprint on commits.project_id = sprint.project_id and commits.commit_date between sprint.start_date and sprint.end_date where commits.sprint_id = 0";
         String updateSql = "update gros.commits set sprint_id = ? where project_id = ? and repo_id = ? and version_id = ?";
         int projectID = this.getProjectID();
         if (projectID != 0) {
