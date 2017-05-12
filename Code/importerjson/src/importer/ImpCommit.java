@@ -146,6 +146,52 @@ public class ImpCommit extends BaseImport{
     }
     
     /**
+     * Update links to sprints for rows that do not have a sprint ID.
+     */
+    public void updateSprintLink() {
+        String sql = "select project_id, repo_id, version_id, commit_date from gros.commits join gros.sprint on commits.project_id = sprint.project_id and commits.commit_date between sprint.start_date and sprint.end_date where sprint_id = 0";
+        String updateSql = "update gros.commits set sprint_id = ? where project_id = ? and repo_id = ? and version_id = ?";
+        int projectID = this.getProjectID();
+        if (projectID != 0) {
+            sql += " and project_id = ?";
+        }
+ 
+        try (
+            SprintDb sprintDb = new SprintDb();
+            Connection con = DataSource.getInstance().getConnection();
+            PreparedStatement pstmt = con.prepareStatement(sql);
+            BatchedStatement bstmt = new BatchedStatement(updateSql)
+        ) {
+            PreparedStatement updateStmt = bstmt.getPreparedStatement();
+            
+            if (projectID != 0) {
+                pstmt.setInt(1, projectID);
+            }
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    int project_id = rs.getInt("project_id");
+                    int repo_id = rs.getInt("repo_id");
+                    String version_id = rs.getString("version_id");
+                    Timestamp commit_date = rs.getTimestamp("commit_date");
+                    int sprint_id = sprintDb.find_sprint(project_id, commit_date);
+                    if (sprint_id != 0) {
+                        updateStmt.setInt(1, sprint_id);
+                        updateStmt.setInt(2, project_id);
+                        updateStmt.setInt(3, repo_id);
+                        updateStmt.setString(4, version_id);
+                        bstmt.batch();
+                    }
+                }
+            }
+            
+            bstmt.execute();
+        }
+        catch (IOException | SQLException | PropertyVetoException ex) {
+            logException(ex);
+        }
+    }
+
+    /**
      * Updates the JiraID's of the VCS developer table. It uses a json file to read
      * all the aliases found on the version control system and then links them to the JiraID's.
      * Best is to do this after collecting all the records of all the projects.
@@ -233,6 +279,9 @@ public class ImpCommit extends BaseImport{
         }
     }
     
+    /**
+     * Encrypts rows in tables that include sensitive data in some fields.
+     */
     public void hashNames() {
         Connection con = null;
         Statement st = null;

@@ -43,7 +43,7 @@ public class Importerjson {
         "developerlink" //, "encrypt"
     });
     private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
-        "developerproject", "developerlink", "encrypt"
+        "sprintlink", "developerproject", "developerlink", "encrypt"
     });
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
@@ -217,6 +217,14 @@ public class Importerjson {
         ImpCommit impCommit = new ImpCommit();
         impCommit.setProjectName(projectName);
         impCommit.setProjectID(projectID);
+        if (tasks.contains("sprintlink")) {
+            long startTime = System.currentTimeMillis();
+            
+            impCommit.updateSprintLink();
+            
+            showCompleteTask("Fixed sprint linking", startTime);
+        }
+        
         if (tasks.contains("developerproject")) {
             long startTime = System.currentTimeMillis();
             
