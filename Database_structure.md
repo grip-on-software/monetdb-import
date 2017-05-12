@@ -484,6 +484,32 @@ These tables include data from Gitlab/Git and Subversion.
 
 ### GitLab tables
 
+-   **vcs_event**: An event from an activity timeline of a repository.
+    The events include pushes of commits or tags, or possibly also other
+    actions such as deletions.
+    -   **repo_id** - INT - reference to repo.id: Repository in which
+        the event was made.
+    -   **action** - VARCHAR(20): A slightly human-readable description
+        of the action that the event performs. This describes what the
+        target of the action is and how it is changed. Examples: 'pushed
+        to' (commit to a branch), 'pushed new' (commit to new feature
+        branch or a new tag), 'deleted' (branch)
+    -   **kind** - VARCHAR(20): The type of event, which provides
+        details of what the event adds, in addition to the action.
+        Examples: 'push', 'tag_push'
+    -   **version_id** - VARCHAR(100) - reference to commits.version_id:
+        The version to which the event applies. For tag pushes, this is
+        the same as *tag.version_id*.
+    -   **ref** - VARCHAR(100): The Git reference that the event applies
+        to. This can be a branch head reference (such as
+        'refs/heads/master') or a tag reference ('refs/tags/0.1.2')
+    -   **date** - TIMESTAMP: The moment in time when the event
+        occurred.
+    -   **developer_id** - INT - reference to vcs_developer.alias_id:
+        The developer that performed the action in the version control
+        repository.
+
+
 -   **gitlab_repo**: GitLab-specific metadata of a repository. Primary
     key is (repo_id, gitlab_id).
     -   **repo_id** - INT - reference to repo.id: Repository that the
