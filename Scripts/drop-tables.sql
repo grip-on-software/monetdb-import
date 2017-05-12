@@ -24,6 +24,7 @@ DROP TABLE "gros"."vcs_developer";
 DROP TABLE "gros"."repo";
 DROP TABLE "gros"."change_path";
 DROP TABLE "gros"."tag";
+DROP TABLE "gros"."vcs_event";
 DROP TABLE "gros"."gitlab_repo";
 DROP TABLE "gros"."merge_request";
 DROP TABLE "gros"."merge_request_note";

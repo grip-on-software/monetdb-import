@@ -33,7 +33,7 @@ public class Importerjson {
         // Quality dashboard metrics
         "metric_value", "metric_version", "metric_target",
         // Version control systems (Git, GitLab, SVN)
-        "commit", "change_path", "tag",
+        "commit", "change_path", "tag", "vcs_event",
         "gitlab_repo", "merge_request", "merge_request_note", "commit_comment",
         // Self-Service Desk
         "reservation",
@@ -73,6 +73,8 @@ public class Importerjson {
         importers.put("commit", ImpCommit.class);
         importers.put("change_path", ImpChangePath.class);
         importers.put("tag", ImpTag.class);
+        importers.put("vcs_event", ImpVcsEvent.class);
+        
         importers.put("gitlab_repo", ImpGitLabRepo.class);
         importers.put("merge_request", ImpMergeRequest.class);
         importers.put("merge_request_note", ImpMergeRequestNote.class);

@@ -258,6 +258,16 @@ CREATE TABLE "gros"."tag" (
 		CONSTRAINT "pk_tag_id" PRIMARY KEY ("repo_id", "tag_name")
 );
 
+CREATE TABLE "gros"."vcs_event" (
+	"repo_id" INTEGER NOT NULL,
+	"action" VARCHAR(20) NOT NULL,
+	"kind" VARCHAR(20) NOT NULL,
+	"version_id" VARCHAR(100) NOT NULL,
+	"ref" VARCHAR(100) NOT NULL,
+	"date" TIMESTAMP NOT NULL,
+	"developer_id" INTEGER NOT NULL
+);
+
 CREATE TABLE "gros"."gitlab_repo" (
 	"repo_id" INTEGER NOT NULL,
 	"gitlab_id" INTEGER NOT NULL,
