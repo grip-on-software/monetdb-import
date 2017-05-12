@@ -12,7 +12,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Objects;
 import util.BaseDb;
+import util.Bisect;
 
 /**
  * Database access magement for sprint properties.
@@ -22,7 +27,64 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertStmt = null;
     private PreparedStatement checkStmt = null;
     private BatchedStatement updateStmt = null;
-    private PreparedStatement findStmt = null;
+    private PreparedStatement cacheStmt = null;
+    private HashMap<Integer, HashMap<Integer, Sprint>> sprintCache;
+    
+    private static class Sprint implements Comparable<Timestamp> {
+        int sprint_id;
+        String name;
+        Timestamp start_date;
+        Timestamp end_date;
+        Timestamp complete_date;
+        
+        public Sprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) {
+            this.sprint_id = sprint_id;
+            this.name = name;
+            this.start_date = start_date;
+            this.end_date = end_date;
+            this.complete_date = complete_date;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (other == null) {
+                return false;
+            }
+            if (other instanceof Sprint) {
+                Sprint otherSprint = (Sprint)other;
+                return (sprint_id == otherSprint.sprint_id &&
+                        name.equals(otherSprint.name) &&
+                        (start_date == null ? otherSprint.start_date == null : start_date.equals(otherSprint.start_date)) &&
+                        (end_date == null ? otherSprint.end_date == null : end_date.equals(otherSprint.end_date)) &&
+                        (complete_date == null ? otherSprint.complete_date == null : complete_date.equals(otherSprint.complete_date)));
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 29 * hash + this.sprint_id;
+            hash = 29 * hash + Objects.hashCode(this.start_date);
+            hash = 29 * hash + Objects.hashCode(this.end_date);
+            hash = 29 * hash + Objects.hashCode(this.complete_date);
+            return hash;
+        }
+        
+        @Override
+        public int compareTo(Timestamp other) {
+            return start_date.compareTo(other);
+        }
+        
+        public static Comparator<Sprint> getComparator() {
+            return new Comparator<Sprint>() {
+                @Override
+                public int compare(Sprint first, Sprint other) {
+                    return Integer.compare(first.sprint_id, other.sprint_id);
+                }
+            };
+        }
+    }
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -35,21 +97,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=? where sprint_id=? and project_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
-    
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
-        if (checkStmt == null) {
-            Connection con = insertStmt.getConnection();
-            checkStmt = con.prepareStatement("select name, start_date, end_date, complete_date from gros.sprint where sprint_id=? and project_id=?;");
-        }
-    }
-    
-    private boolean compareTimestamps(Timestamp date, Timestamp current_date) {
-        if (date == null) {
-            return (current_date == null);
-        }
-        return date.equals(current_date);
-    }
-    
+        
     /**
      * Check whether a certain sprint exists in the the database and has the same
      * properties as the provided parameters.
@@ -68,27 +116,24 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException 
      */
     public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
-        getCheckStmt();
-        
-        checkStmt.setInt(1, sprint_id);
-        checkStmt.setInt(2, project_id);
-        CheckResult result;
-        try (ResultSet rs = checkStmt.executeQuery()) {
-            result = CheckResult.MISSING;
-            while (rs.next()) {
-                if (name.equals(rs.getString("name")) &&
-                        compareTimestamps(start_date, rs.getTimestamp("start_date")) &&
-                        compareTimestamps(end_date, rs.getTimestamp("end_date")) &&
-                        compareTimestamps(complete_date, rs.getTimestamp("complete_date"))) {
-                    result = CheckResult.EXISTS;
-                }
-                else {
-                    result = CheckResult.DIFFERS;
-                }
+        fillCache(project_id);
+        if (!sprintCache.containsKey(project_id)) {
+            return CheckResult.MISSING;
+        }
+        HashMap<Integer, Sprint> sprints = sprintCache.get(project_id);
+        Sprint currentSprint = sprints.get(sprint_id);
+        if (currentSprint != null) {
+            Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date);
+            if (currentSprint.equals(sprint)) {
+                return CheckResult.EXISTS;
+            }
+            else {
+                return CheckResult.DIFFERS;
             }
         }
-        
-        return result;
+        else {
+            return CheckResult.MISSING;
+        }
     }
     
     /**
@@ -140,11 +185,31 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         updateStmt.batch();
     }
     
-    private void getFindStmt() throws SQLException, IOException, PropertyVetoException {
-        if (findStmt == null) {
-            Connection con = insertStmt.getConnection();
-            findStmt = con.prepareStatement("select sprint_id, start_date, end_date from gros.sprint where project_id=? and ? BETWEEN start_date AND end_date ORDER BY start_date;");
+    private void fillCache(int project_id) throws SQLException, IOException, PropertyVetoException {
+        if (sprintCache.containsKey(project_id)) {
+            return;
         }
+        
+        if (cacheStmt == null) {
+            Connection con = insertStmt.getConnection();
+            String sql = "SELECT sprint_id, name, start_date, end_date, complete_date FROM gros.sprint WHERE project_id = ? ORDER BY start_date";
+            cacheStmt = con.prepareStatement(sql);
+        }
+        
+        HashMap<Integer, Sprint> sprints = new HashMap<>();
+        cacheStmt.setInt(1, project_id);
+        try (ResultSet rs = cacheStmt.executeQuery()) {
+            while (rs.next()) {
+                int sprint_id = rs.getInt("sprint_id");
+                String name = rs.getString("name");
+                Timestamp start_date = rs.getTimestamp("start_date");
+                Timestamp end_date = rs.getTimestamp("end_date");
+                Timestamp complete_date = rs.getTimestamp("complete_date");
+                sprints.put(sprint_id, new Sprint(sprint_id, name, start_date, end_date, complete_date));
+           }
+        }
+        sprintCache.put(project_id, sprints);
+        
     }
     
     /**
@@ -158,18 +223,25 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException 
      */
     public int find_sprint(int project_id, Timestamp date) throws SQLException, IOException, PropertyVetoException {
-        getFindStmt();
+        fillCache(project_id);
+        Collection<Sprint> values = sprintCache.get(project_id).values();
+        Sprint[] sprints = values.toArray(new Sprint[values.size()]);
         
-        findStmt.setInt(1, project_id);
-        findStmt.setTimestamp(2, date);
-        int sprint_id = 0;
-        try (ResultSet rs = findStmt.executeQuery()) {
-            while(rs.next()) {
-                sprint_id = rs.getInt("sprint_id");
+        int index = Bisect.bisectRight(sprints, date);
+        if (index == 0) {
+            // Older than all sprints
+            return 0;
+        }
+        if (date.after(sprints[index-1].end_date)) {
+            if (index > 1 && date.before(sprints[index-2].end_date)) {
+                index--;
+            }
+            else {
+                return 0;
             }
         }
         
-        return sprint_id;
+        return sprints[index-1].sprint_id;
     }
     
     @Override
@@ -185,9 +257,12 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             checkStmt = null;
         }
 
-        if (findStmt != null) {
-            findStmt.close();
-            findStmt = null;
+        if (sprintCache != null) {
+            for (HashMap<Integer, Sprint> cache : sprintCache.values()) {
+                cache.clear();
+            }
+            sprintCache.clear();
+            sprintCache = null;
         }
     }
     
