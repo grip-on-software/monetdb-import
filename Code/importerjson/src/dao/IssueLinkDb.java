@@ -17,14 +17,30 @@ import java.util.Objects;
 import util.BaseDb;
 
 /**
- *
+ * Database access management for the JIRA issue links table.
  * @author Leon Helwerda
  */
-public class IssueLinkDb extends BaseDb implements AutoCloseable {    
+public class IssueLinkDb extends BaseDb implements AutoCloseable {
+    /**
+     * Object containing the relationship properties of an issue link.
+     */
     private static class Link {
+        /**
+         * The JIRA issue key involved in the link.
+         */
         public final String from_key;
+        /**
+         * Another JIRA issue key involved in the link.
+         */
         public final String to_key;
+        /**
+         * The type of the link relationship as an internal JIRA identifier.
+         */
         public final int relationship_type;
+        /**
+         * The direction of the link relationship. This is true if the link is
+         * outward from from_key. This is false if the link is inward to from_key.
+         */
         public final boolean outward;
         
         public Link(String from_key, String to_key, int relationship_type) {
@@ -65,8 +81,18 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         }        
     }
     
+    /**
+     * Object containing temporal information related to a link relationship.
+     */
     public static class LinkDates {
+        /**
+         * Timestamp since which the link exists, or null if the start date is unknown.
+         */
         public Timestamp start_date;
+        /**
+         * Timestamp at which the link ceases to exist due to a change in the issues,
+         * or null if the link still exists.
+         */
         public Timestamp end_date;
         
         public LinkDates() {
@@ -171,6 +197,26 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         return result;
     }
 
+    /**
+     * Check whether an issue link exists in the database and that it has the same
+     * properties as the provided arguments.
+     * @param from_key The first JIRA key
+     * @param to_key The second JIRA key
+     * @param relationship_type The type of of the link relationship as an internal JIRA identifier
+     * @param outward The direction of the link: true if the link is outward from
+     * from_key, or false if the link is inward to from_key
+     * @param start_date Timestamp since which the link exists, or null if the start date is unknown
+     * @param end_date Timestamp at which the link ceases to exist, or null if the link still exists
+     * @return An indicator of the state of the database regarding the given issue link.
+     * This is CheckResult.MISSING if the issue link with the provided from_key,
+     * to_key, relationship_type, and outward does not exist. This is
+     * CheckResult.DIFFERS if there is a row with the provided from_key, to_key,
+     * relationship_type, and outward in the database, but it has different values
+     * in its fields. This is CheckResult.EXISTS if there is an issue link in
+     * the database that matches all the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public CheckResult check_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         getCheckStmt();
         fillLinkCache();
@@ -200,6 +246,18 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
+    /**
+     * Insert a new issue link in the database.
+     * @param from_key The first JIRA key
+     * @param to_key The second JIRA key
+     * @param relationship_type The type of of the link relationship as an internal JIRA identifier
+     * @param outward The direction of the link: true if the link is outward from
+     * from_key, or false if the link is inward to from_key
+     * @param start_date Timestamp since which the link exists, or null if the start date is unknown
+     * @param end_date Timestamp at which the link ceases to exist, or null if the link still exists
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setString(1, from_key);
@@ -218,10 +276,23 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Update an existing issue link in the database with new start and end dates.
+     * @param from_key The first JIRA key
+     * @param to_key The second JIRA key
+     * @param relationship_type The type of of the link relationship as an internal JIRA identifier
+     * @param outward The direction of the link: true if the link is outward from
+     * from_key, or false if the link is inward to from_key
+     * @param start_date Timestamp since which the link exists, or null if the start date is unknown
+     * @param end_date Timestamp at which the link ceases to exist, or null if the link still exists
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void update_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         setTimestamp(pstmt, 1, start_date);
         setTimestamp(pstmt, 2, end_date);
+        
         pstmt.setString(3, from_key);
         pstmt.setString(4, to_key);
         pstmt.setInt(5, relationship_type);
