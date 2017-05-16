@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 import util.BaseDb;
 
 /**
- *
+ * Database access management for the VCS events table.
  * @author Leon Helwerda
  */
 public class VcsEventDb extends BaseDb implements AutoCloseable {
@@ -33,6 +33,21 @@ public class VcsEventDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Insert the given event from the version control repository.
+     * @param repo_id The identifier of the repository
+     * @param action The action that the event performs, such as 'pushed to',
+     * 'pushed new' or 'deleted'
+     * @param kind The type of event, which provides details of what the event adds,
+     * in addition to the action. Examples: 'push', 'tag_push'
+     * @param commit_id The version to which the event applies
+     * @param ref The Git reference that the event applies to
+     * @param date The timestamp at which the event occurred
+     * @param developer_id The identifier of the VCS developer that performed
+     * the action in the version control repository
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_event(int repo_id, String action, String kind, String commit_id, String ref, Timestamp date, int developer_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
@@ -46,6 +61,23 @@ public class VcsEventDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
 
+    /**
+     * Check whether the given event from the version control repository exists
+     * in the database.
+     * @param repo_id The identifier of the repository
+     * @param action The action that the event performs, such as 'pushed to',
+     * 'pushed new' or 'deleted'
+     * @param kind The type of event, which provides details of what the event adds,
+     * in addition to the action. Examples: 'push', 'tag_push'
+     * @param commit_id The version to which the event applies
+     * @param ref The Git reference that the event applies to
+     * @param date The timestamp at which the event occurred
+     * @param developer_id The identifier of the VCS developer that performed
+     * the action in the version control repository
+     * @return Whether the event exists in the database
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public boolean check_event(int repo_id, String action, String kind, String commit_id, String ref, Timestamp date, int developer_id) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
