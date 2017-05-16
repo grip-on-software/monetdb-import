@@ -32,11 +32,11 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     private final HashMap<Integer, Sprint[]> dateCache;
     
     private static class Sprint implements Comparable<Timestamp> {
-        int sprint_id;
-        String name;
-        Timestamp start_date;
-        Timestamp end_date;
-        Timestamp complete_date;
+        private final int sprint_id;
+        private final String name;
+        private final Timestamp start_date;
+        private final Timestamp end_date;
+        private final Timestamp complete_date;
         
         public Sprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) {
             this.sprint_id = sprint_id;
@@ -44,6 +44,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             this.start_date = start_date;
             this.end_date = end_date;
             this.complete_date = complete_date;
+        }
+
+        public int getSprintId() {
+            return this.sprint_id;
         }
         
         @Override
@@ -84,6 +88,20 @@ public class SprintDb extends BaseDb implements AutoCloseable {
                     return Integer.compare(first.sprint_id, other.sprint_id);
                 }
             };
+        }
+        
+        public boolean contains(Timestamp date) {
+            if (this.start_date == null || date.before(this.start_date)) {
+                return false;
+            }
+            else if (this.end_date != null && date.after(this.end_date)) {
+                return false;
+            }
+            else if (this.complete_date != null && date.after(this.complete_date)) {
+                return false;
+            }
+            
+            return true;
         }
     }
 
@@ -239,16 +257,16 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             // Older than all sprints
             return 0;
         }
-        if (date.after(sprints[index-1].end_date)) {
-            if (index > 1 && date.before(sprints[index-2].end_date)) {
-                index--;
+        if (!sprints[index-1].contains(date)) {
+            if (index > 1 && sprints[index-2].contains(date)) {
+                return sprints[index-2].getSprintId();
             }
             else {
                 return 0;
             }
         }
         
-        return sprints[index-1].sprint_id;
+        return sprints[index-1].getSprintId();
     }
     
     @Override
