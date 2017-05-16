@@ -10,6 +10,7 @@ import dao.DeveloperDb.Developer;
 import dao.MergeRequestDb;
 import dao.RepositoryDb;
 import dao.SaltDb;
+import dao.SprintDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.Timestamp;
@@ -32,6 +33,7 @@ public class ImpMergeRequest extends BaseImport {
         try (
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
+            SprintDb sprintDb = new SprintDb();
             MergeRequestDb requestDb = new MergeRequestDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_merge_request.json")
         ) {
@@ -82,11 +84,14 @@ public class ImpMergeRequest extends BaseImport {
                 }
                 
                 MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
-                if (result == MergeRequestDb.CheckResult.MISSING) {
-                    requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
-                }
-                else if (result == MergeRequestDb.CheckResult.DIFFERS) {
-                    requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
+                if (result != MergeRequestDb.CheckResult.EXISTS) {
+                    int sprint_id = sprintDb.find_sprint(project_id, created_date);
+                    if (result == MergeRequestDb.CheckResult.MISSING) {
+                        requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date, sprint_id);
+                    }
+                    else if (result == MergeRequestDb.CheckResult.DIFFERS) {
+                        requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date, sprint_id);
+                    }
                 }
             }
             

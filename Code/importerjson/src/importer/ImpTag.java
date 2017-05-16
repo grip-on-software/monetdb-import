@@ -9,6 +9,7 @@ import dao.DeveloperDb;
 import dao.DeveloperDb.Developer;
 import dao.RepositoryDb;
 import dao.SaltDb;
+import dao.SprintDb;
 import dao.TagDb;
 import java.io.FileReader;
 import java.sql.Timestamp;
@@ -29,10 +30,11 @@ public class ImpTag extends BaseImport {
         int projectID = getProjectID();
 
         try (
-                DeveloperDb devDb = new DeveloperDb();
-                RepositoryDb repoDb = new RepositoryDb();
-                TagDb tagDb = new TagDb();
-                FileReader fr = new FileReader(getPath()+getProjectName()+"/data_tag.json")
+            DeveloperDb devDb = new DeveloperDb();
+            RepositoryDb repoDb = new RepositoryDb();
+            SprintDb sprintDb = new SprintDb();
+            TagDb tagDb = new TagDb();
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_tag.json")
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -82,13 +84,15 @@ public class ImpTag extends BaseImport {
                 }
                 
                 TagDb.CheckResult result = tagDb.check_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);
-                if (result == TagDb.CheckResult.DIFFERS) {
-                    tagDb.update_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);
+                if (result != TagDb.CheckResult.EXISTS) {
+                    int sprint_id = sprintDb.find_sprint(projectID, tag_date);
+                    if (result == TagDb.CheckResult.DIFFERS) {
+                        tagDb.update_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id, sprint_id);
+                    }
+                    else if (result == TagDb.CheckResult.MISSING) {
+                        tagDb.insert_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id, sprint_id);
+                    }
                 }
-                else if (result == TagDb.CheckResult.MISSING) {
-                    tagDb.insert_tag(repo_id, tag_name, version_id, message, tag_date, tagger_id);
-                }
-
             }
         }
         catch (Exception ex) {

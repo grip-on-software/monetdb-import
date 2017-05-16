@@ -6,8 +6,10 @@
 package importer;
 
 import dao.MetricDb;
+import dao.SprintDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -26,6 +28,7 @@ public class ImpMetricVersion extends BaseImport {
  
         try (
             MetricDb metricDb = new MetricDb();
+            SprintDb sprintDb = new SprintDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_metric_versions.json")
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -37,14 +40,17 @@ public class ImpMetricVersion extends BaseImport {
                 
                 String message = (String) jsonObject.get("message");
                 String developer = (String) jsonObject.get("developer");
-                String version = (String) jsonObject.get("version_id");
-                String commit_date = (String) jsonObject.get("commit_date");
+                String revision = (String) jsonObject.get("version_id");
+                String date = (String) jsonObject.get("commit_date");
                 
-                version_id = metricDb.check_version(projectId, Integer.parseInt(version));
+                int version = Integer.parseInt(revision);
+                version_id = metricDb.check_version(projectId, version);
             
-                if(version_id == 0){
+                if (version_id == 0) {
+                    Timestamp commit_date = Timestamp.valueOf(date);
+                    int sprint_id = sprintDb.find_sprint(projectId, commit_date);
 
-                    metricDb.insert_version(projectId, Integer.parseInt(version), developer, message, commit_date);
+                    metricDb.insert_version(projectId, version, developer, message, commit_date, sprint_id);
                     
                 }
             }            

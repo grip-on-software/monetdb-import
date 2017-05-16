@@ -7,6 +7,7 @@ package importer;
 
 import util.BaseImport;
 import dao.MetricDb;
+import dao.SprintDb;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,6 +21,8 @@ import java.net.URLConnection;
 import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -33,14 +36,18 @@ import util.StringReplacer;
  * @author Enrique
  */
 public class ImpMetricValue extends BaseImport{
-    class MetricReader {
-        JSONParser parser = new JSONParser();
-        MetricDb mDB = null;
-        int projectID;
+    private static class MetricReader implements AutoCloseable {
+        private final JSONParser parser = new JSONParser();
+        private MetricDb mDB = null;
+        private SprintDb sprintDb = null;
+        private final String path;
+        private final int projectID;
         final int BUFFER_SIZE = 65536;
         
-        public MetricReader(MetricDb mDB, int projectID) {
-            this.mDB = mDB;
+        public MetricReader(String path, int projectID) {
+            this.mDB = new MetricDb();
+            this.sprintDb = new SprintDb();
+            this.path = path;
             this.projectID = projectID;
         }
         
@@ -103,7 +110,7 @@ public class ImpMetricValue extends BaseImport{
                         date = Timestamp.valueOf((String) metric_row.get("date"));
                     }
                     catch (IllegalArgumentException ex) {
-                        logException(ex);
+                        Logger.getLogger("importer").logp(Level.SEVERE, "MetricReader", "readGzip", "Date parsing exception", ex);
                         continue;
                     }
                     
@@ -140,7 +147,7 @@ public class ImpMetricValue extends BaseImport{
                 // Do this upon midway failure as well, but not if we did not read further than the start line.
                 // If we failed somewhere midway, then next time start from the line we failed on.
                 if (line_count > start_from) {
-                    try (PrintWriter writer = new PrintWriter(getPath()+getProjectName()+"/history_line_count.txt")) {
+                    try (PrintWriter writer = new PrintWriter(path+"/history_line_count.txt")) {
                         writer.println(String.valueOf(success ? line_count : line_count-1));
                     }
                 }
@@ -181,20 +188,28 @@ public class ImpMetricValue extends BaseImport{
                     throw new Exception("could not determine metric name");
                 }
             }
+            
+            int sprint_id = sprintDb.find_sprint(projectID, date);
 
-            mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, date, since_date, projectID);
+            mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, date, sprint_id, since_date, projectID);
+        }
+
+        @Override
+        public void close() throws Exception {
+            mDB.close();
+            sprintDb.close();
         }
     }
 
     @Override
     public void parser(){
+        String path = getPath()+getProjectName();
 
         try (
-            MetricDb mDB = new MetricDb();
+            MetricReader reader = new MetricReader(path, this.getProjectID());
             // Read metrics JSON using buffered readers so that Java does not run out of memory
-            BufferedJSONReader br = new BufferedJSONReader(new FileReader(getPath()+getProjectName()+"/data_metrics.json"))
+            BufferedJSONReader br = new BufferedJSONReader(new FileReader(path+"/data_metrics.json"))
         ) {
-            MetricReader reader = new MetricReader(mDB, this.getProjectID());
             reader.readBufferedJSON(br);
         }
         catch (FileNotFoundException ex) {

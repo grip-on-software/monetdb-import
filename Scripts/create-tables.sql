@@ -155,6 +155,7 @@ CREATE TABLE "gros"."metric_value" (
 	"value"           INTEGER     NOT NULL,
 	"category"        VARCHAR(100) NOT NULL,
 	"date"            TIMESTAMP  NULL,
+	"sprint_id"       INTEGER    NULL,
 	"since_date"      TIMESTAMP  NULL,
 	"project_id"      INTEGER     NOT NULL
 );
@@ -165,6 +166,7 @@ CREATE TABLE "gros"."metric_version" (
 	"developer"      VARCHAR(64) NOT NULL,
 	"message"        TEXT      NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
+	"sprint_id"      INTEGER   NULL,
 	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_metric_version_id" PRIMARY KEY ("project_id","version_id")
 );
@@ -255,6 +257,7 @@ CREATE TABLE "gros"."tag" (
 	"message" TEXT NULL,
 	"tagged_date" TIMESTAMP NULL,
 	"tagger_id" INTEGER NULL,
+	"sprint_id" INTEGER NULL,
 		CONSTRAINT "pk_tag_id" PRIMARY KEY ("repo_id", "tag_name")
 );
 
@@ -292,6 +295,7 @@ CREATE TABLE "gros"."merge_request" (
 	"downvotes" INTEGER NULL,
 	"created_date" TIMESTAMP NULL,
 	"updated_date" TIMESTAMP NULL,
+	"sprint_id" INTEGER NULL,
 		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
 );
 
@@ -326,6 +330,7 @@ CREATE TABLE "gros"."reservation" (
 	"end_date" TIMESTAMP NOT NULL,
 	"prepare_date" TIMESTAMP NULL,
 	"close_date" TIMESTAMP NULL,
+	"sprint_id" INTEGER NULL,
 	"encryption"     INTEGER   DEFAULT 0,
 		CONSTRAINT "pk_reservation_id" PRIMARY KEY("reservation_id")
 );
