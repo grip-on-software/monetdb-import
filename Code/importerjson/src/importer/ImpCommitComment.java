@@ -12,6 +12,7 @@ import dao.RepositoryDb;
 import dao.SaltDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -48,6 +49,7 @@ public class ImpCommitComment extends BaseImport {
                 String file = (String) jsonObject.get("file");
                 String line_number = (String) jsonObject.get("line");
                 String line_type = (String) jsonObject.get("line_type");
+                String created_at = (String) jsonObject.get("created_date");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
@@ -70,8 +72,16 @@ public class ImpCommitComment extends BaseImport {
                     line_type = null;
                 }
                 
-                if (!noteDb.check_commit_note(repo_id, version_id, dev_id, comment, file, line, line_type)) {
-                    noteDb.insert_commit_note(repo_id, version_id, dev_id, comment, file, line, line_type);
+                Timestamp created_date;
+                if (created_at == null || created_at.equals("0")) {
+                    created_date = null;
+                }
+                else {
+                    created_date = Timestamp.valueOf(created_at);
+                }
+                
+                if (!noteDb.check_commit_note(repo_id, version_id, dev_id, comment, file, line, line_type, created_date)) {
+                    noteDb.insert_commit_note(repo_id, version_id, dev_id, comment, file, line, line_type, created_date);
                 }
             }
             

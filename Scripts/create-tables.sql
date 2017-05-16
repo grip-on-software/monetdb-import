@@ -291,7 +291,7 @@ CREATE TABLE "gros"."merge_request" (
 	"upvotes" INTEGER NULL,
 	"downvotes" INTEGER NULL,
 	"created_date" TIMESTAMP NULL,
-	"updated_date" TIMESTAMP NULL
+	"updated_date" TIMESTAMP NULL,
 		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
 );
 
@@ -301,7 +301,7 @@ CREATE TABLE "gros"."merge_request_note" (
 	"note_id" INTEGER NOT NULL,
 	"author_id" INTEGER NOT NULL,
 	"comment" TEXT NULL,
-	"created_date" TIMESTAMP NULL
+	"created_date" TIMESTAMP NULL,
 		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "note_id")
 );
 
@@ -312,7 +312,8 @@ CREATE TABLE "gros"."commit_comment" (
 	"comment" TEXT NULL,
 	"file" VARCHAR(1000) NULL,
 	"line" INTEGER NULL,
-	"line_type" VARCHAR(100) NULL
+	"line_type" VARCHAR(100) NULL,
+	"created_date" TIMESTAMP NULL
 );
 
 CREATE TABLE "gros"."reservation" (
