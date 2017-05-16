@@ -483,6 +483,11 @@ These tables include data from Gitlab/Git and Subversion.
     -   **tagger_id** - INT - reference to vcs_developer.id: The
         developer that created the tag. If the developer cannot be
         deduced from tag information, then this is null.
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which the tag was created, based on date intervals. If the
+        tag date is not matched to a sprint, then this is 0. In the case
+        of overlapping sprints, the latest sprint that still contains
+        the date is used.
 
 ### GitLab tables
 
@@ -558,6 +563,11 @@ These tables include data from Gitlab/Git and Subversion.
     -   **updated_date** - TIMESTAMP: Time at which the merge request
         received an update (a merge request note or update to the
         request details).
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which the merge request was made, based on date intervals. If
+        the created date is not matched to a sprint, then this is 0. In
+        the case of overlapping sprints, the latest sprint that still
+        contains the date is used.
 
 
 -   **merge_request_note**: A comment or automated message attached to a
@@ -629,6 +639,11 @@ dashboard project definition.
         improved), grey (disabled), missing (internal problem),
         missing_source (external problem).
     -   **date** - TIMESTAMP: Time at which the measurement took place.
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which the metric was measured, based on date intervals. If
+        the measurement date is not matched to a sprint, then this is 0.
+        In the case of overlapping sprints, the latest sprint that still
+        contains the date is used.
     -   **since_date** - TIMESTAMP - reference to metric_value.date:
         Time since which the metric has the same value.
     -   **project_id** - INT - reference to project.project_id: The
@@ -646,6 +661,11 @@ dashboard project definition.
     -   **message** - TEXT: Commit message describing the change.
     -   **commit_date** - TIMESTAMP: Time at which the target change
         took place.
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which the target norms were changed, based on date intervals.
+        If the commit date is not matched to a sprint, then this is 0.
+        In the case of overlapping sprints, the latest sprint that still
+        contains the commit is used.
     -   **encryption** - INT(row encryption)
 
 
@@ -693,6 +713,11 @@ dashboard project definition.
     -   **close_date** - TIMESTAMP: Time (up to minute) until which the
         reservation is booked to break down any setup in the room. If no
         dismantling is needed, then this is the same as end_date.
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which the reservation took place, based on date intervals. If
+        the reservation date is not matched to a sprint, then this is 0.
+        In the case of overlapping sprints, the latest sprint that still
+        contains the date is used.
     -   **encryption** - INT(row encryption)
 
 ## Internal trackers
