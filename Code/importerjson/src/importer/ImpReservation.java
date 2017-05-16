@@ -6,6 +6,7 @@
 package importer;
 
 import dao.ReservationDb;
+import dao.SprintDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.Timestamp;
@@ -27,6 +28,7 @@ public class ImpReservation extends BaseImport {
  
         try (
             ReservationDb reservationDb = new ReservationDb();
+            SprintDb sprintDb = new SprintDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_reservations.json")
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -50,8 +52,9 @@ public class ImpReservation extends BaseImport {
                     Timestamp end_date = Timestamp.valueOf(end_time);
                     Timestamp prepare_date = Timestamp.valueOf(prepare_time);
                     Timestamp close_date = Timestamp.valueOf(close_time);
+                    int sprint_id = sprintDb.find_sprint(project_id, start_date);
                     
-                    reservationDb.insert_reservation(reservation_id, project_id, requester, number_of_people, description, start_date, end_date, prepare_date, close_date);
+                    reservationDb.insert_reservation(reservation_id, project_id, requester, number_of_people, description, start_date, end_date, prepare_date, close_date, sprint_id);
                 }
             }
         }

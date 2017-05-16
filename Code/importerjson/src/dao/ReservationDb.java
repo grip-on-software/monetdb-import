@@ -23,7 +23,7 @@ public class ReservationDb extends BaseDb implements AutoCloseable {
     PreparedStatement checkStmt = null;
 
     public ReservationDb() {
-        String sql = "insert into gros.reservation(reservation_id,project_id,requester,number_of_people,description,start_date,end_date,prepare_date,close_date) values (?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.reservation(reservation_id,project_id,requester,number_of_people,description,start_date,end_date,prepare_date,close_date,sprint_id) values (?,?,?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);        
     }
     
@@ -47,7 +47,7 @@ public class ReservationDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_reservation(String reservation_id, int project_id, String requester, int number_of_people, String description, Timestamp start_date, Timestamp end_date, Timestamp prepare_date, Timestamp close_date) throws SQLException, IOException, PropertyVetoException{    
+    public void insert_reservation(String reservation_id, int project_id, String requester, int number_of_people, String description, Timestamp start_date, Timestamp end_date, Timestamp prepare_date, Timestamp close_date, int sprint_id) throws SQLException, IOException, PropertyVetoException{    
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setString(1, reservation_id);
         pstmt.setInt(2, project_id);
@@ -58,6 +58,7 @@ public class ReservationDb extends BaseDb implements AutoCloseable {
         pstmt.setTimestamp(7, end_date);
         pstmt.setTimestamp(8, prepare_date);
         pstmt.setTimestamp(9, close_date);
+        pstmt.setInt(10, sprint_id);
         
         insertStmt.batch();
     }

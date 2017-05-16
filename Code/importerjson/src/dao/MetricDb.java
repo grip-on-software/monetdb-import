@@ -32,7 +32,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     public MetricDb() {
         String sql = "insert into gros.metric(name) values (?);";
         insertMetricStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_value(metric_id,value,category,date,since_date,project_id) values (?,?,?,?,?,?);";
+        sql = "insert into gros.metric_value(metric_id,value,category,date,sprint_id,since_date,project_id) values (?,?,?,?,?,?,?);";
         insertMetricValueStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_version(project_id,version_id,developer,message,commit_date) values (?,?,?,?,?);";
         insertMetricVersionStmt = new BatchedStatement(sql);
@@ -49,15 +49,16 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.execute();
     }
     
-    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, Timestamp since_date, int project) throws SQLException, IOException, PropertyVetoException{
+    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, IOException, PropertyVetoException{
         PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
         
         pstmt.setInt(1, metric_id);
         pstmt.setInt(2, value);
         pstmt.setString(3, category);
         pstmt.setTimestamp(4, date);
-        setTimestamp(pstmt, 5, since_date);
-        pstmt.setInt(6, project);
+        pstmt.setInt(5, sprint_id);
+        setTimestamp(pstmt, 6, since_date);
+        pstmt.setInt(7, project);
                     
         insertMetricValueStmt.batch();
     }
@@ -171,14 +172,15 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idVersion;
     }
 
-    public void insert_version(int projectId, int version, String developer, String message, String commit_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_version(int projectId, int version, String developer, String message, Timestamp commit_date, int sprint_id) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricVersionStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
         pstmt.setInt(2, version);
         pstmt.setString(3, developer);
         pstmt.setString(4, message);
-        pstmt.setTimestamp(5, Timestamp.valueOf(commit_date));
+        pstmt.setTimestamp(5, commit_date);
+        pstmt.setInt(6, sprint_id);
                     
         insertMetricVersionStmt.batch();
     }

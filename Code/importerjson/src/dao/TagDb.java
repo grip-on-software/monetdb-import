@@ -77,10 +77,10 @@ public class TagDb  extends BaseDb implements AutoCloseable {
     };
     
     public TagDb() {
-        String sql = "insert into gros.tag(repo_id,tag_name,version_id,message,tagged_date,tagger_id) values (?,?,?,?,?,?);";
+        String sql = "insert into gros.tag(repo_id,tag_name,version_id,message,tagged_date,tagger_id,sprint_id) values (?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.tag set version_id=?, message=?, tagged_date=?, tagger_id=? where repo_id=? and tag_name=?;";
+        sql = "update gros.tag set version_id=?, message=?, tagged_date=?, tagger_id=?, sprint_id=? where repo_id=? and tag_name=?;";
         updateStmt = new BatchedStatement(sql);
         
         tagRepoCache = new HashMap<>();
@@ -145,7 +145,7 @@ public class TagDb  extends BaseDb implements AutoCloseable {
         }
     }
     
-    public void insert_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id) throws SQLException, IOException, PropertyVetoException {
+    public void insert_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
         pstmt.setInt(1, repo_id);
@@ -154,22 +154,24 @@ public class TagDb  extends BaseDb implements AutoCloseable {
         setString(pstmt, 4, message);
         setTimestamp(pstmt, 5, tagged_date);
         setInteger(pstmt, 6, tagger_id);
+        pstmt.setInt(7, sprint_id);
         
         updateTagCache(repo_id, tag_name, version_id, message, tagged_date, tagger_id);
         
         insertStmt.batch();
     }
     
-    public void update_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id) throws SQLException, IOException, PropertyVetoException {
+    public void update_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, IOException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         
         pstmt.setString(1, version_id);
         setString(pstmt, 2, message);
         setTimestamp(pstmt, 3, tagged_date);
         setInteger(pstmt, 4, tagger_id);
+        pstmt.setInt(5, sprint_id);
         
-        pstmt.setInt(5, repo_id);
-        pstmt.setString(6, tag_name);
+        pstmt.setInt(6, repo_id);
+        pstmt.setString(7, tag_name);
         
         updateTagCache(repo_id, tag_name, version_id, message, tagged_date, tagger_id);
         
