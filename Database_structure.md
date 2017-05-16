@@ -601,6 +601,9 @@ These tables include data from Gitlab/Git and Subversion.
     -   **line_type** - VARCHAR(100): The type of line being discussed
         by the comment: 'old' or 'new'. If this is NULL, then the
         comment belongs to the entire version.
+    -   **created_date** - TIMESTAMP: Time at which the comment is added
+        to the commit, or NULL if this information was not available
+        from the API source.
 
 ## Metrics tables (Quality dashboard history)
 
