@@ -31,6 +31,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     private final HashMap<Integer, HashMap<Integer, Sprint>> keyCache;
     private final HashMap<Integer, Sprint[]> dateCache;
     
+    /**
+     * A sprint object. The sprint contains properties extracted from JIRA,
+     * including an internal identifier, the human-readable name, and date ranges.
+     */
     private static class Sprint implements Comparable<Timestamp> {
         private final int sprint_id;
         private final String name;
@@ -46,10 +50,21 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             this.complete_date = complete_date;
         }
 
+        /**
+         * Retrieve the identifier of this sprint. This identifier is unique
+         * within the project the sprint is in.
+         * @return The sprint's internal identifier
+         */
         public int getSprintId() {
             return this.sprint_id;
         }
         
+        /**
+         * Check whether a sprint is equal to another. This does not include any
+         * checks whether the sprints are in the same project.
+         * @param other The other object
+         * @return Whether the other object is a Sprint with the same properties
+         */
         @Override
         public boolean equals(Object other) {
             if (other == null) {
@@ -76,11 +91,26 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             return hash;
         }
         
+        /**
+         * Compare the start date of the sprint to another timestamp.
+         * This can be used for sorting multiple sprints on their start date, or
+         * a first step in finding the sprint that encompasses a given date.
+         * @param other A Timestamp of a moment in time to compare to the sprint
+         * @return the value 0 if the start date is equal to the given timestamp;
+         * a value less than 0 if the start date is before the given timestamp;
+         * and a value greater than 0 if the start date is after the given timestamp.
+         */
         @Override
         public int compareTo(Timestamp other) {
             return start_date.compareTo(other);
         }
         
+        /**
+         * Provide a comparator between Sprint objects.
+         * This comparator uses only the internal sprint ID to compare the sprints
+         * for sorting.
+         * @return A custom comparator object
+         */
         public static Comparator<Sprint> getComparator() {
             return new Comparator<Sprint>() {
                 @Override
@@ -90,6 +120,16 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             };
         }
         
+        /**
+         * Check whether the given date is encompassed by this sprint.
+         * For a sprint to contain a certain date, it must have a start date
+         * that is earlier than or at the same moment as the given date,
+         * its end date (if provided) must be later than or at the same moment
+         * as the given date, and the complete date (if provided) must also be
+         * later than or at the same moment as the given date.
+         * @param date The date to check
+         * @return Whether the date is in the sprint's date range
+         */
         public boolean contains(Timestamp date) {
             if (this.start_date == null || date.before(this.start_date)) {
                 return false;
