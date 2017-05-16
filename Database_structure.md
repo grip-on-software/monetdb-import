@@ -25,9 +25,9 @@ such fields more thoroughly and uniformly.
     for encryption purposes.
 -   **VARCHAR(Git branch)**: A field containing a Git branch object
     name. The maximum length limitation of this field is 255 characters.
--   **INTEGER(row encryption)**: A field specifying which encryption
-    level is applied to certain fields in the given row has encrypted
-    fields. This field exists in tables with [sensitive
+-   **INT(row encryption)**: A field specifying which encryption level
+    is applied to certain fields in the given row has encrypted fields.
+    This field exists in tables with [sensitive
     data](sensitive_data), specifically those with personally
     identifying information. The field levels bitmask is simply an
     integer, where 0 means no encryption, 1 is encryption using
@@ -45,7 +45,8 @@ such fields more thoroughly and uniformly.
 ## Issue tables (JIRA)
 
 -   **issue**: Entries from the JIRA database. Each row is one changelog
-    item. Primary key is (issue_id, changelog_id)
+    item, and contains fields derived from the global issue information
+    or the changelog version. Primary key is (issue_id, changelog_id).
     -   **issue_id** - INT: Internal JIRA identifier. **There may be
         multiple rows with the same issue_id.**
     -   **changelog_id** - INT: Version number deduced from the
@@ -53,7 +54,8 @@ such fields more thoroughly and uniformly.
     -   **key** - VARCHAR(Issue key): The JIRA issue key. **There may be
         multiple rows with the same key.**
     -   **title** - VARCHAR(250): The human-readable title of the issue.
-        Can be updated in changes.
+        This reflects the title at the moment the issue version existed,
+        based on the changelog.
     -   **type** - INT - reference to issuetype.id: The issue type
         (Story, Bug, Use Case) as an internal JIRA identifier.
     -   **priority** - INT - reference to priority.id: The issue
@@ -133,7 +135,7 @@ such fields more thoroughly and uniformly.
     -   **epic** - VARCHAR(Issue key): The issue key of the Epic link.
     -   **impediment** - BOOL: Whether the issue is currently marked as
         being blocked by an Impediment.
-    -   **ready_status** - INTEGER - reference to ready_status.id: The
+    -   **ready_status** - INT - reference to ready_status.id: The
         refinement ready status as an internal JIRA identifier.
     -   **ready_status_reason** - TEXT: Additional text provided in the
         Review tab of the issue to describe why it currently has the
@@ -171,7 +173,7 @@ such fields more thoroughly and uniformly.
         execution appears to take. This is often set after the use case
         is resolved and tested. If this is not set, then it is the
         integer 0.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 ### Context tables
 
@@ -224,7 +226,7 @@ such fields more thoroughly and uniformly.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
         message was edited. This is equal to *date* if the comment has
         not been updated.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 ### Metadata tables
 
@@ -263,11 +265,11 @@ such fields more thoroughly and uniformly.
         displayed in the JIRA interface.
     -   **email** - VARCHAR(100): The email address of the JIRA
         developer.
-    -   **local_domain** - BOOLEAN: Whether the email address of the
+    -   **local_domain** - BOOL: Whether the email address of the
         developer has a local domain as defined in the importer
         properties. In this case, whether the email ends with
         '@ictu.nl'.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 
 -   **project_developer**: **Not yet used.** Names of JIRA users,
@@ -286,7 +288,7 @@ such fields more thoroughly and uniformly.
         displayed in the JIRA interface.
     -   **email** - VARCHAR(100): The email address of the JIRA
         developer.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 
 -   **fixversion**: Indicators in JIRA issues of the version to fix the
@@ -437,7 +439,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
     -   **email** - VARCHAR(100): Email address that the developer uses.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 
 -   **repo**: Repository names
@@ -641,7 +643,7 @@ dashboard project definition.
     -   **message** - TEXT: Commit message describing the change.
     -   **commit_date** - TIMESTAMP: Time at which the target change
         took place.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 
 -   **metric_target**: Manual changes to the metric targets of a
@@ -688,7 +690,7 @@ dashboard project definition.
     -   **close_date** - TIMESTAMP: Time (up to minute) until which the
         reservation is booked to break down any setup in the room. If no
         dismantling is needed, then this is the same as end_date.
-    -   **encryption** - INTEGER(row encryption)
+    -   **encryption** - INT(row encryption)
 
 ## Internal trackers
 
