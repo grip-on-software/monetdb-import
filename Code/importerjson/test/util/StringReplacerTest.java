@@ -64,7 +64,6 @@ public class StringReplacerTest {
      */
     @Test
     public void testExecute() {
-        System.out.println("execute");
         String text = "Test: aa bb cc dd";
         StringReplacer instance = new StringReplacer();
         instance.add("aa", "bbb").add("bb", "ccc");

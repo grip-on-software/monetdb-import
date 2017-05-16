@@ -81,8 +81,9 @@ public class BufferedJSONReaderTest {
     @Test
     public void testReadObject() throws Exception {
         try (BufferedJSONReader instance = new BufferedJSONReader(new StringReader(jsonInput))) {
-            if (expected instanceof Class && Exception.class.isAssignableFrom((Class)expected)) {
-                exception.expect((Class)expected);
+            if (expected instanceof Class && Throwable.class.isAssignableFrom((Class)expected)) {
+                Class<?> expectedClass = (Class<?>)expected;
+                exception.expect(expectedClass.asSubclass(Throwable.class));
             }
             Object result = instance.readObject();
             if (expected instanceof JSONObject) {
