@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import util.BaseDb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,13 +20,13 @@ import java.util.HashMap;
  * @author Enrique and Leon Helwerda
  */
 public class MetricDb extends BaseDb implements AutoCloseable {
-    PreparedStatement checkMetricStmt = null;
-    BatchedStatement insertMetricStmt = null;
-    BatchedStatement insertMetricValueStmt = null;
-    PreparedStatement checkMetricVersionStmt = null;
-    BatchedStatement insertMetricVersionStmt = null;
-    BatchedStatement insertMetricTargetStmt = null;
-    HashMap<String, Integer> nameCache = null;
+    private PreparedStatement checkMetricStmt = null;
+    private BatchedStatement insertMetricStmt = null;
+    private BatchedStatement insertMetricValueStmt = null;
+    private PreparedStatement checkMetricVersionStmt = null;
+    private BatchedStatement insertMetricVersionStmt = null;
+    private BatchedStatement insertMetricTargetStmt = null;
+    private HashMap<String, Integer> nameCache = null;
     
     public MetricDb() {
         String sql = "insert into gros.metric(name) values (?);";
@@ -40,7 +39,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricTargetStmt = new BatchedStatement(sql);
     }
     
-    public void insert_metric(String name) throws SQLException, IOException, PropertyVetoException{
+    public void insert_metric(String name) throws SQLException, PropertyVetoException{
         PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
@@ -49,7 +48,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.execute();
     }
     
-    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, IOException, PropertyVetoException{
+    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, PropertyVetoException{
         PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
         
         pstmt.setInt(1, metric_id);
@@ -92,7 +91,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private void getCheckMetricStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckMetricStmt() throws SQLException, PropertyVetoException {
         if (checkMetricStmt == null) {
             Connection con = insertMetricStmt.getConnection();
             String sql = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = ?";
@@ -100,7 +99,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private void fillNameCache() throws SQLException, IOException, PropertyVetoException {
+    private void fillNameCache() throws SQLException, PropertyVetoException {
         if (nameCache != null) {
             return;
         }
@@ -121,7 +120,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    public int check_metric(String name) throws SQLException, IOException, PropertyVetoException {
+    public int check_metric(String name) throws SQLException, PropertyVetoException {
         fillNameCache();
         
         String key = name.toUpperCase().trim();
@@ -149,7 +148,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idMetric;
     }
 
-    private void getCheckVersionStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckVersionStmt() throws SQLException, PropertyVetoException {
         if (checkMetricVersionStmt == null) {
             Connection con = insertMetricStmt.getConnection();
             String sql = "SELECT version_id FROM gros.metric_version WHERE project_id = ? AND version_id = ?";
@@ -157,7 +156,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    public int check_version(int projectId, int version) throws SQLException, IOException, PropertyVetoException {
+    public int check_version(int projectId, int version) throws SQLException, PropertyVetoException {
         getCheckVersionStmt();
         int idVersion = 0;
         
@@ -172,7 +171,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idVersion;
     }
 
-    public void insert_version(int projectId, int version, String developer, String message, Timestamp commit_date, int sprint_id) throws SQLException, IOException, PropertyVetoException {
+    public void insert_version(int projectId, int version, String developer, String message, Timestamp commit_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricVersionStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
@@ -185,7 +184,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricVersionStmt.batch();
     }
 
-    public void insert_target(int projectId, int version, int metricId, String type, int target, int low_target, String comment) throws SQLException, IOException, PropertyVetoException {
+    public void insert_target(int projectId, int version, int metricId, String type, int target, int low_target, String comment) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricTargetStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);

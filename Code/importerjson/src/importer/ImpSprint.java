@@ -14,10 +14,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 /**
- *
+ * Importer for JIRA sprints.
  * @author Enrique
  */
-public class ImpSprint extends BaseImport{
+public class ImpSprint extends BaseImport {
     
     @Override
     public void parser() {

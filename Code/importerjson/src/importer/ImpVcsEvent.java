@@ -19,7 +19,7 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
+ * Importer for VCS events.
  * @author Leon Helwerda
  */
 public class ImpVcsEvent extends BaseImport {
@@ -37,8 +37,7 @@ public class ImpVcsEvent extends BaseImport {
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String repo_name = (String) jsonObject.get("repo_name");
@@ -75,7 +74,7 @@ public class ImpVcsEvent extends BaseImport {
 
     @Override
     public String getImportName() {
-        return "GitLab events";
+        return "version control system events";
     }
     
 }

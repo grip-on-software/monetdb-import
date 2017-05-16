@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import util.BaseDb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,16 +23,15 @@ public class ProjectDb extends BaseDb {
         
         Connection con = null;
         Statement st = null;
-        String sql="";
     
         try {
             con = DataSource.getInstance().getConnection();
        
             st = con.createStatement();
-            sql = "insert into gros.project(name) values ('"+name+"');";
+            String sql = "insert into gros.project(name) values ('"+name+"');";
                     
             st.executeUpdate(sql);
-        } catch (SQLException | IOException | PropertyVetoException ex) {
+        } catch (SQLException | PropertyVetoException ex) {
             logException(ex);
         } finally {
             if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
@@ -63,7 +61,7 @@ public class ProjectDb extends BaseDb {
             }
 
         }
-        catch (PropertyVetoException | IOException | SQLException ex) {
+        catch (PropertyVetoException | SQLException ex) {
             logException(ex);
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}

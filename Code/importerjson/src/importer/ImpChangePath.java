@@ -19,10 +19,10 @@ import util.BaseImport;
 import util.BufferedJSONReader;
 
 /**
- *
- * @author leonhelwerda
+ * Importer for the VCS changed paths.
+ * @author Leon Helwerda
  */
-public class ImpChangePath extends BaseImport{
+public class ImpChangePath extends BaseImport {
     
     @Override
     public void parser() {

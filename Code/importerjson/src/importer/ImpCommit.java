@@ -35,8 +35,8 @@ import java.util.logging.Logger;
 import util.BufferedJSONReader;
 
 /**
- *
- * @author Thomas and Enrique
+ * Importer for VCS commit versions and some global special tasks.
+ * @author Thomas, Enrique
  */
 public class ImpCommit extends BaseImport{
     
@@ -53,7 +53,6 @@ public class ImpCommit extends BaseImport{
             BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedStatement bstmt = new BatchedStatement(sql)
         ) {
-                
             PreparedStatement pstmt = bstmt.getPreparedStatement();
             
             Object o;
@@ -186,7 +185,7 @@ public class ImpCommit extends BaseImport{
             
             bstmt.execute();
         }
-        catch (IOException | SQLException | PropertyVetoException ex) {
+        catch (SQLException | PropertyVetoException ex) {
             logException(ex);
         }
     }
@@ -217,7 +216,7 @@ public class ImpCommit extends BaseImport{
             {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                int jira_id = 0;
+                int jira_id;
                 String display_name = (String) jsonObject.get("display_name");
                 String email = (String) jsonObject.get("email");
                 Developer dev = new Developer(display_name, email);
@@ -270,7 +269,7 @@ public class ImpCommit extends BaseImport{
             while (rs.next()) {
                 System.out.println("Unknown VCS Developer: " + rs.getString("display_name"));
             }            
-        } catch (PropertyVetoException | IOException | SQLException ex) {
+        } catch (PropertyVetoException | SQLException ex) {
             logException(ex);
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
@@ -382,7 +381,7 @@ public class ImpCommit extends BaseImport{
                 Logger.getLogger("importer").log(Level.INFO, "Encrypted fields in {0} table", table);
 
             }
-        } catch (PropertyVetoException | IOException | SQLException ex) {
+        } catch (PropertyVetoException | SQLException ex) {
             logException(ex);
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}

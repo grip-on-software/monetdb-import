@@ -32,17 +32,17 @@ import util.BufferedJSONReader;
 import util.StringReplacer;
 
 /**
- *
+ * Importer for metric values.
  * @author Enrique
  */
-public class ImpMetricValue extends BaseImport{
+public class ImpMetricValue extends BaseImport {
     private static class MetricReader implements AutoCloseable {
         private final JSONParser parser = new JSONParser();
         private MetricDb mDB = null;
         private SprintDb sprintDb = null;
         private final String path;
         private final int projectID;
-        final int BUFFER_SIZE = 65536;
+        private static final int BUFFER_SIZE = 65536;
         
         public MetricReader(String path, int projectID) {
             this.mDB = new MetricDb();

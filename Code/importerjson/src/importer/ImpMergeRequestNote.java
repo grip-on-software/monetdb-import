@@ -19,8 +19,8 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
- * @author leonhelwerda
+ * Importer for GitLab merge request notes.
+ * @author Leon Helwerda
  */
 public class ImpMergeRequestNote extends BaseImport {
 

@@ -11,28 +11,31 @@ package dao;
  */
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import util.BaseDb;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 /**
- * THe class is created for managing your database connection and having only
+ * The class is created for managing your database connection and having only
  * one database connection at the time.
  * @author Thomas
  */
 public class DataSource extends BaseDb {
-
-    private static DataSource     datasource;
+    /**
+     * Singleton
+     */
+    private static DataSource datasource;
     private final ComboPooledDataSource cpds;
 
-    private DataSource() throws IOException, SQLException, PropertyVetoException {
-        //System.setProperty("com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "WARNING");
-        //System.setProperty("com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog");
-        
+    /**
+     * Create the database connection manager.
+     * @throws PropertyVetoException If the JDBC driver cannot be registered
+     */
+    private DataSource() throws PropertyVetoException {
         cpds = new ComboPooledDataSource();
-        cpds.setDriverClass("nl.cwi.monetdb.jdbc.MonetDriver"); //loads the jdbc driver
+        // Load the MonetDB JDBC driver.
+        cpds.setDriverClass("nl.cwi.monetdb.jdbc.MonetDriver");
         cpds.setJdbcUrl(getUrl());
         cpds.setUser(getUser());
         cpds.setPassword(getPassword());
@@ -42,11 +45,12 @@ public class DataSource extends BaseDb {
     }
 
     /**
-     * Returns the database object for the application. In case a database 
-     * object is not yet created, it will create the object. 
-     * @return Instance of Database connection
+     * Returns the database singleton object for the importer application.
+     * In case a database object is not yet created, it will create the object. 
+     * @return Instance of DataSource
+     * @throws PropertyVetoException If the JDBC driver cannot be registered
      */
-    public static DataSource getInstance() throws IOException, SQLException, PropertyVetoException {
+    public static DataSource getInstance() throws PropertyVetoException {
         if (datasource == null) {
             datasource = new DataSource();
             return datasource;
@@ -58,6 +62,7 @@ public class DataSource extends BaseDb {
     /**
      * Returns the connection with the database. 
      * @return Database connection
+     * @throws SQLException If a database access error occurs
      */
     public final Connection getConnection() throws SQLException {
         return this.cpds.getConnection();

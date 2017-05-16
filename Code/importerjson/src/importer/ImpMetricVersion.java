@@ -16,7 +16,7 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
+ * Importer for metric versions.
  * @author Leon Helwerda
  */
 public class ImpMetricVersion extends BaseImport {
@@ -33,9 +33,7 @@ public class ImpMetricVersion extends BaseImport {
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
-      
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String message = (String) jsonObject.get("message");

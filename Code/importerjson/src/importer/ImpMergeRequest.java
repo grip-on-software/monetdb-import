@@ -20,8 +20,8 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
- * @author leonhelwerda
+ * Importer for GitLab merge requests.
+ * @author Leon Helwerda
  */
 public class ImpMergeRequest extends BaseImport {
 

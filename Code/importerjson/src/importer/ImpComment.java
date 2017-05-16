@@ -9,30 +9,24 @@ import util.BaseImport;
 import dao.CommentDb;
 import java.io.FileReader;
 import java.sql.Timestamp;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import util.BufferedJSONReader;
 
 /**
- *
+ * Importer for the JIRA comments.
  * @author Enrique
  */
 public class ImpComment extends BaseImport{
     
     @Override
     public void parser() {
-
-        JSONParser parser = new JSONParser();
- 
         try (
             CommentDb commentDb = new CommentDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_comments.json")
+            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_comments.json");
+            BufferedJSONReader br = new BufferedJSONReader(fr)
         ) {
-            JSONArray a = (JSONArray) parser.parse(fr);
-            
-            for (Object o : a)
-            {
-      
+            Object o;
+            while ((o = br.readObject()) != null) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String comment = (String) jsonObject.get("comment");

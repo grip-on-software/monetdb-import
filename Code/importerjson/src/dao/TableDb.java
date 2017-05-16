@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,12 +17,12 @@ import java.sql.SQLException;
  * @author Leon Helwerda
  */
 public class TableDb implements AutoCloseable {
-    String tableName;
-    String fieldName;
-    int numberOfFields = 2;
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkIdStmt = null;
-    PreparedStatement checkValueStmt = null;
+    private final String tableName;
+    private final String fieldName;
+    private int numberOfFields = 2;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkIdStmt = null;
+    private PreparedStatement checkValueStmt = null;
     
     /**
      * Create a database access object for metadata tables
@@ -61,7 +60,7 @@ public class TableDb implements AutoCloseable {
         }
     }
     
-    private void getCheckIdStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckIdStmt() throws SQLException, PropertyVetoException {
         if (checkIdStmt == null) {
             Connection con = insertStmt.getConnection();
             String sql = "SELECT id FROM gros." + this.tableName + " WHERE id = ?";
@@ -69,7 +68,7 @@ public class TableDb implements AutoCloseable {
         }
     }
 
-    private void getCheckValueStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckValueStmt() throws SQLException, PropertyVetoException {
         if (checkValueStmt == null) {
             Connection con = insertStmt.getConnection();
             String sql = "SELECT id FROM gros." + this.tableName + " WHERE UPPER(" + this.fieldName + ") = ?";
@@ -81,11 +80,10 @@ public class TableDb implements AutoCloseable {
      * Insert an id--name relation into the table
      * @param identifier Identifier
      * @param value Name value
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert(int identifier, String value) throws SQLException, IOException, PropertyVetoException {
+    public void insert(int identifier, String value) throws SQLException, PropertyVetoException {
         if (numberOfFields != 2) {
             throw new IllegalArgumentException("must provide " + String.valueOf(numberOfFields) + " arguments, not 2");
         }
@@ -102,11 +100,10 @@ public class TableDb implements AutoCloseable {
      * @param identifier Identifier
      * @param value Name value
      * @param metadata Metdata value
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert(int identifier, String value, String metadata) throws SQLException, IOException, PropertyVetoException {
+    public void insert(int identifier, String value, String metadata) throws SQLException, PropertyVetoException {
         if (numberOfFields != 3) {
             throw new IllegalArgumentException("must provide " + String.valueOf(numberOfFields) + " arguments, not 3");
         }
@@ -123,11 +120,10 @@ public class TableDb implements AutoCloseable {
      * Check whether a certain identifier has an id--name relation in the table
      * @param identifier The identifier to check for
      * @return The identifier if it exists in the table, otherwise null
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public Integer check(int identifier) throws SQLException, IOException, PropertyVetoException {
+    public Integer check(int identifier) throws SQLException, PropertyVetoException {
         getCheckIdStmt();
         
         Integer id = null;
@@ -146,11 +142,10 @@ public class TableDb implements AutoCloseable {
      * Check whether a certain name value has an id--name relation in the table
      * @param value The name value to check for
      * @return The identifier if it exists in the table, otherwise null
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public Integer check(String value) throws SQLException, IOException, PropertyVetoException {
+    public Integer check(String value) throws SQLException, PropertyVetoException {
         getCheckValueStmt();
 
         Integer id = null;

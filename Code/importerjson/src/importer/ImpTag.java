@@ -19,7 +19,7 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
+ * Importer for VCS tags.
  * @author Leon Helwerda
  */
 public class ImpTag extends BaseImport {
@@ -38,8 +38,7 @@ public class ImpTag extends BaseImport {
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String repo_name = (String) jsonObject.get("repo_name");

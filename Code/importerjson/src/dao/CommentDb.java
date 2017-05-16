@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import util.BaseDb;
 import java.sql.PreparedStatement;
@@ -15,13 +14,13 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 /**
- *
+ * Database access management for the JIRA comment table.
  * @author Enrique
  */
 public class CommentDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
-    BatchedStatement updateStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
+    private BatchedStatement updateStmt = null;
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -35,14 +34,34 @@ public class CommentDb extends BaseDb implements AutoCloseable {
         updateStmt = new BatchedStatement(sql);
     }
     
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select message, author, date, updater, updated_date from gros.comment where comment_id=?;");
         }
     }
     
-    public CheckResult check_comment(int comment_id, String message, String author, Timestamp date, String updater, Timestamp updated_date) throws SQLException, IOException, PropertyVetoException {
+    /**
+     * Check whether a comment exists in the database and has the same properties.
+     * @param comment_id The internal identifier of the comment
+     * @param message The current contents of the message
+     * @param author The shorthand name of the original author of the comment
+     * @param date The timestamp when the comment was originally written
+     * @param updater The shorthand name of the most recent editor of the comment,
+     * or null if the comment has not been edited
+     * @param updated_date The timestamp when the comment was most recently edited,
+     * or null if the comment has not been edited
+     * @return An indicator of the state of the database regarding the given comment.
+     * This is CheckResult.MISSING if the comment with the provided identifier
+     * does not exist. This is CheckResult.DIFFERS if there is a row with the
+     * provided identifier in the database, but it has different values
+     * in its fields (for example without the most recent edit). This is
+     * CheckResult.EXISTS if there is a comment in the database that matches all 
+     * the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public CheckResult check_comment(int comment_id, String message, String author, Timestamp date, String updater, Timestamp updated_date) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, comment_id);
@@ -66,7 +85,22 @@ public class CommentDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void insert_comment(int comment_id, int issue_id, String message, String author, Timestamp date, String updater, Timestamp updated_date) throws SQLException, IOException, PropertyVetoException{    
+    /**
+     * Insert a new comment in the database.
+     * @param comment_id The internal identifier of the comment
+     * @param issue_id The internal identifier of the issue that the comment
+     * belongs to
+     * @param message The current contents of the message
+     * @param author The shorthand name of the original author of the comment
+     * @param date The timestamp when the comment was originally written
+     * @param updater The shorthand name of the most recent editor of the comment,
+     * or null if the comment has not been edited
+     * @param updated_date The timestamp when the comment was most recently edited,
+     * or null if the comment has not been edited
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_comment(int comment_id, int issue_id, String message, String author, Timestamp date, String updater, Timestamp updated_date) throws SQLException, PropertyVetoException {    
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, comment_id);
         pstmt.setInt(2, issue_id);
@@ -79,7 +113,20 @@ public class CommentDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
-    public void update_comment(int comment_id, String message, String author, Timestamp date, String updater, Timestamp updated_date) throws SQLException, IOException, PropertyVetoException {
+    /**
+     * Update an existing comment in the database with edited values.
+     * @param comment_id The internal identifier of the comment
+     * @param message The current contents of the message
+     * @param author The shorthand name of the original author of the comment
+     * @param date The timestamp when the comment was originally written
+     * @param updater The shorthand name of the most recent editor of the comment,
+     * or null if the comment has not been edited
+     * @param updated_date The timestamp when the comment was most recently edited,
+     * or null if the comment has not been edited
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void update_comment(int comment_id, String message, String author, Timestamp date, String updater, Timestamp updated_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, message);
         pstmt.setString(2, author);

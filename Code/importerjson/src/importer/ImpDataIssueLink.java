@@ -15,10 +15,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 /**
- *
+ * Importer for JIRA issue links.
  * @author Enrique
  */
-public class ImpDataIssueLink extends BaseImport{
+public class ImpDataIssueLink extends BaseImport {
     
     @Override
     public void parser() {

@@ -16,7 +16,7 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
+ * Importer for reservations.
  * @author Leon Helwerda
  */
 public class ImpReservation extends BaseImport {
@@ -33,8 +33,7 @@ public class ImpReservation extends BaseImport {
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
-            for (Object o : a)
-            {
+            for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String reservation_id = (String) jsonObject.get("reservation_id");

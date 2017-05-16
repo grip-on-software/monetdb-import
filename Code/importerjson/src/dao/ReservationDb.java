@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,22 +18,22 @@ import util.BaseDb;
  * @author Leon Helwera
  */
 public class ReservationDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
 
     public ReservationDb() {
         String sql = "insert into gros.reservation(reservation_id,project_id,requester,number_of_people,description,start_date,end_date,prepare_date,close_date,sprint_id) values (?,?,?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);        
     }
     
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select reservation_id from gros.reservation where reservation_id=?;");
         }
     }
         
-    public boolean check_reservation(String reservation_id) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_reservation(String reservation_id) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setString(1, reservation_id);
@@ -47,7 +46,7 @@ public class ReservationDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_reservation(String reservation_id, int project_id, String requester, int number_of_people, String description, Timestamp start_date, Timestamp end_date, Timestamp prepare_date, Timestamp close_date, int sprint_id) throws SQLException, IOException, PropertyVetoException{    
+    public void insert_reservation(String reservation_id, int project_id, String requester, int number_of_people, String description, Timestamp start_date, Timestamp end_date, Timestamp prepare_date, Timestamp close_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setString(1, reservation_id);
         pstmt.setInt(2, project_id);

@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import util.BaseDb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,7 +32,7 @@ public class GitFeatureDb extends BaseDb {
             sql = "insert into gros.git_features (feature_name,feature_value,sprint_id,user_name) values ('"+name+"',"+value+","+sprint+"'"+user+"'');";
                     
             st.executeUpdate(sql);
-        } catch (SQLException | IOException | PropertyVetoException ex) {
+        } catch (SQLException | PropertyVetoException ex) {
             logException(ex);
         } finally {
             if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
@@ -57,7 +56,7 @@ public class GitFeatureDb extends BaseDb {
                     
             st.executeUpdate(sql);
         }
-        catch (SQLException | IOException | PropertyVetoException ex) {
+        catch (SQLException | PropertyVetoException ex) {
             logException(ex);
         }
         finally {
@@ -88,7 +87,7 @@ public class GitFeatureDb extends BaseDb {
                 idUser = rs.getInt("id");
             }
         }
-        catch (PropertyVetoException | IOException | SQLException ex) {
+        catch (PropertyVetoException | SQLException ex) {
             logException(ex);
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}

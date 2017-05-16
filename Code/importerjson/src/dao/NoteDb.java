@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import util.BaseDb;
 import java.sql.PreparedStatement;
@@ -19,10 +18,10 @@ import java.sql.Timestamp;
  * @author Leon Helwerda
  */
 public class NoteDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertRequestStmt = null;
-    PreparedStatement checkRequestStmt = null;
-    BatchedStatement insertCommitStmt = null;
-    PreparedStatement checkCommitStmt = null;
+    private BatchedStatement insertRequestStmt = null;
+    private PreparedStatement checkRequestStmt = null;
+    private BatchedStatement insertCommitStmt = null;
+    private PreparedStatement checkCommitStmt = null;
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -36,14 +35,14 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         insertCommitStmt = new BatchedStatement(sql);
     }
     
-    private void getCheckRequestStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckRequestStmt() throws SQLException, PropertyVetoException {
         if (checkRequestStmt == null) {
             Connection con = insertRequestStmt.getConnection();
             checkRequestStmt = con.prepareStatement("select note_id from gros.merge_request_note where repo_id=? AND request_id=? AND note_id=?;");
         }
     }
     
-    public boolean check_request_note(int repo_id, int request_id, int note_id) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_request_note(int repo_id, int request_id, int note_id) throws SQLException, PropertyVetoException {
         getCheckRequestStmt();
         
         checkRequestStmt.setInt(1, repo_id);
@@ -58,7 +57,7 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_request_note(int repo_id, int request_id, int note_id, int dev_id, String comment, Timestamp created_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_request_note(int repo_id, int request_id, int note_id, int dev_id, String comment, Timestamp created_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertRequestStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setInt(2, request_id);
@@ -70,14 +69,14 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         insertRequestStmt.batch();
     }
     
-    private void getCheckCommitStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckCommitStmt() throws SQLException, PropertyVetoException {
         if (checkCommitStmt == null) {
             Connection con = insertCommitStmt.getConnection();
             checkCommitStmt = con.prepareStatement("select 1 from gros.commit_comment where repo_id=? AND version_id=? AND author=? AND comment=? AND file=? AND line=? AND line_type=? AND created_date=?;");
         }
     }
     
-    public boolean check_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type, Timestamp created_date) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type, Timestamp created_date) throws SQLException, PropertyVetoException {
         getCheckCommitStmt();
         
         checkCommitStmt.setInt(1, repo_id);
@@ -97,7 +96,7 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type, Timestamp created_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type, Timestamp created_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertCommitStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setString(2, version_id);

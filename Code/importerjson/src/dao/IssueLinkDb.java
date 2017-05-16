@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -108,11 +107,11 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         public LinkDates dates = null;
     };
     
-    HashMap<Link, LinkDates> linkCache = null;
+    private HashMap<Link, LinkDates> linkCache = null;
     
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
-    BatchedStatement updateStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
+    private BatchedStatement updateStmt = null;
 
     public IssueLinkDb() {
         String sql = "insert into gros.issuelink (from_key,to_key,relationship_type,outward,start_date,end_date) values (?,?,?,?,?,?);";
@@ -122,14 +121,14 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         updateStmt = new BatchedStatement(sql);
     }
 
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select start_date, end_date from gros.issuelink where from_key=? and to_key=? and relationship_type=? and outward=?;");
         }
     }
 
-    private void fillLinkCache() throws SQLException, IOException, PropertyVetoException {
+    private void fillLinkCache() throws SQLException, PropertyVetoException {
         if (linkCache != null) {
             return;
         }
@@ -172,7 +171,7 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         return result;
     }
 
-    public CheckResult check_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
+    public CheckResult check_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         getCheckStmt();
         fillLinkCache();
         
@@ -201,7 +200,7 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void insert_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setString(1, from_key);
         pstmt.setString(2, to_key);
@@ -219,7 +218,7 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    public void update_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, IOException, PropertyVetoException {
+    public void update_link(String from_key, String to_key, int relationship_type, boolean outward, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         setTimestamp(pstmt, 1, start_date);
         setTimestamp(pstmt, 2, end_date);

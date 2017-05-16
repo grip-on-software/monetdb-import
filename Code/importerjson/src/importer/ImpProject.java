@@ -7,21 +7,16 @@ package importer;
 
 import util.BaseImport;
 import dao.ProjectDb;
-import java.io.BufferedReader;
-import org.json.simple.parser.JSONParser;
 
 /**
- *
+ * Importer for projects.
  * @author Enrique
  */
-public class ImpProject extends BaseImport{
-    
-    BufferedReader br = null;
-    JSONParser parser = new JSONParser();
-    ProjectDb pDB;
+public class ImpProject extends BaseImport {    
 
     @Override
-    public void parser(){
+    public void parser() {
+        ProjectDb pDB;
         String projectN = getProjectName();
 
         int project = 0;

@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,11 +19,11 @@ import util.BaseDb;
  *
  * @author Leon Helwerda
  */
-public class TagDb  extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    BatchedStatement updateStmt = null;
-    PreparedStatement cacheStmt = null;
-    HashMap<Integer, HashMap<String, TagInfo>> tagRepoCache = null;
+public class TagDb extends BaseDb implements AutoCloseable {
+    private BatchedStatement insertStmt = null;
+    private BatchedStatement updateStmt = null;
+    private PreparedStatement cacheStmt = null;
+    private HashMap<Integer, HashMap<String, TagInfo>> tagRepoCache = null;
     
     private static class TagInfo {
         String version_id;
@@ -86,7 +85,7 @@ public class TagDb  extends BaseDb implements AutoCloseable {
         tagRepoCache = new HashMap<>();
     }
         
-    private void fillTagCache(int repo_id) throws SQLException, IOException, PropertyVetoException {
+    private void fillTagCache(int repo_id) throws SQLException, PropertyVetoException {
         if (tagRepoCache.containsKey(repo_id)) {
             return;
         }
@@ -125,7 +124,7 @@ public class TagDb  extends BaseDb implements AutoCloseable {
         cache.put(tag_name, tagInfo);
     }
     
-    public CheckResult check_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id) throws SQLException, IOException, PropertyVetoException {
+    public CheckResult check_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id) throws SQLException, PropertyVetoException {
         fillTagCache(repo_id);
         HashMap<String, TagInfo> cache = tagRepoCache.get(repo_id);
         TagInfo currentTagInfo = cache.get(tag_name);
@@ -145,7 +144,7 @@ public class TagDb  extends BaseDb implements AutoCloseable {
         }
     }
     
-    public void insert_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, IOException, PropertyVetoException {
+    public void insert_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
         pstmt.setInt(1, repo_id);
@@ -161,7 +160,7 @@ public class TagDb  extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
-    public void update_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, IOException, PropertyVetoException {
+    public void update_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         
         pstmt.setString(1, version_id);

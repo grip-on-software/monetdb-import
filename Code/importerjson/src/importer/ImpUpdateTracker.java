@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import util.BaseImport;
 
 /**
- *
+ * Importer for update trackers.
  * @author Leon Helwerda
  */
 public class ImpUpdateTracker extends BaseImport {

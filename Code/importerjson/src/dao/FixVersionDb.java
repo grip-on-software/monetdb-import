@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -15,13 +14,13 @@ import java.sql.SQLException;
 import util.BaseDb;
 
 /**
- *
- * @author leonhelwerda
+ * Database access management for the JIRA fix versions.
+ * @author Leon Helwerda
  */
 public class FixVersionDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
-    BatchedStatement updateStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
+    private BatchedStatement updateStmt = null;
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -35,7 +34,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         updateStmt = new BatchedStatement(sql);
     }
     
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select name, description, start_date, release_date, released from gros.fixversion where id=? and project_id=?;");
@@ -49,7 +48,28 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         return date.equals(current_date);
     }
     
-    public CheckResult check_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, IOException, PropertyVetoException {
+    /**
+     * Check whether a fix version exists in the database and that it has the same
+     * properties as the provided arguments.
+     * @param id The internal identifier of the fix version
+     * @param project_id The identifier of the project that the fix version applies to
+     * @param name The name (version numbering scheme) of the release version.
+     * @param description The description provided to the release version 
+     * @param start_date The day on which work started on this fix version, or null
+     * if work has not yet started
+     * @param release_date The day on which the version is released or is supposed
+     * to be released, or null if there is no projected date yet
+     * @param released Whether the fix version has been released already
+     * @return An indicator of the state of the database regarding the given fix version.
+     * This is CheckResult.MISSING if the fix version with the provided identifier
+     * does not exist. This is CheckResult.DIFFERS if there is a row with the
+     * provided identifier in the database, but it has different values
+     * in its fields. This is CheckResult.EXISTS if there is a fix version in
+     * the database that matches all the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public CheckResult check_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, id);
@@ -74,7 +94,21 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void insert_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, IOException, PropertyVetoException{    
+    /**
+     * Insert a new fix version in the database.
+     * @param id The internal identifier of the fix version
+     * @param project_id The identifier of the project that the fix version applies to
+     * @param name The name (version numbering scheme) of the release version.
+     * @param description The description provided to the release version 
+     * @param start_date The day on which work started on this fix version, or null
+     * if work has not yet started
+     * @param release_date The day on which the version is released or is supposed
+     * to be released, or null if there is no projected date yet
+     * @param released Whether the fix version has been released already
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, PropertyVetoException {    
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, id);
         pstmt.setInt(2, project_id);
@@ -87,7 +121,21 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
-    public void update_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, IOException, PropertyVetoException {
+    /**
+     * Update an existing fix version with new values in its fields.
+     * @param id The internal identifier of the fix version
+     * @param project_id The identifier of the project that the fix version applies to
+     * @param name The name (version numbering scheme) of the release version.
+     * @param description The description provided to the release version 
+     * @param start_date The day on which work started on this fix version, or null
+     * if work has not yet started
+     * @param release_date The day on which the version is released or is supposed
+     * to be released, or null if there is no projected date yet
+     * @param released Whether the fix version has been released already
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void update_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
         pstmt.setString(2, description);

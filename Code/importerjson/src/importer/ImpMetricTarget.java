@@ -14,8 +14,8 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
- * @author leonhelwerda
+ * Importer for metric targets.
+ * @author Leon Helwerda
  */
 public class ImpMetricTarget extends BaseImport {
     @Override

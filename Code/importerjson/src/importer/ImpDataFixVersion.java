@@ -14,7 +14,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 /**
- *
+ * Importer for JIRA fix versions.
  * @author Enrique
  */
 public class ImpDataFixVersion extends BaseImport {

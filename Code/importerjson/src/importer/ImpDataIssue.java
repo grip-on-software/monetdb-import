@@ -20,17 +20,18 @@ import org.json.simple.JSONObject;
 import util.BufferedJSONReader;
 
 /**
- *
+ * Import for JIRA issues.
  * @author Enrique
  */
-public class ImpDataIssue extends BaseImport{
+public class ImpDataIssue extends BaseImport {
+    private static final int NUMBER_OF_FIELDS = 42;
     
     @Override
     public void parser() {
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
         int projectId = getProjectID();
-        String[] fields = new String[42];
+        String[] fields = new String[NUMBER_OF_FIELDS];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
         

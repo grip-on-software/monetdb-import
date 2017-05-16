@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import util.BaseDb;
 import java.sql.PreparedStatement;
@@ -19,9 +18,9 @@ import java.sql.Timestamp;
  * @author Leon Helwerda
  */
 public class MergeRequestDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
-    BatchedStatement updateStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
+    private BatchedStatement updateStmt = null;
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -35,14 +34,14 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         updateStmt = new BatchedStatement(sql);
     }
     
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select title, description, source_branch, target_branch, author_id, assignee_id, upvotes, downvotes, created_date, updated_date from gros.merge_request where repo_id=? AND request_id=?;");
         }
     }
     
-    public CheckResult check_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date) throws SQLException, IOException, PropertyVetoException {
+    public CheckResult check_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, repo_id);
@@ -72,7 +71,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void insert_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, IOException, PropertyVetoException {
+    public void insert_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setInt(2, request_id);
@@ -91,7 +90,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
-    public void update_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, IOException, PropertyVetoException {
+    public void update_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, title);
         pstmt.setString(2, description);

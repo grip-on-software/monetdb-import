@@ -15,7 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Base class for tracking database connection parameters as well as some
+ * import and logging configuration.
  * @author Leon Helwerda
  */
 public class BaseDb {
@@ -23,7 +24,7 @@ public class BaseDb {
     private String url;
     private String user;
     private String password;
-    private String rootPath;
+    private final String rootPath;
     private String path;
     
     public BaseDb() {
@@ -31,7 +32,6 @@ public class BaseDb {
         url = bundle.getString("url").trim();
         user = bundle.getString("user").trim();
         password = bundle.getString("password").trim();
-        //path = bundle.getString("path");
         
         // Get system file path from Java jar location.
         File f = new File(System.getProperty("java.class.path"));
@@ -70,42 +70,48 @@ public class BaseDb {
     }
     
     /**
-     * @return the url
+     * Retrieve the JDBC connection URL of the database.
+     * @return The database URL
      */
     public final String getUrl() {
         return url;
     }
 
     /**
-     * @param url the url to set
+     * Change the JDBC connection URL of the database.
+     * @param url The database URL to set
      */
     public final void setUrl(String url) {
         this.url = url;
     }
 
     /**
-     * @return the user
+     * Retrieve the database username to connect with.
+     * @return The username
      */
     public final String getUser() {
         return user;
     }
 
     /**
-     * @param user the user to set
+     * Change the database username to connect with.
+     * @param user The username to set
      */
     public final void setUser(String user) {
         this.user = user;
     }
 
     /**
-     * @return the password
+     * Retrieve the database password to connect with.
+     * @return The password
      */
     public final String getPassword() {
         return password;
     }
 
     /**
-     * @param password the password to set
+     * Change the database password to connect with.
+     * @param password The password to set
      */
     public final void setPassword(String password) {
         this.password = password;
@@ -113,7 +119,7 @@ public class BaseDb {
     
     /**
      * Get the root path where files with properties for the importer are found.
-     * @return the root path
+     * @return The root path
      */
     public final String getRootPath() {
         return rootPath;
@@ -121,14 +127,16 @@ public class BaseDb {
 
     /**
      * Get the path where the gathered data is stored for import.
-     * @return the path where the gathered data is found
+     * @return The path where the gathered data is found
      */
     public final String getPath() {
         return path;
     }
 
     /**
-     * @param path the path to set
+     * Change the path where the gathered data is stored for import.
+     * This does not change the root path of the importer properties.
+     * @param path The path to set
      */
     public final void setPath(String path) {
         this.path = path;

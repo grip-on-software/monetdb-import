@@ -19,10 +19,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 /**
- *
+ * Importer for JIRA issue subtask relations.
  * @author Enrique
  */
-public class ImpDataSubtask extends BaseImport{
+public class ImpDataSubtask extends BaseImport {
     
     @Override
     public void parser() {
@@ -47,7 +47,6 @@ public class ImpDataSubtask extends BaseImport{
             
             for (Object o : a)
             {
-      
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String from_id = (String) jsonObject.get("from_id");

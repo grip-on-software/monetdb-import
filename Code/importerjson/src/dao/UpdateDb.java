@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,23 +18,23 @@ import util.BaseDb;
  * @author Leon Helwerda
  */
 public class UpdateDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
-    BatchedStatement updateStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
+    private BatchedStatement updateStmt = null;
     
     public UpdateDb() {
         insertStmt = new BatchedStatement("insert into gros.update_tracker(project_id,filename,contents,update_date) values (?,?,?,?);");
         updateStmt = new BatchedStatement("update gros.update_tracker set contents=?, update_date=? where project_id=? and filename=?");
     }
     
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select project_id, filename from gros.update_tracker where project_id=? and filename=?");
         }
     }
     
-    public boolean check_file(int project_id, String filename) throws SQLException, IOException, PropertyVetoException {
+    public boolean check_file(int project_id, String filename) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, project_id);
@@ -49,7 +48,7 @@ public class UpdateDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
-    public void insert_file(int project_id, String filename, String contents, Timestamp update_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_file(int project_id, String filename, String contents, Timestamp update_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
         pstmt.setInt(1, project_id);
@@ -60,7 +59,7 @@ public class UpdateDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
-    public void update_file(int project_id, String filename, String contents, Timestamp update_date) throws SQLException, IOException, PropertyVetoException {
+    public void update_file(int project_id, String filename, String contents, Timestamp update_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         
         pstmt.setString(1, contents);

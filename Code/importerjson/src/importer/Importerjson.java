@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import util.BaseImport;
 
 /**
- *
+ * The main importer application entry point.
  * @author Enrique
  * @author Thomas Helling
  * @author Leon Helwerda

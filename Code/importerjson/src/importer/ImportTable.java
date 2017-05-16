@@ -17,10 +17,10 @@ import util.BaseImport;
  * @author Leon Helwerda
  */
 public class ImportTable extends BaseImport {
-    String name;
-    String fieldName;
-    String metadataName = null;
-    String description;
+    private String name;
+    private String fieldName;
+    private String metadataName = null;
+    private String description;
     
     /**
      * Create an importer for a table with only an id--name relation

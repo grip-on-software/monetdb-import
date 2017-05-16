@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,16 +17,15 @@ import util.BaseDb;
 
 /**
  * Class is created to manage the repository table of the database.
- * @author Enrique & Thomas
+ * @author Enrique, Thomas
  */
 public class RepositoryDb extends BaseDb implements AutoCloseable {
-    
-    BatchedStatement insertRepoStmt = null;
-    PreparedStatement checkRepoStmt = null;
-    HashMap<String, Integer> nameCache = null;
-    BatchedStatement insertGitLabRepoStmt = null;
-    PreparedStatement checkGitLabRepoStmt = null;
-    BatchedStatement updateGitLabRepoStmt = null;
+    private BatchedStatement insertRepoStmt = null;
+    private PreparedStatement checkRepoStmt = null;
+    private HashMap<String, Integer> nameCache = null;
+    private BatchedStatement insertGitLabRepoStmt = null;
+    private PreparedStatement checkGitLabRepoStmt = null;
+    private BatchedStatement updateGitLabRepoStmt = null;
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -74,11 +72,10 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     /**
      * Inserts repository in the repo table. 
      * @param name The complete name of the repository.
-     * @throws java.sql.SQLException
-     * @throws java.io.IOException
-     * @throws java.beans.PropertyVetoException
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_repo(String name) throws SQLException, IOException, PropertyVetoException{
+    public void insert_repo(String name) throws SQLException, PropertyVetoException{
         PreparedStatement pstmt = insertRepoStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
@@ -87,7 +84,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         pstmt.execute();
     }
     
-    private void getCheckRepoStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckRepoStmt() throws SQLException, PropertyVetoException {
         if (checkRepoStmt == null) {
             Connection con = insertRepoStmt.getConnection();
             String sql = "SELECT id FROM gros.repo WHERE UPPER(repo_name) = ?";
@@ -95,7 +92,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private void fillNameCache() throws SQLException, IOException, PropertyVetoException {
+    private void fillNameCache() throws SQLException, PropertyVetoException {
         if (nameCache != null) {
             return;
         }
@@ -118,11 +115,10 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
      * table of the database. Otherwise, returns 0.
      * @param name the complete name of the repository.
      * @return the repo ID if found, otherwise 0.
-     * @throws java.sql.SQLException
-     * @throws java.io.IOException
-     * @throws java.beans.PropertyVetoException
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int check_repo(String name) throws SQLException, IOException, PropertyVetoException {
+    public int check_repo(String name) throws SQLException, PropertyVetoException {
         fillNameCache();
         
         String key = name.toUpperCase().trim();
@@ -150,7 +146,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     } 
     
     /**
-     * Inserts repository in the gitlab_repo table. 
+     * Insert the given repository in the gitlab_repo table. 
      * @param repo_id Repository ID from the repo table
      * @param gitlab_id GitLab internal repository ID
      * @param description GitLab description
@@ -158,11 +154,10 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
      * @param archived Whether the repository is archived (read-only) in GitLab
      * @param has_avatar Whether the repository has an avatar
      * @param star_count Number of stars from developers
-     * @throws java.sql.SQLException
-     * @throws java.io.IOException
-     * @throws java.beans.PropertyVetoException
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_gitlab_repo(int repo_id, int gitlab_id, String description, Timestamp create_date, boolean archived, boolean has_avatar, int star_count) throws SQLException, IOException, PropertyVetoException{
+    public void insert_gitlab_repo(int repo_id, int gitlab_id, String description, Timestamp create_date, boolean archived, boolean has_avatar, int star_count) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertGitLabRepoStmt.getPreparedStatement();
         
         pstmt.setInt(1, repo_id);
@@ -182,7 +177,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         insertGitLabRepoStmt.batch();
     }
     
-    private void getCheckGitLabRepoStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckGitLabRepoStmt() throws SQLException, PropertyVetoException {
         if (checkGitLabRepoStmt == null) {
             Connection con = insertGitLabRepoStmt.getConnection();
             String sql = "SELECT description,create_date,archived,has_avatar,star_count FROM gros.gitlab_repo WHERE repo_id=? AND gitlab_id=?";
@@ -190,7 +185,26 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         }
     }
 
-    public CheckResult check_gitlab_repo(int repo_id, int gitlab_id, String description, Timestamp create_date, boolean archived, boolean has_avatar, int star_count) throws SQLException, IOException, PropertyVetoException{
+    /**
+     * Check whether the given repository exists in the gitlab_repo table and
+     * has the same properties.
+     * @param repo_id Repository ID from the repo table
+     * @param gitlab_id GitLab internal repository ID
+     * @param description GitLab description
+     * @param create_date Date when the repository was created in GitLab
+     * @param archived Whether the repository is archived (read-only) in GitLab
+     * @param has_avatar Whether the repository has an avatar
+     * @param star_count Number of stars from developers
+     * @return An indicator of the state of the database regarding the given GitLab
+     * repository. This is CheckResult.MISSING if the repository with the provided
+     * repo and gitlab identifiers does not exist. This is CheckResult.DIFFERS if
+     * there is a row with the provided repo and gitlab identifiers in the database,
+     * but it has different values in its fields. This is CheckResult.EXISTS if
+     * there is a repository in the database that matches the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public CheckResult check_gitlab_repo(int repo_id, int gitlab_id, String description, Timestamp create_date, boolean archived, boolean has_avatar, int star_count) throws SQLException, PropertyVetoException {
         getCheckGitLabRepoStmt();
         
         checkGitLabRepoStmt.setInt(1, repo_id);
@@ -215,7 +229,19 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
-    public void update_gitlab_repo(int repo_id, int gitlab_id, String description, Timestamp create_date, boolean archived, boolean has_avatar, int star_count) throws SQLException, IOException, PropertyVetoException{
+    /**
+     * Update the given repository in the gitlab_repo table with new values.
+     * @param repo_id Repository ID from the repo table
+     * @param gitlab_id GitLab internal repository ID
+     * @param description GitLab description
+     * @param create_date Date when the repository was created in GitLab
+     * @param archived Whether the repository is archived (read-only) in GitLab
+     * @param has_avatar Whether the repository has an avatar
+     * @param star_count Number of stars from developers
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void update_gitlab_repo(int repo_id, int gitlab_id, String description, Timestamp create_date, boolean archived, boolean has_avatar, int star_count) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateGitLabRepoStmt.getPreparedStatement();
         if (description != null) {
             pstmt.setString(1, description);

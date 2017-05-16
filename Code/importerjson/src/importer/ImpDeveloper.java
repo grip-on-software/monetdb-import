@@ -14,14 +14,13 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- *
+ * Importer for JIRA developers.
  * @author Thomas and Enrique
  */
 public class ImpDeveloper extends BaseImport{
     
     @Override
     public void parser(){
-
         JSONParser parser = new JSONParser();
         int project_id = this.getProjectID();
  

@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -20,12 +19,12 @@ import java.util.Random;
 import util.BaseDb;
 
 /**
- *
+ * Management of project-specific and global encryption salts.
  * @author Leon Helwerda
  */
 public class SaltDb extends BaseDb implements AutoCloseable {
-    BatchedStatement insertStmt = null;
-    PreparedStatement checkStmt = null;
+    private BatchedStatement insertStmt = null;
+    private PreparedStatement checkStmt = null;
     
     public final static class Encryption {
         public final static int NONE = 0;
@@ -60,8 +59,8 @@ public class SaltDb extends BaseDb implements AutoCloseable {
     }
 
     public class SaltPair {
-        private String salt;
-        private String pepper;
+        private final String salt;
+        private final String pepper;
         
         public SaltPair(String salt, String pepper) {
             this.salt = salt;
@@ -82,7 +81,7 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         insertStmt = new BatchedStatement(sql);
     }
     
-    private void getCheckStmt() throws SQLException, IOException, PropertyVetoException {
+    private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
             checkStmt = con.prepareStatement("select salt, pepper from gros.project_salt where project_id=?;");
@@ -101,7 +100,16 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         return new SaltPair(encoder.encodeToString(salt), encoder.encodeToString(pepper));
     }
     
-    public SaltPair get_salt(int project_id) throws SQLException, IOException, PropertyVetoException {
+    /**
+     * Retrieve the salt and pepper pair for the provided project. If the pair
+     * does not yet exist, it is created, inserted and returned.
+     * @param project_id The project to retrieve the pair for. If this is 0, then
+     * the global salt and pepper are retrieved.
+     * @return A SaltPair with the salt and pepper.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public SaltPair get_salt(int project_id) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, project_id);
@@ -116,7 +124,15 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         return pair;
     }
     
-    public void insert_salt(int project_id, SaltPair pair) throws SQLException, IOException, PropertyVetoException {
+    /**
+     * Insert a salt pair into de project salts table.
+     * @param project_id The project ID to add the salt and pepper for, or 0 to
+     * insert a global salt pair.
+     * @param pair The salt and pepper pair.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_salt(int project_id, SaltPair pair) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
         pstmt.setInt(1, project_id);
@@ -144,6 +160,12 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Perform a one-way encryption step using SHA-256 on the provided string.
+     * @param value A string to encrypt
+     * @param pair The salt and pepper to use in the one-way encryption.
+     * @return The encrypted string
+     */
     public String hash(String value, SaltPair pair) {
         // Keep null values as is, since there is no sensitive information in this case.
         if (value == null) {

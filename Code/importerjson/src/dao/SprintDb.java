@@ -6,7 +6,6 @@
 package dao;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -173,11 +172,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * combination is not found, CheckResult.EXISTS if all properties match, or
      * CheckResult.DIFFERS if the sprint and project ID is found but the name and/or
      * dates do not match.
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
+    public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, PropertyVetoException {
         fillCache(project_id);
         if (!keyCache.containsKey(project_id)) {
             return CheckResult.MISSING;
@@ -206,11 +204,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @param start_date The date at which the sprint starts or is set to start.
      * @param end_date The date at which the sprint ends or is set to end.
      * @param complete_date The date at which the tasks in the sprint are completed.
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
+    public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, sprint_id);
         pstmt.setInt(2, project_id);
@@ -230,11 +227,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @param start_date The date at which the sprint starts or is set to start.
      * @param end_date The date at which the sprint ends or is set to end.
      * @param complete_date The date at which the tasks in the sprint are completed.
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, IOException, PropertyVetoException {
+    public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
         setTimestamp(pstmt, 2, start_date);
@@ -247,7 +243,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         updateStmt.batch();
     }
     
-    private void fillCache(int project_id) throws SQLException, IOException, PropertyVetoException {
+    private void fillCache(int project_id) throws SQLException, PropertyVetoException {
         if (keyCache.containsKey(project_id)) {
             return;
         }
@@ -284,11 +280,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @param date The date to contain in the sprint.
      * @return The sprint ID of the latest sprint that contains the date, or 0
      * if there are no sprints that contain the date.
-     * @throws SQLException
-     * @throws IOException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int find_sprint(int project_id, Timestamp date) throws SQLException, IOException, PropertyVetoException {
+    public int find_sprint(int project_id, Timestamp date) throws SQLException, PropertyVetoException {
         fillCache(project_id);
         Sprint[] sprints = dateCache.get(project_id);
         
