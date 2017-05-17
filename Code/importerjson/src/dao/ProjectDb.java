@@ -14,13 +14,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- *
+ * Database access management for the projects table.
  * @author Enrique
  */
 public class ProjectDb extends BaseDb {
     
-    public void insert_project(String name){
-        
+    /**
+     * Insert a new project in the database.
+     * @param name The shorthand name of the project
+     */
+    public void insert_project(String name) {
         Connection con = null;
         Statement st = null;
     
@@ -37,12 +40,15 @@ public class ProjectDb extends BaseDb {
             if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
             if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
-        
-    
     }
-   
-    public int check_project(String name){
-
+    
+    /**
+     * Check whether the project exists in the database
+     * @param name The shorthand name of the project
+     * @return The identifier of the project if it exists in the database, or 0
+     * if the project is not yet in the database.
+     */
+    public int check_project(String name) {
         int idProject = 0;
         Connection con = null;
         Statement st = null;

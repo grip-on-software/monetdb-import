@@ -16,7 +16,7 @@ import java.util.Objects;
 import util.BaseDb;
 
 /**
- *
+ * Database access management for the version control system tags table.
  * @author Leon Helwerda
  */
 public class TagDb extends BaseDb implements AutoCloseable {
@@ -25,11 +25,14 @@ public class TagDb extends BaseDb implements AutoCloseable {
     private PreparedStatement cacheStmt = null;
     private HashMap<Integer, HashMap<String, TagInfo>> tagRepoCache = null;
     
+    /**
+     * Object that holds properties of a certain tag.
+     */
     private static class TagInfo {
-        String version_id;
-        String message;
-        Timestamp tagged_date;
-        Integer tagger_id;
+        public String version_id;
+        public String message;
+        public Timestamp tagged_date;
+        public Integer tagger_id;
         
         public TagInfo() {
             this.version_id = null;
@@ -124,6 +127,29 @@ public class TagDb extends BaseDb implements AutoCloseable {
         cache.put(tag_name, tagInfo);
     }
     
+    /**
+     * Check whether a tag exists in the database and that it has the same
+     * properties as the provided parameters.
+     * @param repo_id Identifier of the repository in which the tag is added
+     * @param tag_name The name of the tag
+     * @param version_id The version in which the tag is added (Subversion) or
+     * which the tag references (Git)
+     * @param message Message that is added to the tag when it is created, separate
+     * from the commit message. Only available for Git repositories. If this is null,
+     * then the tag has no separate message.
+     * @param tagged_date Timestamp on which the tag is created (Git) or most
+     * recently updated (Subversion). May be null for incomplete tags.
+     * @param tagger_id Idenitifier of the VCS developer that created the tag.
+     * If this is null, then the developer could not be deduced from tag information
+     * @return An indicator of the state of the database regarding the given tag.
+     * This is CheckResult.MISSING if the tag with the provided repository and name
+     * does not exist. This is CheckResult.DIFFERS if there is a row with the provided
+     * repsoitory identifier and tag name in the database, but it has different values
+     * in its other fields. This is CheckResult.EXISTS if there is an merge request
+     * in the database that matches all the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public CheckResult check_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id) throws SQLException, PropertyVetoException {
         fillTagCache(repo_id);
         HashMap<String, TagInfo> cache = tagRepoCache.get(repo_id);
@@ -144,6 +170,23 @@ public class TagDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Insert a new tag in the database.
+     * @param repo_id Identifier of the repository in which the tag is added
+     * @param tag_name The name of the tag
+     * @param version_id The version in which the tag is added (Subversion) or
+     * which the tag references (Git)
+     * @param message Message that is added to the tag when it is created, separate
+     * from the commit message. Only available for Git repositories. If this is null,
+     * then the tag has no separate message.
+     * @param tagged_date Timestamp on which the tag is created (Git) or most
+     * recently updated (Subversion). May be null for incomplete tags.
+     * @param tagger_id Idenitifier of the VCS developer that created the tag.
+     * If this is null, then the developer could not be deduced from tag information
+     * @param sprint_id Idenitifer of the sprint in which the tag is created
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
@@ -160,6 +203,23 @@ public class TagDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
+    /**
+     * Update an existing tag in the database with new parameter values.
+     * @param repo_id Identifier of the repository in which the tag is added
+     * @param tag_name The name of the tag
+     * @param version_id The version in which the tag is added (Subversion) or
+     * which the tag references (Git)
+     * @param message Message that is added to the tag when it is created, separate
+     * from the commit message. Only available for Git repositories. If this is null,
+     * then the tag has no separate message.
+     * @param tagged_date Timestamp on which the tag is created (Git) or most
+     * recently updated (Subversion). May be null for incomplete tags.
+     * @param tagger_id Idenitifier of the VCS developer that created the tag.
+     * If this is null, then the developer could not be deduced from tag information
+     * @param sprint_id Idenitifer of the sprint in which the tag is created
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void update_tag(int repo_id, String tag_name, String version_id, String message, Timestamp tagged_date, Integer tagger_id, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         

@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 /**
- *
+ * Database access management for the merge requests table.
  * @author Leon Helwerda
  */
 public class MergeRequestDb extends BaseDb implements AutoCloseable {
@@ -41,6 +41,31 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether a merge request exists in the database and that it has the same
+     * properties as the provided parameters.
+     * @param repo_id Idenitifer of the repository the request is made for
+     * @param request_id Internal identifier or the merge request
+     * @param title The short header message describing what the merge request is about
+     * @param description The contents of the request message
+     * @param source_branch The branch from which commits should be merged
+     * @param target_branch The branch at which the commits should be merged into
+     * @param author_id Identifier of the VCS developer that started the request
+     * @param assignee_id Identifier of the VCS developer that should review the request,
+     * or null if nobody is assigned
+     * @param upvotes Number of votes from the development team in support of the merge request
+     * @param downvotes Number of votes from the development team against the merge request
+     * @param created_date Timestamp at which the merge request is created
+     * @param updated_date Timestamp at which the merge request received an update
+     * @return An indicator of the state of the database regarding the given merge request.
+     * This is CheckResult.MISSING if the merge request with the provided repository
+     * and request identifiers does not exist. This is CheckResult.DIFFERS if there
+     * is a row with the provided repsoitory and merge request identifiers in the database,
+     * but it has different values in its fields. This is CheckResult.EXISTS if there
+     * is an merge request in the database that matches all the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public CheckResult check_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
@@ -71,6 +96,25 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         return result;
     }
     
+    /**
+     * Insert a new merge request in the database.
+     * @param repo_id Idenitifer of the repository the request is made for
+     * @param request_id Internal identifier or the merge request
+     * @param title The short header message describing what the merge request is about
+     * @param description The contents of the request message
+     * @param source_branch The branch from which commits should be merged
+     * @param target_branch The branch at which the commits should be merged into
+     * @param author_id Identifier of the VCS developer that started the request
+     * @param assignee_id Identifier of the VCS developer that should review the request,
+     * or null if nobody is assigned
+     * @param upvotes Number of votes from the development team in support of the merge request
+     * @param downvotes Number of votes from the development team against the merge request
+     * @param created_date Timestamp at which the merge request is created
+     * @param updated_date Timestamp at which the merge request received an update
+     * @param sprint_id The sprint in which the request was created
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
@@ -90,6 +134,25 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
+    /**
+     * Update an existing merge request in the database with new values.
+     * @param repo_id Idenitifer of the repository the request is made for
+     * @param request_id Internal identifier or the merge request
+     * @param title The short header message describing what the merge request is about
+     * @param description The contents of the request message
+     * @param source_branch The branch from which commits should be merged
+     * @param target_branch The branch at which the commits should be merged into
+     * @param author_id Identifier of the VCS developer that started the request
+     * @param assignee_id Identifier of the VCS developer that should review the request,
+     * or null if nobody is assigned
+     * @param upvotes Number of votes from the development team in support of the merge request
+     * @param downvotes Number of votes from the development team against the merge request
+     * @param created_date Timestamp at which the merge request is created
+     * @param updated_date Timestamp at which the merge request received an update
+     * @param sprint_id The sprint in which the request was created
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void update_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, title);

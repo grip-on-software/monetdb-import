@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 import util.BaseDb;
 
 /**
- *
+ * Database access management for the update trackers table.
  * @author Leon Helwerda
  */
 public class UpdateDb extends BaseDb implements AutoCloseable {
@@ -34,6 +34,14 @@ public class UpdateDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether an update tracker for a certain project exists in the database.
+     * @param project_id Identifier of the project that the file tracks
+     * @param filename The name of the file (without path) that keeps track of the update state
+     * @return Whether the update tracker file is stored in the database for the given project
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public boolean check_file(int project_id, String filename) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
@@ -48,6 +56,15 @@ public class UpdateDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
+    /**
+     * Insert a new update tracker file in the database.
+     * @param project_id Identifier of the project that the file tracks
+     * @param filename The name of the file (without path) that keeps track of the update state
+     * @param contents Textual contents of the update tracker
+     * @param update_date The latest modification date of the file
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_file(int project_id, String filename, String contents, Timestamp update_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
@@ -59,6 +76,15 @@ public class UpdateDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
     
+    /**
+     * Update an existing update tracker file in the database with new contents.
+     * @param project_id Identifier of the project that the file tracks
+     * @param filename The name of the file (without path) that keeps track of the update state
+     * @param contents Textual contents of the update tracker
+     * @param update_date The latest modification date of the file
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void update_file(int project_id, String filename, String contents, Timestamp update_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         

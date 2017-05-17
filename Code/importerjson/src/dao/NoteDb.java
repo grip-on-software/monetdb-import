@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 /**
- *
+ * Database access management for comments on merge requests and VCS commits.
  * @author Leon Helwerda
  */
 public class NoteDb extends BaseDb implements AutoCloseable {
@@ -42,6 +42,15 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether a merge request note exists in the database.
+     * @param repo_id Identifier of the repository the note is made in
+     * @param request_id Identifier of the merge request
+     * @param note_id Idenfitier of the note
+     * @return Whether a merge request note with the provided ientifiers exists
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public boolean check_request_note(int repo_id, int request_id, int note_id) throws SQLException, PropertyVetoException {
         getCheckRequestStmt();
         
@@ -57,6 +66,17 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
+    /**
+     * Insert a new merge request note in the database.
+     * @param repo_id Identifier of the repository the note is made in
+     * @param request_id Identifier of the merge request
+     * @param note_id Idenfitier of the note
+     * @param dev_id Identifier of the VCS developer that made the note
+     * @param comment Plain text comment message of the note
+     * @param created_date Timestamp at which the comment is added to the merge request
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_request_note(int repo_id, int request_id, int note_id, int dev_id, String comment, Timestamp created_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertRequestStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
@@ -76,6 +96,26 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether a commit comment note exists in the database.
+     * @param repo_id Identifier of the repository the note is made in
+     * @param version_id Commit to which this note is added
+     * @param dev_id Identifier of the VCS developer that made the node
+     * @param comment Plain text comment message of the note
+     * @param file Path to a file in the repository that is changed in the commit
+     * and is discussed by the comment, or null to indicate that the comment
+     * belongs to the entire version
+     * @param line Line number of the file that is discussed by the comment, or
+     * null to indicate that the comment belongs to the entire version
+     * @param line_type The type of line being discussed by the comment: 'old'
+     * or 'new', or null to indicate that the comment belongs to the entire version
+     * @param created_date Timestamp at which the comment is added to the commit,
+     * or null if not known
+     * @return Whether a commit comment with all the provided properties exists
+     * in the database
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public boolean check_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type, Timestamp created_date) throws SQLException, PropertyVetoException {
         getCheckCommitStmt();
         
@@ -96,6 +136,24 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
+    /**
+     * Insert a new commit comment note in the database.
+     * @param repo_id Identifier of the repository the note is made in
+     * @param version_id Commit to which this note is added
+     * @param dev_id Identifier of the VCS developer that made the node
+     * @param comment Plain text comment message of the note
+     * @param file Path to a file in the repository that is changed in the commit
+     * and is discussed by the comment, or null to indicate that the comment
+     * belongs to the entire version
+     * @param line Line number of the file that is discussed by the comment, or
+     * null to indicate that the comment belongs to the entire version
+     * @param line_type The type of line being discussed by the comment: 'old'
+     * or 'new', or null to indicate that the comment belongs to the entire version
+     * @param created_date Timestamp at which the comment is added to the commit,
+     * or null if not known
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_commit_note(int repo_id, String version_id, int dev_id, String comment, String file, Integer line, String line_type, Timestamp created_date) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertCommitStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);

@@ -16,8 +16,8 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
- *
- * @author Enrique and Leon Helwerda
+ * Database access management for the metrics tables.
+ * @author Enrique, Leon Helwerda
  */
 public class MetricDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkMetricStmt = null;
@@ -39,7 +39,13 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricTargetStmt = new BatchedStatement(sql);
     }
     
-    public void insert_metric(String name) throws SQLException, PropertyVetoException{
+    /**
+     * Insert a metric name into the metrics table.
+     * @param name The name of the metric, possibly including project-specific 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_metric(String name) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
@@ -48,7 +54,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.execute();
     }
     
-    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, PropertyVetoException{
+    /**
+     * Insert a metric measurement into the metric values table.
+     * @param metric_id Identifier of the metric name
+     * @param value The value of the metric at time of measurement
+     * @param category The category related to the metric's value ('red', 'green', 'yellow')
+     * @param date Timestamp at which the measurement took place
+     * @param sprint_id Identifier of the sprint in which the measurement took place
+     * @param since_date Timestamp since which the metric has the same value
+     * @param project Identifier of the project in which the measurement was made
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
         
         pstmt.setInt(1, metric_id);
@@ -120,6 +138,13 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether a metric name exists in the database and return its identifier.
+     * @param name Name of the metric
+     * @return Identifier of the metric, or 0 if it is not found
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public int check_metric(String name) throws SQLException, PropertyVetoException {
         fillNameCache();
         
@@ -156,6 +181,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether a metric version exists in the database.
+     * @param projectId Identifier of the project to which the metric version change applies
+     * @param version The revision number of the change
+     * @return The revision number if the version exists, or 0 if it is not found
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public int check_version(int projectId, int version) throws SQLException, PropertyVetoException {
         getCheckVersionStmt();
         int idVersion = 0;
@@ -171,6 +204,17 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idVersion;
     }
 
+    /**
+     * Insert a new metric version in the database
+     * @param projectId Identifier of the project to which the metric version change applies
+     * @param version The revision number of the change
+     * @param developer Shorthand name of the developer that made the change
+     * @param message Commit message describing the change 
+     * @param commit_date Timestamp at which the target change took place
+     * @param sprint_id Identifier of the sprint in which the target norms were changed
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_version(int projectId, int version, String developer, String message, Timestamp commit_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricVersionStmt.getPreparedStatement();
         
@@ -184,6 +228,18 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricVersionStmt.batch();
     }
 
+    /**
+     * Insert a new project-specific target norm change in the metric targets table.
+     * @param projectId Identifier of the project to which the metric norm change applies
+     * @param version The revision number of the change
+     * @param metricId Identifier of the metric name
+     * @param type The type of norm change: 'options', 'old_options', 'TechnicalDebtTarget' or 'DynamicTechnicalDebtTarget'
+     * @param target The norm value at which the category changes from green to yellow
+     * @param low_target The norm value at which the category changes from yellow to red
+     * @param comment Comment for technical debt targets describing the reason of the norm change
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_target(int projectId, int version, int metricId, String type, int target, int low_target, String comment) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricTargetStmt.getPreparedStatement();
         
