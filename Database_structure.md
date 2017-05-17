@@ -552,7 +552,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **author_id** - INT - reference to vcs_developer.alias_id: The
         GitLab account of the developer that started the request.
     -   **assignee_id** - INT - reference to vcs_developer.alias_id: The
-        GitLab account of he developer that should review the request.
+        GitLab account of the developer that should review the request.
         This is NULL if nobody is assigned.
     -   **upvotes** - INT: Number of votes from the development team in
         support of the merge request.
@@ -602,6 +602,7 @@ These tables include data from Gitlab/Git and Subversion.
         Commit to which this note is added.
     -   **author_id** - INT - reference to vcs_developer.alias_id: The
         GitLab account of the developer who wrote the commit comment.
+    -   **comment** - TEXT: Plain text comment message of the note.
     -   **file** - VARCHAR(1000): Path to a file in the repository that
         is changed in the commit and is discussed by the comment. If
         this is NULL, then the comment belongs to the entire version.
