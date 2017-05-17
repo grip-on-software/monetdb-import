@@ -29,16 +29,26 @@ public class BaseDb {
     
     public BaseDb() {
         bundle = ResourceBundle.getBundle("util.import");
-        url = bundle.getString("url").trim();
-        user = bundle.getString("user").trim();
-        password = bundle.getString("password").trim();
+        url = getProperty("url");
+        user = getProperty("user");
+        password = getProperty("password");
         
         // Get system file path from Java jar location.
         File f = new File(System.getProperty("java.class.path"));
         File dir = f.getAbsoluteFile().getParentFile();
         rootPath = dir.toString() + "/";
-        String relPath = System.getProperty("importer.relPath", bundle.getString("relPath"));
+        String relPath = getProperty("relPath");
         path = rootPath + relPath + "/";
+    }
+    
+    /**
+     * Retrieve a property from the system properties or the resource bundle
+     * @param name Property name
+     * @return Textual property value
+     */
+    protected final String getProperty(String name) {
+        String property = System.getProperty("importer." + name, bundle.getString(name));
+        return property.trim();
     }
     
     /**
@@ -142,6 +152,15 @@ public class BaseDb {
         this.path = path;
     }
 
+    /**
+     * Set a string parameter to a prepared statement. If the parameter is null,
+     * then this method performs the appropriate action to set the designated
+     * parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value, possibly null
+     * @throws SQLException If a database access error occurred
+     */
     protected void setString(PreparedStatement pstmt, int index, String value) throws SQLException {
         if (value != null) {
             pstmt.setString(index, value);
@@ -151,6 +170,15 @@ public class BaseDb {
         }
     }
     
+    /**
+     * Set an integer parameter to a prepared statement. If the parameter is null,
+     * then this method performs the appropriate action to set the designated
+     * parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value, possibly null
+     * @throws SQLException If a database access error occurred
+     */
     protected void setInteger(PreparedStatement pstmt, int index, Integer value) throws SQLException {
         if (value != null) {
             pstmt.setInt(index, value);
@@ -160,6 +188,15 @@ public class BaseDb {
         }
     }
     
+    /**
+     * Set a timestamp parameter to a prepared statement. If the parameter is null,
+     * then this method performs the appropriate action to set the designated
+     * parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param date The parameter value, possibly null
+     * @throws SQLException If a database access error occurred
+     */
     protected void setTimestamp(PreparedStatement pstmt, int index, Timestamp date) throws SQLException {
         if (date != null) {
             pstmt.setTimestamp(index, date);
@@ -169,6 +206,15 @@ public class BaseDb {
         }
     }
     
+    /**
+     * Set a date parameter to a prepared statement. If the parameter is null,
+     * then this method performs the appropriate action to set the designated
+     * parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param date The parameter value, possibly null
+     * @throws SQLException If a database access error occurred
+     */
     protected void setDate(PreparedStatement pstmt, int index, Date date) throws SQLException {
         if (date != null) {
             pstmt.setDate(index, date);

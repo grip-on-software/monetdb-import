@@ -5,11 +5,6 @@
  */
 package dao;
 
-/**
- *
- * @author Thomas
- */
-
 import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -34,14 +29,13 @@ public class DataSource extends BaseDb {
      */
     private DataSource() throws PropertyVetoException {
         cpds = new ComboPooledDataSource();
-        // Load the MonetDB JDBC driver.
-        cpds.setDriverClass("nl.cwi.monetdb.jdbc.MonetDriver");
+        // Load the JDBC driver.
+        cpds.setDriverClass(getProperty("driver"));
         cpds.setJdbcUrl(getUrl());
         cpds.setUser(getUser());
         cpds.setPassword(getPassword());
         
         cpds.setMaxPoolSize(50);
-        
     }
 
     /**
