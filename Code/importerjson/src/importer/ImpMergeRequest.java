@@ -20,7 +20,7 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- * Importer for GitLab merge requests.
+ * Importer for GitLab merge requests or Team Foundation Server pull requests.
  * @author Leon Helwerda
  */
 public class ImpMergeRequest extends BaseImport {
@@ -107,7 +107,7 @@ public class ImpMergeRequest extends BaseImport {
 
     @Override
     public String getImportName() {
-        return "GitLab merge requests";
+        return "GitLab/TFS merge requests";
     }
     
 }

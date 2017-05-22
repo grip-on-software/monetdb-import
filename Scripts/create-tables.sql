@@ -211,7 +211,8 @@ CREATE TABLE "gros"."commits" (
 	"number_of_lines"   INTEGER     NOT NULL,
 	"type"              VARCHAR(100)  NOT NULL,
 	"repo_id"       INTEGER         NOT NULL,
-	"author_date"   TIMESTAMP       NULL
+	"author_date"   TIMESTAMP       NULL,
+	"branch"        VARCHAR(255)    NULL
 );
 
 CREATE TABLE "gros"."comment" (
@@ -299,25 +300,42 @@ CREATE TABLE "gros"."merge_request" (
 		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
 );
 
+CREATE TABLE "gros"."merge_request_review" (
+	"repo_id" INTEGER NOT NULL,
+	"request_id" INTEGER NOT NULL,
+	"reviewer_id" INTEGER NOT NULL,
+	"vote" INTEGER NOT NULL,
+		CONSTRAINT "pk_merge_request_review_id" PRIMARY KEY("repo_id", "request_id", "reviewer_id")
+);
+
 CREATE TABLE "gros"."merge_request_note" (
 	"repo_id" INTEGER NOT NULL,
 	"request_id" INTEGER NOT NULL,
+	"thread_id" INTEGER NOT NULL,
 	"note_id" INTEGER NOT NULL,
+	"parent_id" INTEGER NULL,
 	"author_id" INTEGER NOT NULL,
 	"comment" TEXT NULL,
 	"created_date" TIMESTAMP NULL,
-		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "note_id")
+	"updated_date" TIMESTAMP NULL,
+		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "thread_id", "note_id")
 );
 
 CREATE TABLE "gros"."commit_comment" (
 	"repo_id" INTEGER NOT NULL,
 	"version_id" VARCHAR(100) NOT NULL,
+	"request_id" INTEGER NOT NULL,
+	"thread_id" INTEGER NOT NULL,
+	"note_id" INTEGER NOT NULL,
+	"parent_id" INTEGER NULL,
 	"author_id" INTEGER NOT NULL,
 	"comment" TEXT NULL,
 	"file" VARCHAR(1000) NULL,
+	"end_line" INTEGER NULL,
 	"line" INTEGER NULL,
 	"line_type" VARCHAR(100) NULL,
-	"created_date" TIMESTAMP NULL
+	"created_date" TIMESTAMP NULL,
+	"updated_date" TIMESTAMP NULL
 );
 
 CREATE TABLE "gros"."reservation" (

@@ -43,7 +43,7 @@ public class ImpCommit extends BaseImport{
     @Override
     public void parser() {
         int projectID = getProjectID();
-        String sql = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id,author_date) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id,author_date,branch) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
         try (
             DeveloperDb devDb = new DeveloperDb();
@@ -73,6 +73,7 @@ public class ImpCommit extends BaseImport{
                 String number_of_lines = (String) jsonObject.get("number_of_lines");
                 String type = (String) jsonObject.get("type");
                 String repo_name = (String) jsonObject.get("repo_name");
+                String branch = (String) jsonObject.get("branch");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
                 int sprint_id;
@@ -129,6 +130,13 @@ public class ImpCommit extends BaseImport{
                 else {
                     Timestamp authored = Timestamp.valueOf(author_date);
                     pstmt.setTimestamp(14, authored);
+                }
+                
+                if (branch == null || branch.equals("0")) {
+                    pstmt.setNull(15, java.sql.Types.VARCHAR);
+                }
+                else {
+                    pstmt.setString(15, branch);
                 }
 
                 bstmt.batch();
