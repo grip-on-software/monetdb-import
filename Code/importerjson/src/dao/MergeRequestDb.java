@@ -27,17 +27,17 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
     };
     
     public MergeRequestDb() {
-        String sql = "insert into gros.merge_request(repo_id,request_id,title,description,source_branch,target_branch,author_id,assignee_id,upvotes,downvotes,created_date,updated_date,sprint_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.merge_request(repo_id,request_id,title,description,status,source_branch,target_branch,author_id,assignee_id,upvotes,downvotes,created_date,updated_date,sprint_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.merge_request set title=?, description=?, source_branch=?, target_branch=?, author_id=?, assignee_id=?, upvotes=?, downvotes=?, created_date=?, updated_date=?, sprint_id=? WHERE repo_id=? AND request_id=?;";
+        sql = "update gros.merge_request set title=?, description=?, status=?, source_branch=?, target_branch=?, author_id=?, assignee_id=?, upvotes=?, downvotes=?, created_date=?, updated_date=?, sprint_id=? WHERE repo_id=? AND request_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
     private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
-            checkStmt = con.prepareStatement("select title, description, source_branch, target_branch, author_id, assignee_id, upvotes, downvotes, created_date, updated_date from gros.merge_request where repo_id=? AND request_id=?;");
+            checkStmt = con.prepareStatement("select title, description, status, source_branch, target_branch, author_id, assignee_id, upvotes, downvotes, created_date, updated_date from gros.merge_request where repo_id=? AND request_id=?;");
         }
     }
     
@@ -48,6 +48,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * @param request_id Internal identifier or the merge request
      * @param title The short header message describing what the merge request is about
      * @param description The contents of the request message
+     * @param status The status of the request
      * @param source_branch The branch from which commits should be merged
      * @param target_branch The branch at which the commits should be merged into
      * @param author_id Identifier of the VCS developer that started the request
@@ -66,7 +67,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public CheckResult check_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date) throws SQLException, PropertyVetoException {
+    public CheckResult check_request(int repo_id, int request_id, String title, String description, String status, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, repo_id);
@@ -77,6 +78,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
             while (rs.next()) {
                 if (title.equals(rs.getString("title")) &&
                         description.equals(rs.getString("description")) &&
+                        status.equals(rs.getString("status")) &&
                         source_branch.equals(rs.getString("source_branch")) &&
                         target_branch.equals(rs.getString("target_branch")) &&
                         author_id == rs.getInt("author_id") &&
@@ -102,6 +104,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * @param request_id Internal identifier or the merge request
      * @param title The short header message describing what the merge request is about
      * @param description The contents of the request message
+     * @param status The status of the request
      * @param source_branch The branch from which commits should be merged
      * @param target_branch The branch at which the commits should be merged into
      * @param author_id Identifier of the VCS developer that started the request
@@ -115,21 +118,22 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
+    public void insert_request(int repo_id, int request_id, String title, String description, String status, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setInt(2, request_id);
         pstmt.setString(3, title);
         pstmt.setString(4, description);
-        pstmt.setString(5, source_branch);
-        pstmt.setString(6, target_branch);
-        pstmt.setInt(7, author_id);
-        setInteger(pstmt, 8, assignee_id);
-        pstmt.setInt(9, upvotes);
-        pstmt.setInt(10, downvotes);
-        pstmt.setTimestamp(11, created_date);
-        pstmt.setTimestamp(12, updated_date);
-        pstmt.setInt(13, sprint_id);
+        pstmt.setString(5, status);
+        pstmt.setString(6, source_branch);
+        pstmt.setString(7, target_branch);
+        pstmt.setInt(8, author_id);
+        setInteger(pstmt, 9, assignee_id);
+        pstmt.setInt(10, upvotes);
+        pstmt.setInt(11, downvotes);
+        pstmt.setTimestamp(12, created_date);
+        pstmt.setTimestamp(13, updated_date);
+        pstmt.setInt(14, sprint_id);
                              
         insertStmt.batch();
     }
@@ -140,6 +144,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * @param request_id Internal identifier or the merge request
      * @param title The short header message describing what the merge request is about
      * @param description The contents of the request message
+     * @param status The status of the request
      * @param source_branch The branch from which commits should be merged
      * @param target_branch The branch at which the commits should be merged into
      * @param author_id Identifier of the VCS developer that started the request
@@ -153,22 +158,23 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void update_request(int repo_id, int request_id, String title, String description, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
+    public void update_request(int repo_id, int request_id, String title, String description, String status, String source_branch, String target_branch, int author_id, Integer assignee_id, int upvotes, int downvotes, Timestamp created_date, Timestamp updated_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, title);
         pstmt.setString(2, description);
-        pstmt.setString(3, source_branch);
-        pstmt.setString(4, target_branch);
-        pstmt.setInt(5, author_id);
-        setInteger(pstmt, 6, assignee_id);
-        pstmt.setInt(7, upvotes);
-        pstmt.setInt(8, downvotes);
-        pstmt.setTimestamp(9, created_date);
-        pstmt.setTimestamp(10, updated_date);
-        pstmt.setInt(11, sprint_id);
+        pstmt.setString(3, status);
+        pstmt.setString(4, source_branch);
+        pstmt.setString(5, target_branch);
+        pstmt.setInt(6, author_id);
+        setInteger(pstmt, 7, assignee_id);
+        pstmt.setInt(8, upvotes);
+        pstmt.setInt(9, downvotes);
+        pstmt.setTimestamp(10, created_date);
+        pstmt.setTimestamp(11, updated_date);
+        pstmt.setInt(12, sprint_id);
         
-        pstmt.setInt(12, repo_id);
-        pstmt.setInt(13, request_id);
+        pstmt.setInt(13, repo_id);
+        pstmt.setInt(14, request_id);
         
         updateStmt.batch();
     }

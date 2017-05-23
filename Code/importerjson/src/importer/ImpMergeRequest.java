@@ -47,6 +47,7 @@ public class ImpMergeRequest extends BaseImport {
                 String id = (String) jsonObject.get("id");
                 String title = (String) jsonObject.get("title");
                 String description = (String) jsonObject.get("description");
+                String status = (String) jsonObject.get("status");
                 String source_branch = (String) jsonObject.get("source_branch");
                 String target_branch = (String) jsonObject.get("target_branch");
                 String author = (String) jsonObject.get("author");
@@ -83,14 +84,14 @@ public class ImpMergeRequest extends BaseImport {
                     assignee_id = devDb.update_vcs_developer(project_id, assignee_dev, encryption);
                 }
                 
-                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
+                MergeRequestDb.CheckResult result = requestDb.check_request(repo_id, request_id, title, description, status, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date);
                 if (result != MergeRequestDb.CheckResult.EXISTS) {
                     int sprint_id = sprintDb.find_sprint(project_id, created_date);
                     if (result == MergeRequestDb.CheckResult.MISSING) {
-                        requestDb.insert_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date, sprint_id);
+                        requestDb.insert_request(repo_id, request_id, title, description, status, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date, sprint_id);
                     }
                     else if (result == MergeRequestDb.CheckResult.DIFFERS) {
-                        requestDb.update_request(repo_id, request_id, title, description, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date, sprint_id);
+                        requestDb.update_request(repo_id, request_id, title, description, status, source_branch, target_branch, author_id, assignee_id, number_of_upvotes, number_of_downvotes, created_date, updated_date, sprint_id);
                     }
                 }
             }

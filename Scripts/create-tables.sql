@@ -288,6 +288,7 @@ CREATE TABLE "gros"."merge_request" (
 	"request_id" INTEGER NOT NULL,
 	"title" TEXT NULL,
 	"description" TEXT NULL,
+	"status" VARCHAR(100) NULL,
 	"source_branch" VARCHAR(255) NOT NULL,
 	"target_branch" VARCHAR(255) NOT NULL,
 	"author_id" INTEGER NOT NULL,
