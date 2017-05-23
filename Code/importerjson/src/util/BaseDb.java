@@ -10,6 +10,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +29,12 @@ public class BaseDb {
     private String path;
     
     public BaseDb() {
-        bundle = ResourceBundle.getBundle("util.import");
+        try {
+            bundle = ResourceBundle.getBundle("util.import");
+        }
+        catch (MissingResourceException ex) {
+            throw new RuntimeException("An import.properties must have been created during compile time", ex);
+        }
         url = getProperty("url");
         user = getProperty("user");
         password = getProperty("password");
