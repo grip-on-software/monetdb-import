@@ -81,7 +81,7 @@
 			</and>
 		</condition>
 		<fail unless="importer.generate.properties"
-			message="You must add the properties importer.{url,user,password,relPath,email_domain} to a private properties file" />
+			message="You must set the properties importer.{url,user,password,relPath,email_domain} in a private properties file or pass them through ant -D" />
 	</target>
     <target name="-pre-compile" if="importer.generate.properties">
 		<propertyfile file="src/util/import.properties"
@@ -95,7 +95,6 @@
 		</propertyfile>
     </target>
     <target name="-post-compile">
-		<echo message="${importer.url}" />
         <copy file="data_vcsdev_to_dev.json" todir="${dist.dir}"/>
     </target>
 </project>
