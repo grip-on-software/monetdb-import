@@ -73,7 +73,7 @@ public class BaseDb {
     
     /**
      * Retrieve the ResourceBundle of the importer.
-     * @return the resource bundle
+     * @return The resource bundle
      */
     public final ResourceBundle getBundle() {
         return bundle;
