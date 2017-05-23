@@ -423,6 +423,11 @@ These tables include data from Gitlab/Git and Subversion.
     -   **author_date** - TIMESTAMP: Point in time that the developer
         initially made the commit. This is NULL for version control
         systems that do not know a separate authored date.
+    -   **branch** - VARCHAR(Git branch): The original branch that the
+        commit was made on. The branch is deduced from the merge commit
+        that brought the commit to the master branch. This is NULL for
+        commits whose originating branch cannot be deduced, such as for
+        Subversion repositories.
 
 
 -   **vcs_developer**: User names from VCS commits. The same developer
@@ -489,7 +494,7 @@ These tables include data from Gitlab/Git and Subversion.
         of overlapping sprints, the latest sprint that still contains
         the date is used.
 
-### GitLab tables
+### GitLab/TFS tables
 
 -   **vcs_event**: An event from an activity timeline of a repository.
     The events include pushes of commits or tags, or possibly also other
@@ -540,20 +545,26 @@ These tables include data from Gitlab/Git and Subversion.
     Git branch into another. Primary key is (repo_id, request_id).
     -   **repo_id** - INT - reference to repo.id: Repository whose
         branches are the topic of the request.
-    -   **request_id** - INT: Internal GitLab identifier which is unique
-        for the GitLab instance.
+    -   **request_id** - INT: Internal GitLab or TFS identifier of the
+        merge request which is unique for the instance.
     -   **title** - TEXT: The short header message describing what the
         merge request is about, e.g., what branches/commits it merges.
     -   **description** - TEXT: The contents of the request message.
+    -   **status** - VARCHAR(100): The open/close state of the request.
+        This can be a word like 'opened', 'merged' or 'closed' for
+        GitLab or 'active', 'completed' or 'abandoned' for TFS. Note
+        that merge procedures may differ by team, and as such a
+        closed/abandoned pull request may have been manually merged.
     -   **source_branch** - VARCHAR(Git branch): The (feature) branch
         from which commits should be merged.
     -   **target_branch** - VARCHAR(Git branch): The (main) branch at
         which the commits should be merged into.
-    -   **author_id** - INT - reference to vcs_developer.alias_id: The
-        GitLab account of the developer that started the request.
-    -   **assignee_id** - INT - reference to vcs_developer.alias_id: The
-        GitLab account of the developer that should review the request.
-        This is NULL if nobody is assigned.
+    -   **author_id** - INT - reference to vcs_developer.alias_id:
+        Identifier of the developer that started the request.
+    -   **assignee_id** - INT - reference to vcs_developer.alias_id:
+        Identifier of the developer that should review the request. This
+        is NULL if nobody is assigned, which is the case for TFS pull
+        requests.
     -   **upvotes** - INT: Number of votes from the development team in
         support of the merge request.
     -   **downvotes** - INT: Number of votes from the development team
@@ -570,38 +581,79 @@ These tables include data from Gitlab/Git and Subversion.
         contains the date is used.
 
 
+-   **merge_request_review**: A vote given by a reviewer to a pull
+    request in a Team Foundation Server instance.
+    -   **repo_id** - reference to repo.id: Repository for which the
+        review was made.
+    -   **request_id** - INT - reference to merge_request.request_id:
+        Merge request in which the review was made.
+    -   **reviewer_id** - INT - reference to vcs_developer.alias_id:
+        Identifier of the developer who performed the review.
+    -   **vote** - INT: The vote weight of the developer, which is
+        positive for upvotes and acceptance and negative for downvotes.
+
+
 -   **merge_request_note**: A comment or automated message attached to a
     merge request, which is a part of a discussion about the request or
     describes changes to request details or branch commits. Primary key
-    is (repo_id, request_id, note_id).
+    is (repo_id, request_id, thread_id, note_id).
     -   **repo_id** - INT - reference to repo.id: Repository for which
         this note is added.
     -   **request_id** - INT - reference to merge_request.request_id:
         Merge request to which this note is added.
-    -   **note_id** - INT: Internal GitLab identifier which is unique
-        for the GitLab instance.
-    -   **author_id** - INT - reference to vcs_developer.alias_id: The
-        GitLab account of the developer that wrote the comment or on
-        whose regard the automated comment is added.
+    -   **thread_id** - INT: Identifier of the thread to which this
+        comment belongs. If threading information is not provided by the
+        VCS, then this is 0.
+    -   **note_id** - INT: Internal identifier of the note which is
+        unique within the scope of the thread, request, repository or
+        instance.
+    -   **parent_id** - INT - reference to merge_request_note.note_id:
+        The note to which this comment is a reply. The parent note has
+        the same repository, request and thread identifiers as this
+        note. If threading information is not provided by the VCS, then
+        this is 0.
+    -   **author_id** - INT - reference to vcs_developer.alias_id:
+        Identifier of the developer that wrote the comment or on whose
+        regard the automated comment is added.
     -   **comment** - TEXT: Plain text comment message of the note.
-        Automated notes have a first line which is surrounded with
-        underscores, or matches the regex "Added \\d commits?:" with the
-        remaining lines either empty or starting with star-bullets.
+        Automated GitLab notes have a first line which is surrounded
+        with underscores, or matches the regex "Added \\d commits?:"
+        with the remaining lines either empty or starting with
+        star-bullets. Automated TFS notes have been filtered out.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
         to the merge request.
+    -   **updated_date** - TIMESTAMP: Time at which the comment is most
+        recently edited. This is NULL if this information was not
+        available from the API source.
 
 
 -   **commit_comment**: A comment attached to a version in the Git
     repository. Note that the comment may be part of a review of a merge
     request, but this is not directly visible from the data. The table
     has no keys; in order to check if a certain row already exists, all
-    fields should be included into the query.
+    fields (except perhaps updated_date) should be included into the
+    query.
     -   **repo_id** - INT - reference to repo.id: Repository for which
         this note is added.
     -   **version_id** - VACHAR(100) - reference to commits.version_id:
         Commit to which this note is added.
-    -   **author_id** - INT - reference to vcs_developer.alias_id: The
-        GitLab account of the developer who wrote the commit comment.
+    -   **request_id** - INT - reference to merge_request.request_id:
+        Merge request to which this note is added. This is 0 if the
+        merge request cannot be deduced or the comment does not belong
+        to a request.
+    -   **thread_id** - INT: Identifier of the thread to which this
+        comment belongs. If threading information is not provided by the
+        VCS, then this is 0.
+    -   **note_id** - INT: Internal identifier of the note. This is 0 if
+        the instance does not provide unique identifiers to commit
+        comments.
+    -   **parent_id** - INT - reference to commit_comment.note_id: The
+        note to which this comment is a reply. The parent note has the
+        same repository, request and thread identifiers as this note. If
+        threading information is not provided by the VCS, then this is
+        0.
+    -   **author_id** - INT - reference to vcs_developer.alias_id:
+        Identifier of the developer who wrote the commit comment.
     -   **comment** - TEXT: Plain text comment message of the note.
     -   **file** - VARCHAR(1000): Path to a file in the repository that
         is changed in the commit and is discussed by the comment. If
@@ -609,12 +661,19 @@ These tables include data from Gitlab/Git and Subversion.
     -   **line** - INT: Line number of the file that is discussed by the
         comment. If this is NULL, then the comment belongs to the entire
         version.
+    -   **end_line** - INT: Line number of the end of the range in the
+        file that is discussed by the comment. If this is NULL, then the
+        comment does not belong to a range (because the VCS does not
+        support range comments).
     -   **line_type** - VARCHAR(100): The type of line being discussed
         by the comment: 'old' or 'new'. If this is NULL, then the
         comment belongs to the entire version.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
-        to the commit, or NULL if this information was not available
-        from the API source.
+        to the commit. This is NULL if this information was not
+        available from the API source.
+    -   **updated_date** - TIMESTAMP: Time at which the comment is most
+        recently edited. This is NULL if this information was not
+        available from the API source.
 
 ## Metrics tables (Quality dashboard history)
 
