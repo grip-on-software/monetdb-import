@@ -14,6 +14,7 @@ import dao.SaltDb;
 import dao.SaltDb.Encryption;
 import dao.SprintDb;
 import java.beans.PropertyVetoException;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -254,6 +255,9 @@ public class ImpCommit extends BaseImport{
             }
             
             bstmt.execute();
+        }
+        catch (FileNotFoundException ex) {
+            System.out.println("Cannot link VCS developers to JIRA developers: " + ex.getMessage());
         }
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
             logException(ex);

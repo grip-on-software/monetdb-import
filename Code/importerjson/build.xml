@@ -94,7 +94,4 @@
 			<entry key="email_domain" operation="=" value="${importer.email_domain}" />
 		</propertyfile>
     </target>
-    <target name="-post-compile">
-        <copy file="data_vcsdev_to_dev.json" todir="${dist.dir}"/>
-    </target>
 </project>
