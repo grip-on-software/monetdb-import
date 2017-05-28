@@ -33,7 +33,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_value(metric_id,value,category,date,sprint_id,since_date,project_id) values (?,?,?,?,?,?,?);";
         insertMetricValueStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_version(project_id,version_id,developer,message,commit_date) values (?,?,?,?,?);";
+        sql = "insert into gros.metric_version(project_id,version_id,developer,message,commit_date,sprint_id) values (?,?,?,?,?,?);";
         insertMetricVersionStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
