@@ -6,6 +6,7 @@
 package importer;
 
 import dao.BatchedStatement;
+import dao.SaltDb;
 import util.BaseImport;
 import java.io.FileReader;
 import java.math.BigDecimal;
@@ -200,7 +201,7 @@ public class ImpDataIssue extends BaseImport {
                     pstmt.setInt(40, Integer.parseInt(test_execution));
                     pstmt.setInt(41, Integer.parseInt(test_execution_time));
                     // Encryption
-                    pstmt.setBoolean(42, false);
+                    pstmt.setInt(42, SaltDb.Encryption.NONE);
 
                     bstmt.batch();
                 }
