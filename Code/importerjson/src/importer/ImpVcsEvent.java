@@ -43,7 +43,7 @@ public class ImpVcsEvent extends BaseImport {
                 String repo_name = (String) jsonObject.get("repo_name");
                 String action = (String) jsonObject.get("action");
                 String kind = (String) jsonObject.get("kind");
-                String commit_id = (String) jsonObject.get("commit_id");
+                String commit_id = (String) jsonObject.get("version_id");
                 String ref = (String) jsonObject.get("ref");
                 String date = (String) jsonObject.get("date");
                 String user = (String) jsonObject.get("user");
