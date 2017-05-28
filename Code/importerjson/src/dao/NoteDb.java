@@ -28,10 +28,10 @@ public class NoteDb extends BaseDb implements AutoCloseable {
     };
     
     public NoteDb() {
-        String sql = "insert into gros.merge_request_note(repo_id,request_id,thread_id,note_id,parent_id,developer_id,comment,created_date,updated_date) values (?,?,?,?,?,?,?,?,?);";
+        String sql = "insert into gros.merge_request_note(repo_id,request_id,thread_id,note_id,parent_id,author_id,comment,created_date,updated_date) values (?,?,?,?,?,?,?,?,?);";
         insertRequestStmt = new BatchedStatement(sql);
         
-        sql = "insert into gros.commit_comment(repo_id,version_id,request_id,thread_id,note_id,parent_id,developer_id,comment,file,line,end_line,line_type,created_date,updated_date) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        sql = "insert into gros.commit_comment(repo_id,version_id,request_id,thread_id,note_id,parent_id,author_id,comment,file,line,end_line,line_type,created_date,updated_date) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         insertCommitStmt = new BatchedStatement(sql);
     }
     
@@ -101,7 +101,7 @@ public class NoteDb extends BaseDb implements AutoCloseable {
     private void getCheckCommitStmt() throws SQLException, PropertyVetoException {
         if (checkCommitStmt == null) {
             Connection con = insertCommitStmt.getConnection();
-            checkCommitStmt = con.prepareStatement("select created_date, updated_date from gros.commit_comment where repo_id=? AND version_id=? AND request_id=? AND thread_id=? AND note_id=? AND parent_id=? AND author=? AND comment=? AND file=? AND line=? AND end_line=? AND line_type=? AND created_date=?;");
+            checkCommitStmt = con.prepareStatement("select created_date, updated_date from gros.commit_comment where repo_id=? AND version_id=? AND request_id=? AND thread_id=? AND note_id=? AND parent_id=? AND author_id=? AND comment=? AND file=? AND line=? AND end_line=? AND line_type=? AND created_date=?;");
         }
     }
     
