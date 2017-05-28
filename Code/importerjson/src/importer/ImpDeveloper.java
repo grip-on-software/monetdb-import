@@ -42,6 +42,7 @@ public class ImpDeveloper extends BaseImport{
                 // check whether the developer does not already exist
                 if(dev_id == 0) {
                     devDb.insert_developer(dev);
+                    dev_id = devDb.check_developer(dev);
                     devDb.insert_project_developer(project_id, dev_id, dev);
                 }
 
