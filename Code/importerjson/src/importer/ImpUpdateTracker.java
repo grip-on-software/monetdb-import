@@ -47,7 +47,7 @@ public class ImpUpdateTracker extends BaseImport {
                     }
                 }
                 catch (IOException ex) {
-                    getLogger().log(Level.WARNING, "Cannot import update tracking file " + updateFilename, ex);
+                    getLogger().log(Level.WARNING, "Cannot import update tracking file {0}: {1}", new Object[]{updateFilename, ex.getMessage()});
                 }
             }
         }
