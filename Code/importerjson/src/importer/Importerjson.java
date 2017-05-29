@@ -243,7 +243,7 @@ public class Importerjson {
             long startTime = System.currentTimeMillis();
             
             impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
-            impCommit.printUnknownDevs();
+            impCommit.showUnknownDevs();
             
             showCompleteTask("Fixed JIRA and VCS developer linking", startTime);
         }

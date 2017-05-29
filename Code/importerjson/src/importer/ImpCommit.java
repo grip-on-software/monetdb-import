@@ -263,7 +263,7 @@ public class ImpCommit extends BaseImport{
         }
     }
     
-    public void printUnknownDevs() {
+    public void showUnknownDevs() {
         Connection con = null;
         Statement st = null;
         ResultSet rs = null;
@@ -271,14 +271,19 @@ public class ImpCommit extends BaseImport{
         try {
             con = DataSource.getInstance().getConnection();
 
-            String sql = "SELECT display_name FROM gros.vcs_developer WHERE jira_dev_id=0;";
+            String sql = "SELECT display_name, email FROM gros.vcs_developer WHERE jira_dev_id=0;";
 
-            System.out.println("These VCS developers should be linked in to Jira. Add them to the file data_vcsdev_to_dev.json: ");
+            getLogger().info("These VCS developers should be linked in to Jira. Add them to the file data_vcsdev_to_dev.json:");
             
             st = con.createStatement();
             rs = st.executeQuery(sql);
             while (rs.next()) {
-                System.out.println("Unknown VCS Developer: " + rs.getString("display_name"));
+                String display_name = rs.getString("display_name");
+                String email = rs.getString("email");
+                if (email == null) {
+                    email = "NULL";
+                }
+                getLogger().log(Level.INFO, "Unknown VCS Developer: display name {0}, email {1}", new Object[]{display_name, email});
             }            
         } catch (PropertyVetoException | SQLException ex) {
             logException(ex);
