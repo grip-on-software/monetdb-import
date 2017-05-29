@@ -189,12 +189,18 @@ public class NoteDb extends BaseDb implements AutoCloseable {
         PreparedStatement pstmt = insertCommitStmt.getPreparedStatement();
         pstmt.setInt(1, repo_id);
         pstmt.setString(2, version_id);
-        pstmt.setInt(3, dev_id);
-        pstmt.setString(4, comment);
-        setString(pstmt, 5, file);
-        setInteger(pstmt, 6, line);
-        setString(pstmt, 7, line_type);
-        setTimestamp(pstmt, 8, created_date);
+        pstmt.setInt(3, request_id);
+        pstmt.setInt(4, thread_id);
+        pstmt.setInt(5, note_id);
+        pstmt.setInt(6, parent_id);
+        pstmt.setInt(7, dev_id);
+        pstmt.setString(8, comment);
+        setString(pstmt, 9, file);
+        setInteger(pstmt, 10, line);
+        setInteger(pstmt, 11, end_line);
+        setString(pstmt, 12, line_type);
+        setTimestamp(pstmt, 13, created_date);
+        setTimestamp(pstmt, 14, updated_date);
                              
         insertCommitStmt.batch();
     }
