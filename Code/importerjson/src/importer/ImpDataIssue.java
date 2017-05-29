@@ -35,6 +35,7 @@ public class ImpDataIssue extends BaseImport {
         String[] fields = new String[NUMBER_OF_FIELDS];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
+        BigDecimal max_points = BigDecimal.valueOf(999.0);
         
         try (
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data.json");
@@ -164,10 +165,10 @@ public class ImpDataIssue extends BaseImport {
                     
                     if (storypoint != null) {
                         BigDecimal points = BigDecimal.valueOf(Double.parseDouble(storypoint));
-                        pstmt.setBigDecimal(22, points);
+                        pstmt.setBigDecimal(22, points.min(max_points));
                     }
                     else {
-                        pstmt.setNull(22, java.sql.Types.DECIMAL);
+                        pstmt.setNull(22, java.sql.Types.NUMERIC);
                     }
 
                     setTimestamp(pstmt, 23, resolution_date);
