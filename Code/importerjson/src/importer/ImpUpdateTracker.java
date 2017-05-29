@@ -27,7 +27,7 @@ public class ImpUpdateTracker extends BaseImport {
         int project_id = getProjectID();
         String updateFiles = System.getProperty("importer.update", "").trim();
         if (updateFiles.isEmpty()) {
-            Logger.getLogger("importer").log(Level.WARNING, "No update tracker files specified");
+            getLogger().log(Level.WARNING, "No update tracker files specified");
             return;
         }
         String[] updateNames = updateFiles.split(" ");
@@ -47,7 +47,7 @@ public class ImpUpdateTracker extends BaseImport {
                     }
                 }
                 catch (IOException ex) {
-                    Logger.getLogger("importer").log(Level.WARNING, "Cannot import update tracking file " + updateFilename, ex);
+                    getLogger().log(Level.WARNING, "Cannot import update tracking file " + updateFilename, ex);
                 }
             }
         }

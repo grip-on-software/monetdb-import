@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.logging.Level;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import util.BaseImport;
@@ -68,7 +69,7 @@ public class ImpChangePath extends BaseImport {
             bstmt.execute();
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
+            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
         }
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
             logException(ex);

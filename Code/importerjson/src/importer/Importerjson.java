@@ -48,6 +48,8 @@ public class Importerjson {
     });
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
+    
+    private final static Logger LOGGER = Logger.getLogger("importer");
 
     private static HashMap<String, Class<? extends BaseImport>> retrieveImporters() {
         HashMap<String, Class<? extends BaseImport>> importers = new HashMap<>();
@@ -118,7 +120,7 @@ public class Importerjson {
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
         
-        Logger.getLogger("importer").log(Level.INFO, "{0} in {1} seconds", new Object[]{taskName, elapsedTime / 1000});
+        LOGGER.log(Level.INFO, "{0} in {1} seconds", new Object[]{taskName, elapsedTime / 1000});
     }
     
     private static SortedSet<String> retrieveTasks(String[] taskList) {
@@ -138,7 +140,7 @@ public class Importerjson {
             }
             else {
                 if (!DEFAULT_TASKS.contains(task)) {
-                    Logger.getLogger("importerjson").log(Level.WARNING, "Task {0} not in the default tasks", task);
+                    LOGGER.log(Level.WARNING, "Task {0} not in the default tasks", task);
                 }
                 tasks.add(task);
             }
@@ -152,7 +154,7 @@ public class Importerjson {
         System.setProperty("java.util.logging.SimpleFormatter.format",
                            "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS:%4$s:%2$s:%5$s%6$s%n");
         try {
-            Logger.getLogger("importer").setLevel(Level.parse(logLevel));
+            LOGGER.setLevel(Level.parse(logLevel));
         }
         catch (IllegalArgumentException ex) {
             throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + usage);
@@ -179,7 +181,7 @@ public class Importerjson {
             projectName = args[0].trim();
         }
         
-        Logger.getLogger("importer").log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
+        LOGGER.log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
         
         // Perform project import so that project ID is known to exist
         if (!projectName.isEmpty()) {
@@ -201,14 +203,14 @@ public class Importerjson {
                             Constructor<? extends BaseImport> constructor = importClass.getDeclaredConstructor(typeSpec);
                             importer = constructor.newInstance((Object[]) arguments);
                         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
-                            Logger.getLogger("importer").log(Level.SEVERE, "While instatiating importer for task " + task, ex);
+                            LOGGER.log(Level.SEVERE, "While instatiating importer for task " + task, ex);
                         }
                     }
                     else {
                         try {
                             importer = importClass.newInstance();
                         } catch (InstantiationException | IllegalAccessException ex) {
-                            Logger.getLogger("importer").log(Level.SEVERE, "While instatiating importer for task " + task, ex);
+                            LOGGER.log(Level.SEVERE, "While instantiating importer for task " + task, ex);
                         }
                     }
                     if (importer != null) {

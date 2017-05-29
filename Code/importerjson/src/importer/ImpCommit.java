@@ -32,7 +32,6 @@ import util.BaseImport;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import util.BufferedJSONReader;
 
 /**
@@ -257,7 +256,7 @@ public class ImpCommit extends BaseImport{
             bstmt.execute();
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot link VCS developers to JIRA developers: " + ex.getMessage());
+            getLogger().log(Level.WARNING, "Cannot link VCS developers to JIRA developers: {0}", ex.getMessage());
         }
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
             logException(ex);
@@ -390,7 +389,7 @@ public class ImpCommit extends BaseImport{
                     bstmt.execute();
                 }
                 
-                Logger.getLogger("importer").log(Level.INFO, "Encrypted fields in {0} table", table);
+                getLogger().log(Level.INFO, "Encrypted fields in {0} table", table);
 
             }
         } catch (PropertyVetoException | SQLException ex) {

@@ -213,7 +213,7 @@ public class ImpMetricValue extends BaseImport {
             reader.readBufferedJSON(br);
         }
         catch (FileNotFoundException ex) {
-            System.out.println("Cannot import " + getImportName() + ": " + ex.getMessage());
+            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
         }
         catch (Exception ex) {
             logException(ex);
