@@ -284,6 +284,11 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public int find_sprint(int project_id, Timestamp date) throws SQLException, PropertyVetoException {
+        if (date == null) {
+            // Unknown timestamps cannot be matched to a specific sprint
+            return 0;
+        }
+        
         fillCache(project_id);
         Sprint[] sprints = dateCache.get(project_id);
         
