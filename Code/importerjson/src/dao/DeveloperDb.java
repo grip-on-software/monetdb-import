@@ -427,6 +427,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
                 name = saltDb.hash(name, pair);
                 display_name = saltDb.hash(display_name, pair);
                 email = saltDb.hash(email, pair);
+                encryption = SaltDb.Encryption.PROJECT;
             }
         }
         

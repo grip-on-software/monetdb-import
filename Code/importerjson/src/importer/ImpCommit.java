@@ -239,6 +239,7 @@ public class ImpCommit extends BaseImport{
                 }
                 
                 if (jira_id != 0) {
+                    getLogger().log(Level.INFO, "Linking developer name: {0}, email: {1} to JIRA ID {2}", new Object[]{display_name, email, jira_id});
                     pstmt.setInt(1, jira_id);
                     
                     pstmt.setInt(2, Encryption.NONE);
