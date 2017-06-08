@@ -80,7 +80,8 @@ public class BaseDb {
     }
     
     /**
-     * Retrieve the logger object.
+     * Retrieve the logger object of the importer.
+     * @return The logger
      */
     protected final Logger getLogger() {
         return logger;
