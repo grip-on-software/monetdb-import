@@ -32,6 +32,7 @@ import util.BaseImport;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import util.BufferedJSONReader;
 
 /**
@@ -206,18 +207,12 @@ public class ImpCommit extends BaseImport{
     public void updateJiraID() {
         JSONParser parser = new JSONParser();
         int projectID = this.getProjectID();
+        boolean success;
  
-        String condition = "(encryption=? AND (display_name=? OR (email IS NOT NULL AND email=?)))";
-        String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
         try (
             FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json");
             DeveloperDb devDb = new DeveloperDb();
-            SaltDb saltDb = new SaltDb();
-            BatchedStatement bstmt = new BatchedStatement(sql)
         ) {
-            SaltDb.SaltPair pair = saltDb.get_salt(projectID);
-            PreparedStatement pstmt = bstmt.getPreparedStatement();
-            
             JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a)
@@ -231,37 +226,55 @@ public class ImpCommit extends BaseImport{
                 Developer dev = new Developer(name, display_name, email);
                 if (jsonObject.containsKey("id")) {
                     jira_id = Integer.parseInt((String) jsonObject.get("id"));
+                    success = devDb.link_vcs_developer(projectID, jira_id, dev);
+                    logLinkSuccess(jira_id, dev, success);
                 }
-                else if (projectID == 0) {
-                    jira_id = devDb.check_developer(dev);
+                else if (jsonObject.containsKey("prefix")) {
+                    String prefix = (String) jsonObject.get("prefix");
+                    String pattern = (String) jsonObject.get("pattern");
+                    String replace = (String) jsonObject.get("replace");
+                    String mutate = (String) jsonObject.get("mutate");
+                    if (pattern == null) {
+                        pattern = Pattern.quote(prefix);
+                        replace = "";
+                    }
+                    List<Developer> developers = devDb.search_vcs_developers(prefix + "%");
+                    if (developers.isEmpty()) {
+                        getLogger().log(Level.WARNING, "Prefix {0} did not match any VCS developers", prefix);
+                    }
+                    for (Developer matchDev : developers) {
+                        String linkName = matchDev.getDisplayName().replaceFirst(pattern, replace);
+                        if ("lower".equals(mutate)) {
+                            linkName = linkName.toLowerCase();
+                        }
+                        Developer linkDev = new Developer(linkName, email);
+                        jira_id = devDb.check_project_developer(projectID, linkDev, Encryption.NONE);
+                        success = devDb.link_vcs_developer(projectID, jira_id, matchDev);
+                        logLinkSuccess(jira_id, matchDev, success);
+                    }
                 }
                 else {
                     jira_id = devDb.check_project_developer(projectID, dev, Encryption.NONE);
-                }
-                
-                if (jira_id != 0) {
-                    getLogger().log(Level.INFO, "Linking developer name: {0}, email: {1} to JIRA ID {2}", new Object[]{display_name, email, jira_id});
-                    pstmt.setInt(1, jira_id);
-                    
-                    pstmt.setInt(2, Encryption.NONE);
-                    pstmt.setString(3, display_name);
-                    setString(pstmt, 4, email);
-                    
-                    pstmt.setInt(5, projectID == 0 ? Encryption.GLOBAL : Encryption.PROJECT);
-                    pstmt.setString(6, saltDb.hash(display_name, pair));
-                    setString(pstmt, 7, saltDb.hash(email, pair));
-
-                    bstmt.batch();
+                    success = devDb.link_vcs_developer(projectID, jira_id, dev);
+                    logLinkSuccess(jira_id, dev, success);
                 }
             }
-            
-            bstmt.execute();
         }
         catch (FileNotFoundException ex) {
             getLogger().log(Level.WARNING, "Cannot link VCS developers to JIRA developers: {0}", ex.getMessage());
         }
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
             logException(ex);
+        }
+    }
+    
+    private void logLinkSuccess(int jira_id, Developer dev, boolean success) {
+        Object[] params = new Object[]{dev.getDisplayName(), dev.getEmail(), jira_id};
+        if (success) {
+            getLogger().log(Level.INFO, "Linked developer name: {0}, email: {1} to JIRA ID {2}", params);
+        }
+        else {
+            getLogger().log(Level.WARNING, "Could not link developer name: {0}, email: {1} to JIRA ID {2}", params);
         }
     }
     

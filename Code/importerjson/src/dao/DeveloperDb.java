@@ -11,7 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import util.BaseDb;
 
 /**
@@ -25,6 +27,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     
     private PreparedStatement insertVcsDeveloperStmt = null;
     private PreparedStatement checkVcsDeveloperStmt = null;
+    private PreparedStatement searchVcsDeveloperStmt = null;
+    private PreparedStatement linkVcsDeveloperStmt = null;
     
     private PreparedStatement insertProjectDeveloperStmt = null;
     private PreparedStatement checkProjectDeveloperStmt = null;
@@ -210,30 +214,6 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         } 
     }
     
-    /**
-     * Inserts developers in the VCS developer table of the database. In case developer
-     * id is not set, the developer id from Jira will be 0. The alias id's are initialized
-     * incremental by the database.
-     * @param dev_id the corresponding developer id in Jira 
-     * @param dev The developer object, with at least display name.
-     * Developer shorthand name is ignored.
-     * @param encryption the encryption level of the provided display_name and
-     * email address of the developer (0=no encryption, 1=project encryption,
-     * 2=global encrption, 3=project-then-global encryption).
-     * @throws SQLException If a database access error occurs
-     * @throws PropertyVetoException If the database connection cannot be configured
-     */
-    public void insert_vcs_developer(int dev_id, Developer dev, int encryption) throws SQLException, PropertyVetoException{
-        getInsertVcsDeveloperStmt();
-        
-        insertVcsDeveloperStmt.setInt(1, dev_id);
-        insertVcsDeveloperStmt.setString(2, dev.getDisplayName());
-        setString(insertVcsDeveloperStmt, 3, dev.getEmail());
-        insertVcsDeveloperStmt.setInt(4, encryption);
-    
-        insertVcsDeveloperStmt.execute();
-    }
-   
     private void getCheckVcsDeveloperStmt() throws SQLException, PropertyVetoException {
         if (checkVcsDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
@@ -266,6 +246,47 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    private void getSearchVcsDeveloperStmt() throws SQLException, PropertyVetoException {
+        if (searchVcsDeveloperStmt == null) {
+            Connection con = insertDeveloperStmt.getConnection();
+            String sql = "SELECT display_name, email FROM gros.vcs_developer WHERE encryption = 0 AND display_name LIKE ?";
+            searchVcsDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    private void getLinkVcsDeveloperStmt() throws SQLException, PropertyVetoException {
+        if (linkVcsDeveloperStmt == null) {
+            Connection con = insertDeveloperStmt.getConnection();
+            String condition = "(encryption=? AND (display_name=? OR (email IS NOT NULL AND email=?)))";
+            String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
+            linkVcsDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    /**
+     * Inserts developers in the VCS developer table of the database. In case developer
+     * id is not set, the developer id from Jira will be 0. The alias id's are initialized
+     * incremental by the database.
+     * @param dev_id the corresponding developer id in Jira 
+     * @param dev The developer object, with at least display name.
+     * Developer shorthand name is ignored.
+     * @param encryption the encryption level of the provided display_name and
+     * email address of the developer (0=no encryption, 1=project encryption,
+     * 2=global encrption, 3=project-then-global encryption).
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_vcs_developer(int dev_id, Developer dev, int encryption) throws SQLException, PropertyVetoException{
+        getInsertVcsDeveloperStmt();
+        
+        insertVcsDeveloperStmt.setInt(1, dev_id);
+        insertVcsDeveloperStmt.setString(2, dev.getDisplayName());
+        setString(insertVcsDeveloperStmt, 3, dev.getEmail());
+        insertVcsDeveloperStmt.setInt(4, encryption);
+    
+        insertVcsDeveloperStmt.execute();
+    }
+   
     /**
      * Returns the Alias ID if the developer already exists in the VCS developer 
      * table of the database. Else returns 0.
@@ -360,6 +381,69 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
 
         return vcs_developer_id;
     }
+    
+    /**
+     * Search for developers in the VCS developer table that match
+     * the given display name pattern.
+     * @param display_name An SQL LIKE pattern to search display names on.
+     * @return A list of Developer objects for matching display names.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public List<Developer> search_vcs_developers(String display_name) throws SQLException, PropertyVetoException {
+        getSearchVcsDeveloperStmt();
+        
+        searchVcsDeveloperStmt.setString(1, display_name);
+        
+        List<Developer> result = new ArrayList<>();
+        try (ResultSet rs = searchVcsDeveloperStmt.executeQuery()) {
+            while (rs.next()) {
+                Developer matchDev = new Developer(rs.getString("display_name"), rs.getString("email"));
+                result.add(matchDev);
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Link VCS developers that have a certain display name or email with a JIRA
+     * developer based on ID linking.
+     * @param project_id The project ID in which the developer works on, for the
+     * purpose of matching encrypted versions of the developer name.
+     * @param jira_id The developer ID of the JIRA developer to link against.
+     * @param dev The developer details to use when searching for the VCS
+     * developer to link.
+     * @return Whether the link was successful. A link is unsuccessful if the
+     * provided JIRA ID is 0 or if there was no developer with the provided
+     * display name or email (if available).
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public boolean link_vcs_developer(int project_id, int jira_id, Developer dev) throws SQLException, PropertyVetoException {
+        getLinkVcsDeveloperStmt();
+        
+        if (jira_id == 0) {
+            return false;
+        }
+        
+        linkVcsDeveloperStmt.setInt(1, jira_id);
+        
+        linkVcsDeveloperStmt.setInt(2, SaltDb.Encryption.NONE);
+        linkVcsDeveloperStmt.setString(3, dev.getDisplayName());
+        setString(linkVcsDeveloperStmt, 4, dev.getEmail());
+
+        try (SaltDb saltDb = new SaltDb()) {
+            SaltDb.SaltPair pair = saltDb.get_salt(project_id);
+            linkVcsDeveloperStmt.setInt(5, project_id == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
+            linkVcsDeveloperStmt.setString(6, saltDb.hash(dev.getDisplayName(), pair));
+            setString(linkVcsDeveloperStmt, 7, saltDb.hash(dev.getEmail(), pair));
+        }
+        
+        int rows = linkVcsDeveloperStmt.executeUpdate();
+        return rows > 0;
+    }
+
 
     private void getInsertProjectDeveloperStmt() throws SQLException, PropertyVetoException {
         if (insertProjectDeveloperStmt == null) {
@@ -406,7 +490,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * Check if a developer is registered in the project developer table, either
      * with their display name or email address. This is used for matching VCS
      * developers with their global JIRA developer counterpart.
-     * @param project_id the project the developer works on.
+     * @param project_id the project the developer works on, or 0 to use the
+     * global JIRA developer table instead.
      * @param dev The project developer.
      * @param encryption the encryption level of the developer's display name and
      * email address (0=no encryption, 1=project encryption,
@@ -416,6 +501,10 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public int check_project_developer(int project_id, Developer dev, int encryption) throws SQLException, PropertyVetoException {
+        if (project_id == 0) {
+            return check_developer(dev);
+        }
+        
         getCheckProjectDeveloperStmt();
         
         String name = dev.getName();
