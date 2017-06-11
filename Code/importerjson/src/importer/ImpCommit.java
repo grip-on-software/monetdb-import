@@ -387,7 +387,7 @@ public class ImpCommit extends BaseImport{
                             String value = rs.getString(field);
                             String hashValue = saltDb.hash(value, pair);
                             
-                            pstmt.setString(index, hashValue);
+                            setString(pstmt, index, hashValue);
                             index++;
                         }
                         int encryption = rs.getInt("encryption");
