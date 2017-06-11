@@ -377,7 +377,7 @@ public class ImpCommit extends BaseImport{
 
                 st = con.createStatement();
                 rs = st.executeQuery(selectSql);
-                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=" + Encryption.NONE;
+                String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=?";
 
                 try (BatchedStatement bstmt = new BatchedStatement(updateSql)) {
                     PreparedStatement pstmt = bstmt.getPreparedStatement();
@@ -403,6 +403,8 @@ public class ImpCommit extends BaseImport{
                             }
                             index++;
                         }
+                        pstmt.setInt(index, encryption);
+                        
                         bstmt.batch();
                     }
                     
