@@ -23,6 +23,7 @@ structure](Database_structure.md) for tables and fields.
 | HQ     | metric            | name             | Recognizable project artifact      | Encrypt with project salt beforehand                                                        | Not yet done                                                       |
 | HQ     | metric_version    | developer        | Recognizable user shorthand        | Encrypt with global salt                                                                    | Manual global encryption step afterward                            |
 | JIRA   | comment           | author           | Recognizable user shorthand        | Encrypt with project and/or global salt                                                     | Run task during import, or manual global encryption step afterward |
+| JIRA   | comment           | updater          | Recognizable user shorthand        | Encrypt with project and/or global salt                                                     | Run task during import, or manual global encryption step afterward |
 | \*     | \*                | TIMESTAMP fields | Property of project (time span)    | Adapt all data afterward to store differences compared to first date within project (epoch) | Not yet done                                                       |
 | VCS    | vcs_developer     | display_name     | Personal name                      | Encrypt with project salt beforehand                                                        | Run task during import, or manual global encryption step afterward |
 | VCS    | repo              | repo_name        | Recognizable project artifact      | Encrypt with project salt beforehand                                                        | Not yet done                                                       |
@@ -44,3 +45,20 @@ Additionally, from VCS:
     projects in order to keep all necessary information available. The
     filters should be improved such that they also salt the changed
     paths.
+
+Project artifacts can also be found in running text in the following
+fields:
+
+-   JIRA issue keys: issue.key, issue.epic, issuelink.from_key,
+    issuelink.to_key
+-   Running text from JIRA: issue.title, issue.description,
+    issue.additional_information, issue.review_comments,
+    issue.ready_status_reason, sprint.name, comment.message,
+    fixversion.name, fixversion.description
+-   Running text from VCS: commits.message, commits.branch,
+    tag.tag_name, tag.message, vcs_event.ref, gitlab_repo.description,
+    merge_request.title, merge_request.description,
+    merge_request.source_branch, merge_request.target_branch,
+    merge_request_note.comment, commit_comment.comment
+-   Running text from metrics: metric_version.message,
+    metric_target.comment
