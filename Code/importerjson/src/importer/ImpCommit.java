@@ -339,7 +339,7 @@ public class ImpCommit extends BaseImport{
         hashFields.put("reservation", new String[]{"requester"});
         
         hashFields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
-        hashFields.put("comment", new String[]{"author"});
+        hashFields.put("comment", new String[]{"author", "updater"});
         
         String[] tables;
 
