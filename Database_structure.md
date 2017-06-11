@@ -683,9 +683,9 @@ dashboard project definition.
 -   **metric**: Metric types
     -   **metric_id** - INT - primary key: Sequential number assigned to
         the metric.
-    -   **metric_name** - VARCHAR(100): Amalgamated name of the metric,
-        based on the type of metric and the component, product, team or
-        other domain object it measures.
+    -   **name** - VARCHAR(100): Amalgamated name of the metric, based
+        on the type of metric and the component, product, team or other
+        domain object it measures.
 
 
 -   **metric_value**: Singular metric data from quality report
