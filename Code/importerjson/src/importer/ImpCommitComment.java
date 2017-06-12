@@ -66,7 +66,7 @@ public class ImpCommitComment extends BaseImport {
                 }
                 
                 Developer dev = new Developer(author_username, author, null);
-                int dev_id = devDb.check_project_developer(project_id, dev, encryption);
+                int dev_id = devDb.update_vcs_developer(project_id, dev, encryption);
                 
                 int request_id = Integer.parseInt(merge_request_id);
                 int thread_id = Integer.parseInt(thread);
