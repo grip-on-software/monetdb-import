@@ -30,8 +30,9 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private PreparedStatement searchVcsDeveloperStmt = null;
     private PreparedStatement linkVcsDeveloperStmt = null;
     
-    private PreparedStatement insertProjectDeveloperStmt = null;
+    private BatchedStatement insertProjectDeveloperStmt = null;
     private PreparedStatement checkProjectDeveloperStmt = null;
+    private PreparedStatement checkProjectDeveloperIdStmt = null;
     
     private HashMap<String, Integer> vcsNameCache = null;
     
@@ -91,6 +92,10 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     public DeveloperDb() {
         String sql = "insert into gros.developer (name,display_name,email,local_domain) values (?,?,?,?);";
         insertDeveloperStmt = new BatchedStatement(sql);
+
+        sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encryption) values (?,?,?,?,?,?);";
+        insertProjectDeveloperStmt = new BatchedStatement(sql);
+
         localDomain = getBundle().getString("email_domain");
     }
     
@@ -125,6 +130,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             checkDeveloperStmt.close();
             checkDeveloperStmt = null;
         }
+        
         if (insertVcsDeveloperStmt != null) {
             insertVcsDeveloperStmt.close();
             insertVcsDeveloperStmt = null;
@@ -133,14 +139,30 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             checkVcsDeveloperStmt.close();
             checkVcsDeveloperStmt = null;
         }
-        if (insertProjectDeveloperStmt != null) {
-            insertProjectDeveloperStmt.close();
-            insertProjectDeveloperStmt = null;
+        if (searchVcsDeveloperStmt != null) {
+            searchVcsDeveloperStmt.close();
+            searchVcsDeveloperStmt = null;
+        }
+        if (linkVcsDeveloperStmt != null) {
+            linkVcsDeveloperStmt.close();
+            linkVcsDeveloperStmt = null;
         }
         
         if (vcsNameCache != null) {
             vcsNameCache.clear();
             vcsNameCache = null;
+        }
+
+        insertProjectDeveloperStmt.execute();
+        insertProjectDeveloperStmt.close();
+        
+        if (checkProjectDeveloperStmt != null) {
+            checkProjectDeveloperStmt.close();
+            checkProjectDeveloperStmt = null;
+        }
+        if (checkProjectDeveloperIdStmt != null) {
+            checkProjectDeveloperIdStmt.close();
+            checkProjectDeveloperIdStmt = null;
         }
     }
     
@@ -443,21 +465,20 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         int rows = linkVcsDeveloperStmt.executeUpdate();
         return rows > 0;
     }
-
-
-    private void getInsertProjectDeveloperStmt() throws SQLException, PropertyVetoException {
-        if (insertProjectDeveloperStmt == null) {
-            Connection con = insertDeveloperStmt.getConnection();
-            String sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encryption) values (?,?,?,?,?,?);";
-            insertProjectDeveloperStmt = con.prepareStatement(sql);
-        } 
-    }
     
     private void getCheckProjectDeveloperStmt() throws SQLException, PropertyVetoException {
         if (checkProjectDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
             String sql = "SELECT developer_id, name, email FROM gros.project_developer WHERE project_id = ? AND encryption = ? AND (name = ? OR display_name = ? OR (email IS NOT NULL AND email = ?))";
             checkProjectDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    private void getCheckProjectDeveloperIdStmt() throws SQLException, PropertyVetoException {
+        if (checkProjectDeveloperIdStmt == null) {
+            Connection con = insertDeveloperStmt.getConnection();
+            String sql = "SELECT developer_id FROM gros.project_developer WHERE project_id = ? AND developer_id = ?";
+            checkProjectDeveloperIdStmt = con.prepareStatement(sql);
         }
     }
     
@@ -470,19 +491,30 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void insert_project_developer(int project_id, int dev_id, Developer dev) throws SQLException, PropertyVetoException{
-        getInsertProjectDeveloperStmt();
+        getCheckProjectDeveloperIdStmt();
+        
+        // Check if the project developer already exists
+        checkProjectDeveloperIdStmt.setInt(1, project_id);
+        checkProjectDeveloperIdStmt.setInt(2, dev_id);
+        try (ResultSet rs = checkProjectDeveloperIdStmt.executeQuery()) {
+            if (rs.next()) {
+                return;
+            }
+        }
+        
+        PreparedStatement pstmt = insertProjectDeveloperStmt.getPreparedStatement();
         
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(project_id);
             
-            insertProjectDeveloperStmt.setInt(1, project_id);
-            insertProjectDeveloperStmt.setInt(2, dev_id);
-            insertProjectDeveloperStmt.setString(3, saltDb.hash(dev.getName(), pair));
-            setString(insertProjectDeveloperStmt, 4, saltDb.hash(dev.getDisplayName(), pair));
-            setString(insertProjectDeveloperStmt, 5, saltDb.hash(dev.getEmail(), pair));
-            insertProjectDeveloperStmt.setInt(6, SaltDb.Encryption.PROJECT);
+            pstmt.setInt(1, project_id);
+            pstmt.setInt(2, dev_id);
+            pstmt.setString(3, saltDb.hash(dev.getName(), pair));
+            setString(pstmt, 4, saltDb.hash(dev.getDisplayName(), pair));
+            setString(pstmt, 5, saltDb.hash(dev.getEmail(), pair));
+            pstmt.setInt(6, SaltDb.Encryption.PROJECT);
     
-            insertProjectDeveloperStmt.execute();
+            insertProjectDeveloperStmt.batch();
         }
     }
     
