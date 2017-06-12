@@ -113,7 +113,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         setString(pstmt, 3, dev.getEmail());
         pstmt.setBoolean(4, dev.matchEmailDomain(localDomain));
         
-        // Insert immediately because we need to have the row available
+        // Insert immediately because we need to have the developer ID available
+        // in the ImpDeveloper importer.
         pstmt.execute();
     }
     
@@ -306,6 +307,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         setString(insertVcsDeveloperStmt, 3, dev.getEmail());
         insertVcsDeveloperStmt.setInt(4, encryption);
     
+        // Insert immediately because we need to have the alias_id available
+        // in update_vcs_developer.
         insertVcsDeveloperStmt.execute();
     }
    
