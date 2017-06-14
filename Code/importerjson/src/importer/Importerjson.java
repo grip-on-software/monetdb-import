@@ -7,7 +7,9 @@ package importer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.SortedSet;
@@ -25,24 +27,52 @@ import util.BaseImport;
 public class Importerjson {
     private static String projectName = "";
     private static int projectID = 0;
-    private final static List<String> DEFAULT_TASKS = Arrays.asList(new String[]{
+    
+    private final static HashMap<String, List<String>> GROUPED_TASKS = retrieveGroupedTasks();
+
+    private static HashMap<String, List<String>> retrieveGroupedTasks() {
+        HashMap<String, List<String>> groupedTasks = new HashMap<>();
+        
         // JIRA
-        "issue", "issuetype", "status", "resolution", "relationshiptype",
-        "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
-        "sprint", "comment", "developer",
+        groupedTasks.put("jira", Arrays.asList(new String[]{
+            "issue", "issuetype", "status", "resolution", "relationshiptype",
+            "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
+            "sprint", "comment", "developer"
+        }));
+
         // Quality dashboard metrics
-        "metric_value", "metric_version", "metric_target",
+        groupedTasks.put("metrics", Arrays.asList(new String[]{
+            "metric_value", "metric_version", "metric_target"
+        }));
+
         // Version control systems and collaboration frontends (Git, GitLab, TFS, SVN)
-        "commit", "change_path", "tag", "vcs_event",
-        "gitlab_repo",
-        "merge_request", "merge_request_review", "merge_request_note", "commit_comment",
+        groupedTasks.put("vcs", Arrays.asList(new String[]{
+            "commit", "change_path", "tag", "vcs_event",
+            "gitlab_repo",
+            "merge_request", "merge_request_review", "merge_request_note", "commit_comment"
+        }));
+        
+        return groupedTasks;
+    }
+    
+    private final static List<String> DEFAULT_TASKS = retrieveDefaultTasks();
+    
+    private static List<String> retrieveDefaultTasks() {
+        List<String> defaultTasks = new ArrayList<>();
+        defaultTasks.addAll(GROUPED_TASKS.get("jira"));
+        defaultTasks.addAll(GROUPED_TASKS.get("metrics"));
+        defaultTasks.addAll(GROUPED_TASKS.get("vcs"));
+        
         // Self-Service Desk
-        "reservation",
+        defaultTasks.add("reservation");
         // Tracking
-        "update",
+        defaultTasks.add("update");
         // Additional tasks
-        "developerlink" //, "encrypt"
-    });
+        defaultTasks.add("developerlink");
+        
+        return defaultTasks;
+    }
+    
     private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
         "sprintlink", "developerproject", "developerlink", "encrypt"
     });
@@ -123,24 +153,34 @@ public class Importerjson {
         LOGGER.log(Level.INFO, "{0} in {1} seconds", new Object[]{taskName, elapsedTime / 1000});
     }
     
-    private static SortedSet<String> retrieveTasks(String[] taskList) {
+    private static SortedSet<String> retrieveTasks(String[] taskList, Collection<String> validateTasks) {
         SortedSet<String> tasks = new TreeSet<>();
         for (String task : taskList) {
             if (task.equals("all")) {
                 tasks.addAll(DEFAULT_TASKS);
             }
+            else if (GROUPED_TASKS.containsKey(task)) {
+                List<String> groupTasks = GROUPED_TASKS.get(task);
+                if (!validateTasks.containsAll(groupTasks)) {
+                    LOGGER.log(Level.WARNING, "Some tasks of group {0} could not be added or removed", task);                    
+                }
+                tasks.addAll(groupTasks);
+            }
             else if (task.startsWith("-")) {
-                // Remove task from the list (overriding earlier additions).
+                // Remove task from the set (overriding earlier additions).
+                // Validate against the current set to check if tasks are
+                // being needlessly removed (swhich may indicate input problem).
                 // Also, if this is the first option in the list of tasks,
                 // then add all default tasks and remove it from there.
                 if (tasks.isEmpty()) {
                     tasks.addAll(DEFAULT_TASKS);
                 }
-                tasks.remove(task.substring(1));
+                SortedSet<String> removeTasks = retrieveTasks(new String[]{task.substring(1)}, tasks);
+                tasks.removeAll(removeTasks);
             }
             else {
-                if (!DEFAULT_TASKS.contains(task)) {
-                    LOGGER.log(Level.WARNING, "Task {0} not in the default tasks", task);
+                if (!validateTasks.contains(task)) {
+                    LOGGER.log(Level.WARNING, "Task {0} could not be added or removed", task);
                 }
                 tasks.add(task);
             }
@@ -165,7 +205,7 @@ public class Importerjson {
         
         SortedSet<String> tasks;
         if (args.length > 1) {
-            tasks = retrieveTasks(args[1].trim().split(","));
+            tasks = retrieveTasks(args[1].trim().split(","), DEFAULT_TASKS);
         }
         else {
             tasks = new TreeSet<>(DEFAULT_TASKS);
