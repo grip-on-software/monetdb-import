@@ -203,12 +203,19 @@ public class Importerjson {
             throw new RuntimeException(usage);
         }
         
+        // Determine a set of tasks to run. With a missing argumet, we run all
+        // the default tasks. Otherwise, we add all of the tasks and task groups
+        // (or remove them when prefixed with a minus sign) from the argument.
+        // Warnings are logged if added tasks are not registered at all, or if
+        // a task is removed that was not in the list before it.
         SortedSet<String> tasks;
+        SortedSet<String> allTasks = new TreeSet<>(DEFAULT_TASKS);
         if (args.length > 1) {
-            tasks = retrieveTasks(args[1].trim().split(","), DEFAULT_TASKS);
+            allTasks.addAll(SPECIAL_TASKS);
+            tasks = retrieveTasks(args[1].trim().split(","), allTasks);
         }
         else {
-            tasks = new TreeSet<>(DEFAULT_TASKS);
+            tasks = allTasks;
         }
         
         if ("--".equals(args[0])) {
