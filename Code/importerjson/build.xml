@@ -70,28 +70,28 @@
     nbproject/build-impl.xml file. 
 
     -->
-	<target name="-post-init">
-		<condition property="importer.generate.properties">
-			<and>
-				<isset property="importer.url" />
-				<isset property="importer.user" />
-				<isset property="importer.password" />
-				<isset property="importer.relPath" />
-				<isset property="importer.email_domain" />
-			</and>
-		</condition>
-		<fail unless="importer.generate.properties"
-			message="You must set the properties importer.{url,user,password,relPath,email_domain} in a private properties file or pass them through ant -D" />
-	</target>
+    <target name="-post-init">
+        <condition property="importer.generate.properties">
+            <and>
+                <isset property="importer.url" />
+                <isset property="importer.user" />
+                <isset property="importer.password" />
+                <isset property="importer.relPath" />
+                <isset property="importer.email_domain" />
+            </and>
+        </condition>
+        <fail unless="importer.generate.properties"
+            message="You must set the properties importer.{url,user,password,relPath,email_domain} in a private properties file or pass them through ant -D" />
+    </target>
     <target name="-pre-compile" if="importer.generate.properties">
-		<propertyfile file="src/util/import.properties"
-			comment="Variables used to locate and import the json files to MonetDB.">
-			<entry key="driver" operation="=" value="nl.cwi.monetdb.jdbc.MonetDriver" />
-			<entry key="url" operation="=" value="${importer.url}" />
-			<entry key="user" operation="=" value="${importer.user}" />
-			<entry key="password" operation="=" value="${importer.password}" />
-			<entry key="relPath" operation="=" value="${importer.relPath}" />
-			<entry key="email_domain" operation="=" value="${importer.email_domain}" />
-		</propertyfile>
+        <propertyfile file="src/util/import.properties"
+            comment="Variables used to locate and import the json files to MonetDB.">
+            <entry key="driver" operation="=" value="nl.cwi.monetdb.jdbc.MonetDriver" />
+            <entry key="url" operation="=" value="${importer.url}" />
+            <entry key="user" operation="=" value="${importer.user}" />
+            <entry key="password" operation="=" value="${importer.password}" />
+            <entry key="relPath" operation="=" value="${importer.relPath}" />
+            <entry key="email_domain" operation="=" value="${importer.email_domain}" />
+        </propertyfile>
     </target>
 </project>
