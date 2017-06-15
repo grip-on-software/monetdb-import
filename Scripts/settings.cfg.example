@@ -1,0 +1,8 @@
+[monetdb]
+hostname = $MONETDB_HOSTNAME
+passphrase = $MONETDB_PASSPHRASE
+username = $MONETDB_USERNAME
+password = $MONETDB_PASSWORD
+database = $MONETDB_DATABASE
+[jenkins]
+url = $JENKINS_URL

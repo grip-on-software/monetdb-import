@@ -2,6 +2,4 @@
 /Code/importerjson/build/
 /Code/importerjson/nbproject/private/
 /Code/importerjson/src/util/import.properties
-/Code/databasedumper/nbproject/private/
-/Code/databasedumper/build/
-/Code/databasedumper/dist/
+/Scripts/settings.cfg
