@@ -5,8 +5,10 @@
  */
 package importer;
 
+import dao.BatchedCheckStatement;
 import dao.BatchedStatement;
 import dao.SaltDb;
+import java.beans.PropertyVetoException;
 import util.BaseImport;
 import java.io.FileReader;
 import java.math.BigDecimal;
@@ -35,71 +37,61 @@ public class ImpDataIssue extends BaseImport {
         String[] fields = new String[NUMBER_OF_FIELDS];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
-        BigDecimal max_points = BigDecimal.valueOf(999.0);
         
         try (
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data.json");
             BufferedJSONReader br = new BufferedJSONReader(fr);
-            BatchedStatement bstmt = new BatchedStatement(sql);
-        ) {
-            PreparedStatement pstmt = bstmt.getPreparedStatement();
-            
-            Connection con = bstmt.getConnection();
-            
-            sql = "SELECT issue_id,changelog_id FROM gros.issue WHERE issue_id=? AND changelog_id=?";
-            existsStmt = con.prepareStatement(sql);
-            
-            Object o;
-            while ((o = br.readObject()) != null) {
-                JSONObject jsonObject = (JSONObject) o;
+            BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.issue", sql,
+                    new String[]{"issue_id", "changelog_id"}
+            ) {
+                private final BigDecimal max_points = BigDecimal.valueOf(999.0);
+                private final int projectID = getProjectID();
+
+                @Override
+                protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+                    int issue_id = (int)values[0];
+                    int changelog_id = (int)values[1];
+                    
+                    JSONObject jsonObject = (JSONObject) data;
+                    String additional_information = (String) jsonObject.get("additional_information");
+                    String assignee = (String) jsonObject.get("assignee");
+                    String title = (String) jsonObject.get("title");
+                    String fixVersions = (String) jsonObject.get("fixVersions");
+                    String priority = (String) jsonObject.get("priority");
+                    String attachment = (String) jsonObject.get("attachment");
+                    String type = (String) jsonObject.get("issuetype");
+                    String duedate = (String) jsonObject.get("duedate");
+                    String status = (String) jsonObject.get("status");
+                    String updated = (String) jsonObject.get("updated");
+                    String updated_by = (String) jsonObject.get("updated_by");
+                    String description = (String) jsonObject.get("description");
+                    String reporter = (String) jsonObject.get("reporter");
+                    String key = (String) jsonObject.get("key");
+                    String resolution_date = (String) jsonObject.get("resolution_date");
+                    String storypoint = (String) jsonObject.get("storypoint");
+                    String watchers = (String) jsonObject.get("watchers");
+                    String created = (String) jsonObject.get("created");
+                    String bugfix = (String) jsonObject.get("bugfix");
+                    String review_comments = (String) jsonObject.get("review_comments");
+                    String resolution = (String) jsonObject.get("resolution");
+                    String sprint = (String) jsonObject.get("sprint");
+                    String rank_change = (String) jsonObject.get("rank_change");
+                    String epic = (String) jsonObject.get("epic");
+                    String flagged = (String) jsonObject.get("flagged");
+                    String ready_status = (String) jsonObject.get("ready_status");
+                    String ready_status_reason = (String) jsonObject.get("ready_status_reason");
+                    String approved = (String) jsonObject.get("approved");
+                    String approved_by_po = (String) jsonObject.get("approved_by_po");
+                    String labels = (String) jsonObject.get("labels");
+                    String affectedVersion = (String) jsonObject.get("versions");
+                    String expected_ltcs = (String) jsonObject.get("expected_ltcs");
+                    String expected_phtcs = (String) jsonObject.get("expected_phtcs");
+                    String test_given = (String) jsonObject.get("test_given");
+                    String test_when = (String) jsonObject.get("test_when");
+                    String test_then = (String) jsonObject.get("test_then");
+                    String test_execution = (String) jsonObject.get("test_execution");
+                    String test_execution_time = (String) jsonObject.get("test_execution_time");
                 
-                String additional_information = (String) jsonObject.get("additional_information");
-                String assignee = (String) jsonObject.get("assignee");
-                String title = (String) jsonObject.get("title");
-                String fixVersions = (String) jsonObject.get("fixVersions");
-                String priority = (String) jsonObject.get("priority");
-                String attachment = (String) jsonObject.get("attachment");
-                String type = (String) jsonObject.get("issuetype");
-                String duedate = (String) jsonObject.get("duedate");
-                String status = (String) jsonObject.get("status");
-                String updated = (String) jsonObject.get("updated");
-                String updated_by = (String) jsonObject.get("updated_by");
-                String description = (String) jsonObject.get("description");
-                String reporter = (String) jsonObject.get("reporter");
-                String key = (String) jsonObject.get("key");
-                String resolution_date = (String) jsonObject.get("resolution_date");
-                String storypoint = (String) jsonObject.get("storypoint");
-                String watchers = (String) jsonObject.get("watchers");
-                String created = (String) jsonObject.get("created");  
-                String bugfix = (String) jsonObject.get("bugfix");
-                String review_comments = (String) jsonObject.get("review_comments");
-                String issue_id = (String) jsonObject.get("issue_id");
-                String resolution = (String) jsonObject.get("resolution");
-                String sprint = (String) jsonObject.get("sprint");
-                String changelog_id = (String) jsonObject.get("changelog_id");
-                String rank_change = (String) jsonObject.get("rank_change");
-                String epic = (String) jsonObject.get("epic");
-                String flagged = (String) jsonObject.get("flagged");
-                String ready_status = (String) jsonObject.get("ready_status");
-                String ready_status_reason = (String) jsonObject.get("ready_status_reason");
-                String approved = (String) jsonObject.get("approved");
-                String approved_by_po = (String) jsonObject.get("approved_by_po");
-                String labels = (String) jsonObject.get("labels");
-                String affectedVersion = (String) jsonObject.get("versions");
-                String expected_ltcs = (String) jsonObject.get("expected_ltcs");
-                String expected_phtcs = (String) jsonObject.get("expected_phtcs");
-                String test_given = (String) jsonObject.get("test_given");
-                String test_when = (String) jsonObject.get("test_when");
-                String test_then = (String) jsonObject.get("test_then");
-                String test_execution = (String) jsonObject.get("test_execution");
-                String test_execution_time = (String) jsonObject.get("test_execution_time");
-                
-                existsStmt.setInt(1, Integer.parseInt(issue_id));
-                existsStmt.setInt(2, Integer.parseInt(changelog_id));
-                rs = existsStmt.executeQuery();
-                
-                // Check if the issue/changelog id pair does not already exist
-                if(!rs.next()) {
                     // Convert legacy format (null, None) and empty fields ("0") from the JSON fields to correct values.
                     if ((sprint.trim()).equals("null")){
                         sprint = "0";
@@ -137,8 +129,8 @@ public class ImpDataIssue extends BaseImport {
                     }
 
                     // Fill the prepared statement with the new field values.
-                    pstmt.setInt(1, Integer.parseInt(issue_id));
-                    pstmt.setInt(2, Integer.parseInt(changelog_id));
+                    pstmt.setInt(1, issue_id);
+                    pstmt.setInt(2, changelog_id);
                     pstmt.setString(3, key);
                     pstmt.setString(4, title);
                     pstmt.setInt(5, Integer.parseInt(type));
@@ -155,7 +147,7 @@ public class ImpDataIssue extends BaseImport {
 
                     setDate(pstmt, 14, duedate);
 
-                    pstmt.setInt(15, projectId);
+                    pstmt.setInt(15, projectID);
                     pstmt.setInt(16, Integer.parseInt(status));
                     setString(pstmt, 17, reporter);
                     setString(pstmt, 18, assignee);
@@ -204,11 +196,25 @@ public class ImpDataIssue extends BaseImport {
                     // Encryption
                     pstmt.setInt(42, SaltDb.Encryption.NONE);
 
-                    bstmt.batch();
+                    insertStmt.batch();
                 }
+            };
+        ) {
+            Object o;
+            while ((o = br.readObject()) != null) {
+                JSONObject jsonObject = (JSONObject) o;
+                
+                String issue_id = (String) jsonObject.get("issue_id");
+                String changelog_id = (String) jsonObject.get("changelog_id");
+                
+                Object[] values = new Object[]{
+                    Integer.parseInt(issue_id), Integer.parseInt(changelog_id)
+                };
+                
+                cstmt.batch(values, o);
             }
             
-            bstmt.execute();
+            cstmt.execute();
         }
         catch (Exception ex) {
             logException(ex);

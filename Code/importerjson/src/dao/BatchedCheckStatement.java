@@ -170,6 +170,16 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
         checkValues.clear();
         insertStmt.execute();
     }
+
+    /**
+     * Retrieve the connection that the batched statement uses.
+     * @return Connection object
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public Connection getConnection() throws SQLException, PropertyVetoException {
+        return insertStmt.getConnection();
+    }
     
     /**
      * Retrieve the batch size.
