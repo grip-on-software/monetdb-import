@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.BatchedCheckStatement;
 import dao.BatchedStatement;
 import dao.DataSource;
 import dao.DeveloperDb;
@@ -39,7 +40,7 @@ import util.BufferedJSONReader;
  * Importer for VCS commit versions and some global special tasks.
  * @author Thomas, Enrique
  */
-public class ImpCommit extends BaseImport{
+public class ImpCommit extends BaseImport {
     
     @Override
     public void parser() {
@@ -52,49 +53,100 @@ public class ImpCommit extends BaseImport{
             SprintDb sprintDb = new SprintDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json");
             BufferedJSONReader br = new BufferedJSONReader(fr);
-            BatchedStatement bstmt = new BatchedStatement(sql)
+            BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.commits", sql,
+                    new String[]{"version_id", "project_id", "repo_id"},
+                    new int[]{java.sql.Types.VARCHAR, java.sql.Types.INTEGER, java.sql.Types.INTEGER}
+            ) {
+                @Override
+                protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+                    String version_id = (String)values[0];
+                    int projectID = (int)values[1];
+                    int repo_id = (int)values[2];
+
+                    JSONObject jsonObject = (JSONObject) data;
+                    String commit_date = (String) jsonObject.get("commit_date");
+                    String author_date = (String) jsonObject.get("author_date");
+                    String sprint = (String) jsonObject.get("sprint_id");
+                    String developer = (String) jsonObject.get("developer");
+                    String developer_email = (String) jsonObject.get("developer_email");
+                    String message = (String) jsonObject.get("message");
+                    String size_of_commit = (String) jsonObject.get("size");
+                    String insertions = (String) jsonObject.get("insertions");
+                    String deletions = (String) jsonObject.get("deletions");
+                    String number_of_files = (String) jsonObject.get("number_of_files");
+                    String number_of_lines = (String) jsonObject.get("number_of_lines");
+                    String type = (String) jsonObject.get("type");
+                    String branch = (String) jsonObject.get("branch");
+                    String encrypted = (String) jsonObject.get("encrypted");
+
+                    int sprint_id;
+                    if ((sprint.trim()).equals("null")) { // In case not in between dates of sprint
+                        sprint_id = 0;
+                    }
+                    else {
+                        sprint_id = Integer.parseInt(sprint);
+                    }
+
+                    if (developer.equals("unknown")) {
+                        developer = developer_email;
+                    }
+                    if (developer_email.equals("0")) {
+                        developer_email = null;
+                    }
+                    int encryption = Encryption.parseInt(encrypted);
+
+                    Developer dev = new Developer(developer, developer_email);
+                    int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
+
+                    pstmt.setString(1, version_id);
+                    pstmt.setInt(2, projectID);
+
+                    Timestamp ts_created = Timestamp.valueOf(commit_date); 
+                    pstmt.setTimestamp(3, ts_created);
+
+                    if (sprint_id == 0) {
+                        sprint_id = sprintDb.find_sprint(projectID, ts_created);
+                    }
+
+                    pstmt.setInt(4, sprint_id);
+
+                    // Calculate developerid Int or String?
+                    pstmt.setInt(5, developer_id);
+                    pstmt.setString(6, message);
+                    pstmt.setInt(7, Integer.parseInt(size_of_commit));
+                    pstmt.setInt(8, Integer.parseInt(insertions));
+                    pstmt.setInt(9, Integer.parseInt(deletions));
+                    pstmt.setInt(10, Integer.parseInt(number_of_files));
+                    pstmt.setInt(11, Integer.parseInt(number_of_lines));
+                    pstmt.setString(12, type);
+                    pstmt.setInt(13, repo_id);
+
+                    if (author_date == null || author_date.equals("0")) {
+                        pstmt.setNull(14, java.sql.Types.TIMESTAMP);
+                    }
+                    else {
+                        Timestamp authored = Timestamp.valueOf(author_date);
+                        pstmt.setTimestamp(14, authored);
+                    }
+
+                    if (branch == null || branch.equals("0")) {
+                        pstmt.setNull(15, java.sql.Types.VARCHAR);
+                    }
+                    else {
+                        pstmt.setString(15, branch);
+                    }
+                    
+                    insertStmt.batch();
+                }
+            }
         ) {
-            PreparedStatement pstmt = bstmt.getPreparedStatement();
-            
+            cstmt.setBatchSize(100);
             Object o;
             while ((o = br.readObject()) != null) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String version_id = (String) jsonObject.get("version_id");
-                String commit_date = (String) jsonObject.get("commit_date");
-                String author_date = (String) jsonObject.get("author_date");
-                String sprint = (String) jsonObject.get("sprint_id");
-                String developer = (String) jsonObject.get("developer");
-                String developer_email = (String) jsonObject.get("developer_email");
-                String message = (String) jsonObject.get("message");
-                String size_of_commit = (String) jsonObject.get("size");
-                String insertions = (String) jsonObject.get("insertions");
-                String deletions = (String) jsonObject.get("deletions");
-                String number_of_files = (String) jsonObject.get("number_of_files");
-                String number_of_lines = (String) jsonObject.get("number_of_lines");
-                String type = (String) jsonObject.get("type");
                 String repo_name = (String) jsonObject.get("repo_name");
-                String branch = (String) jsonObject.get("branch");
-                String encrypted = (String) jsonObject.get("encrypted");
-                
-                int sprint_id;
-                if ((sprint.trim()).equals("null")) { // In case not in between dates of sprint
-                    sprint_id = 0;
-                }
-                else {
-                    sprint_id = Integer.parseInt(sprint);
-                }
-                
-                if (developer.equals("unknown")) {
-                    developer = developer_email;
-                }
-                if (developer_email.equals("0")) {
-                    developer_email = null;
-                }
-                int encryption = Encryption.parseInt(encrypted);
-                
-                Developer dev = new Developer(developer, developer_email);
-                int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
                 
                 int repo_id = repoDb.check_repo(repo_name);
                 if (repo_id == 0) { // if repo id does not exist, create repo with new id
@@ -102,48 +154,11 @@ public class ImpCommit extends BaseImport{
                     repo_id = repoDb.check_repo(repo_name); // set new id of repo
                 }
                 
-                pstmt.setString(1, version_id);
-                pstmt.setInt(2, projectID);
-
-                Timestamp ts_created = Timestamp.valueOf(commit_date); 
-                pstmt.setTimestamp(3, ts_created);
-                
-                if (sprint_id == 0) {
-                    sprint_id = sprintDb.find_sprint(projectID, ts_created);
-                }
-
-                pstmt.setInt(4, sprint_id);
-
-                // Calculate developerid Int or String?
-                pstmt.setInt(5, developer_id);
-                pstmt.setString(6, message);
-                pstmt.setInt(7, Integer.parseInt(size_of_commit));
-                pstmt.setInt(8, Integer.parseInt(insertions));
-                pstmt.setInt(9, Integer.parseInt(deletions));
-                pstmt.setInt(10, Integer.parseInt(number_of_files));
-                pstmt.setInt(11, Integer.parseInt(number_of_lines));
-                pstmt.setString(12, type);
-                pstmt.setInt(13, repo_id);
-                
-                if (author_date == null || author_date.equals("0")) {
-                    pstmt.setNull(14, java.sql.Types.TIMESTAMP);
-                }
-                else {
-                    Timestamp authored = Timestamp.valueOf(author_date);
-                    pstmt.setTimestamp(14, authored);
-                }
-                
-                if (branch == null || branch.equals("0")) {
-                    pstmt.setNull(15, java.sql.Types.VARCHAR);
-                }
-                else {
-                    pstmt.setString(15, branch);
-                }
-
-                bstmt.batch();
+                Object values[] = new Object[]{version_id, projectID, repo_id};
+                cstmt.batch(values, o);
             }
             
-            bstmt.execute();
+            cstmt.execute();
             
             //Used for creating Project if it didn't exist
             this.setProjectID(projectID);

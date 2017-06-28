@@ -116,4 +116,12 @@ public class BatchedStatement implements AutoCloseable {
         }
         batchSize = 0;
     }
+
+    /**
+     * Retrieve the maximum batch size.
+     * @return The maximum size of batches for the batched statement
+     */
+    public int getMaxBatchSize() {
+        return MAX_BATCH_SIZE;
+    }
 }
