@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.BaseImport;
@@ -194,7 +196,13 @@ public class Importerjson {
         System.setProperty("java.util.logging.SimpleFormatter.format",
                            "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS:%4$s:%2$s:%5$s%6$s%n");
         try {
-            LOGGER.setLevel(Level.parse(logLevel));
+            Level level = Level.parse(logLevel);
+            Handler handler = new ConsoleHandler();
+            handler.setLevel(level);
+            LOGGER.addHandler(handler);
+            LOGGER.setLevel(level);
+            LOGGER.setUseParentHandlers(false);
+            LOGGER.log(Level.FINE, "Set log level to {0}", level.getName());
         }
         catch (IllegalArgumentException ex) {
             throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + usage);
