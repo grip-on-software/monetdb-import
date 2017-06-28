@@ -272,12 +272,12 @@ such fields more thoroughly and uniformly.
     -   **encryption** - INT(row encryption)
 
 
--   **project_developer**: **Not yet used.** Names of JIRA users,
-    encrypted using the project-specific salt rather than a global salt.
-    Only use this for matching against (encrypted) developer names from
-    other sources. The fields duplicate those of *developer*, but the
-    values are encrypted differently and some of the fields of the
-    latter table may be removed.
+-   **project_developer**: Names of JIRA users, encrypted using the
+    project-specific salt rather than a global salt. Only use this for
+    matching against (encrypted) developer names from other sources. The
+    fields duplicate those of *developer*, but the values are encrypted
+    differently and some of the fields of the latter table may be
+    removed.
     -   **project_id** - INT - reference to project.id: Project that the
         JIRA developer worked on.
     -   **developer_id** - INT - reference to developer.id: Global
@@ -385,7 +385,8 @@ such fields more thoroughly and uniformly.
 These tables include data from Gitlab/Git and Subversion.
 
 -   **commits**: Data from individual commits in VCS (Git or Subversion)
-    repositories used by the development team.
+    repositories used by the development team. Primary key is
+    (version_id, repo_id).
     -   **version_id** - VARCHAR(100): SHA hash or revision number
         belonging to this code version. The version number is unique for
         the repository the change is made in (indicated by the *repo_id*
@@ -440,23 +441,26 @@ These tables include data from Gitlab/Git and Subversion.
         is based on the VCS developer's display name and email, and the
         JIRA developer display name, short name or email. The matching
         is also manually tweaked using the file data_vcsdev_to_dev.json
-        in the monetdb-script repository.
+        (which is retrieved from ownCloud).
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
     -   **email** - VARCHAR(100): Email address that the developer uses.
     -   **encryption** - INT(row encryption)
 
 
--   **repo**: Repository names
-    -   **repo_id** - INT - primary key: Auto-incrementing identifier.
+-   **repo**: Repository names and projects
+    -   **id** - INT - primary key: Auto-incrementing identifier.
     -   **repo_name** - VARCHAR(1000): Readable name of the repository
         extracted from one of the data sources (GitLab, project
         definition, path name).
+    -   **project_id** - INTEGER - reference to project.project_id: The
+        project to which the repository belongs to. This, alongside the
+        *id*, distinguishes repositories with the same name.
 
 
 -   **change_path**: Statistics on files that are changed in versions in
-    the repository.
-    -   **repo_id** - INT - reference to repo.repo_id: The repository in
+    the repository. Primary key is (repo_id, version_id, file).
+    -   **repo_id** - INT - reference to repo.id: The repository in
         which the change was made.
     -   **version_id** - VARCHAR(100) - reference to commits.version_id:
         The version in which the change to the file was made.
@@ -471,7 +475,7 @@ These tables include data from Gitlab/Git and Subversion.
 
 
 -   **tag**: Release tags specified in the repository.
-    -   **repo_id** - INT - reference to repo.repo_id: The repository in
+    -   **repo_id** - INT - reference to repo.id: The repository in
         which the tag is added.
     -   **tag_name** - VARCHAR(100): The name of the tag.
     -   **version_id** - VARCHAR(100) - reference to commits.version_id:
