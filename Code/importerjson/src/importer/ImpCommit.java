@@ -54,8 +54,8 @@ public class ImpCommit extends BaseImport {
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json");
             BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.commits", sql,
-                    new String[]{"version_id", "project_id", "repo_id"},
-                    new int[]{java.sql.Types.VARCHAR, java.sql.Types.INTEGER, java.sql.Types.INTEGER}
+                    new String[]{"version_id", "repo_id"},
+                    new int[]{java.sql.Types.VARCHAR, java.sql.Types.INTEGER}
             ) {
                 @Override
                 protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
@@ -110,7 +110,6 @@ public class ImpCommit extends BaseImport {
 
                     pstmt.setInt(4, sprint_id);
 
-                    // Calculate developerid Int or String?
                     pstmt.setInt(5, developer_id);
                     pstmt.setString(6, message);
                     pstmt.setInt(7, Integer.parseInt(size_of_commit));
@@ -148,13 +147,14 @@ public class ImpCommit extends BaseImport {
                 String version_id = (String) jsonObject.get("version_id");
                 String repo_name = (String) jsonObject.get("repo_name");
                 
-                int repo_id = repoDb.check_repo(repo_name);
-                if (repo_id == 0) { // if repo id does not exist, create repo with new id
-                    repoDb.insert_repo(repo_name);
-                    repo_id = repoDb.check_repo(repo_name); // set new id of repo
+                // Check if repo ID exists or create repo with new ID
+                int repo_id = repoDb.check_repo(repo_name, projectID);
+                if (repo_id == 0) {
+                    repoDb.insert_repo(repo_name, projectID);
+                    repo_id = repoDb.check_repo(repo_name, projectID);
                 }
                 
-                Object values[] = new Object[]{version_id, projectID, repo_id};
+                Object values[] = new Object[]{version_id, repo_id};
                 cstmt.batch(values, o);
             }
             
@@ -478,7 +478,7 @@ public class ImpCommit extends BaseImport {
         
     @Override
     public String getImportName() {
-        return "VCS commit versions";
+        return "version control system commit versions";
     }
 
 }

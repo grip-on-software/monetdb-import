@@ -50,10 +50,10 @@ public class ImpTag extends BaseImport {
                 String tagger_email = (String) jsonObject.get("tagger_email");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
-                int repo_id = repoDb.check_repo(repo_name);
+                int repo_id = repoDb.check_repo(repo_name, projectID);
                 if (repo_id == 0){
-                    repoDb.insert_repo(repo_name);
-                    repo_id = repoDb.check_repo(repo_name);
+                    repoDb.insert_repo(repo_name, projectID);
+                    repo_id = repoDb.check_repo(repo_name, projectID);
                 }
                 
                 int encryption = SaltDb.Encryption.parseInt(encrypted);

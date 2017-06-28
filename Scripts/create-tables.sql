@@ -212,7 +212,8 @@ CREATE TABLE "gros"."commits" (
 	"type"              VARCHAR(100)  NOT NULL,
 	"repo_id"       INTEGER         NOT NULL,
 	"author_date"   TIMESTAMP       NULL,
-	"branch"        VARCHAR(255)    NULL
+	"branch"        VARCHAR(255)    NULL,
+        CONSTRAINT "pk_commit_id" PRIMARY KEY ("version_id", "repo_id")
 );
 
 CREATE TABLE "gros"."comment" (
@@ -239,6 +240,7 @@ CREATE TABLE "gros"."vcs_developer" (
 CREATE TABLE "gros"."repo" (
 	"id"       INTEGER       NOT NULL AUTO_INCREMENT,
 	"repo_name" VARCHAR(1000) NOT NULL,
+	"project_id" INTEGER       NOT NULL,
         CONSTRAINT "pk_repo_id" PRIMARY KEY ("id")
 );
 
@@ -248,7 +250,8 @@ CREATE TABLE "gros"."change_path" (
 	"file" VARCHAR(1000) NOT NULL,
 	"insertions" INTEGER NOT NULL,
 	"deletions" INTEGER NOT NULL,
-	"type" VARCHAR(1) NOT NULL default 'M'
+	"type" VARCHAR(1) NOT NULL default 'M',
+        CONSTRAINT "pk_change_path_id" PRIMARY KEY ("repo_id", "version_id", "file")
 );
 
 CREATE TABLE "gros"."tag" (

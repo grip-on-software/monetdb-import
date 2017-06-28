@@ -22,17 +22,17 @@ import util.BaseDb;
 public class RepositoryDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertRepoStmt = null;
     private PreparedStatement checkRepoStmt = null;
-    private HashMap<String, Integer> nameCache = null;
+    private HashMap<Integer, HashMap<String, Integer>> nameCache = null;
     private BatchedStatement insertGitLabRepoStmt = null;
     private PreparedStatement checkGitLabRepoStmt = null;
     private BatchedStatement updateGitLabRepoStmt = null;
-    
+
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
     };
     
     public RepositoryDb() {
-        String sql = "insert into gros.repo (repo_name) values (?);";
+        String sql = "insert into gros.repo (repo_name,project_id) values (?,?);";
         insertRepoStmt = new BatchedStatement(sql);
         
         sql = "insert into gros.gitlab_repo (repo_id,gitlab_id,description,create_date,archived,has_avatar,star_count) values (?,?,?,?,?,?,?);";
@@ -72,13 +72,15 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     /**
      * Inserts repository in the repo table. 
      * @param name The complete name of the repository.
+     * @param project_id The project in which the repository is used.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_repo(String name) throws SQLException, PropertyVetoException{
+    public void insert_repo(String name, int project_id) throws SQLException, PropertyVetoException{
         PreparedStatement pstmt = insertRepoStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
+        pstmt.setInt(2, project_id);
         
         // Insert immediately because we need to have the row available
         pstmt.execute();
@@ -87,9 +89,16 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     private void getCheckRepoStmt() throws SQLException, PropertyVetoException {
         if (checkRepoStmt == null) {
             Connection con = insertRepoStmt.getConnection();
-            String sql = "SELECT id FROM gros.repo WHERE UPPER(repo_name) = ?";
+            String sql = "SELECT id FROM gros.repo WHERE UPPER(repo_name) = ? AND project_id = ?";
             checkRepoStmt = con.prepareStatement(sql);
         }
+    }
+    
+    private void insertCache(String key, Integer project_id, Integer id) {
+        if (!nameCache.containsKey(project_id)) {
+            nameCache.put(project_id, new HashMap<String, Integer>());
+        }
+        nameCache.get(project_id).put(key, id);
     }
     
     private void fillNameCache() throws SQLException, PropertyVetoException {
@@ -99,45 +108,50 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         nameCache = new HashMap<>();
         
         Connection con = insertRepoStmt.getConnection();
-        String sql = "SELECT UPPER(repo_name), id FROM gros.repo";
+        String sql = "SELECT UPPER(repo_name) AS repo_key, project_id, id FROM gros.repo";
         try (Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
             while(rs.next()) {
-                String key = rs.getString(1);
-                Integer id = Integer.parseInt(rs.getString(2));
-                nameCache.put(key, id);
+                String key = rs.getString("repo_key");
+                Integer project_id = rs.getInt("project_id");
+                Integer id = rs.getInt("id");
+                insertCache(key, project_id, id);
             }
         }
     }
     
     /**
      * Returns the repository ID if the repository already exists in the repo 
-     * table of the database. Otherwise, returns 0.
-     * @param name the complete name of the repository.
-     * @return the repo ID if found, otherwise 0.
+     * table of the database for the given project ID. Otherwise, returns 0.
+     * @param name The complete name of the repository.
+     * @param project_id The project in which the repository is used.
+     * @return The repo ID if found, otherwise 0.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int check_repo(String name) throws SQLException, PropertyVetoException {
+    public int check_repo(String name, int project_id) throws SQLException, PropertyVetoException {
         fillNameCache();
         
         String key = name.toUpperCase().trim();
-        Integer cacheId = nameCache.get(key);
-        if (cacheId != null) {
-            return cacheId;
+        if (nameCache.containsKey(project_id)) {
+            Integer cacheId = nameCache.get(project_id).get(key);
+            if (cacheId != null) {
+                return cacheId;
+            }
         }
         
         Integer idRepo = null;
         getCheckRepoStmt();
         
         checkRepoStmt.setString(1, key);
+        checkRepoStmt.setInt(2, project_id);
         try (ResultSet rs = checkRepoStmt.executeQuery()) {
             while (rs.next()) {
                 idRepo = rs.getInt("id");
             }
         }
         
-        nameCache.put(key, idRepo);
+        insertCache(key, project_id, idRepo);
         if (idRepo == null) {
             return 0;
         }

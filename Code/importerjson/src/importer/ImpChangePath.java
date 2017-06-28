@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.BatchedCheckStatement;
 import dao.BatchedStatement;
 import dao.RepositoryDb;
 import java.beans.PropertyVetoException;
@@ -27,17 +28,38 @@ public class ImpChangePath extends BaseImport {
     
     @Override
     public void parser() {
-        String sql = "insert into gros.change_path values (?,?,?,?,?,?);";
+        int projectID = getProjectID();
+        String sql = "insert into gros.change_path(repo_id,version_id,file,insertions,deletions,type) values (?,?,?,?,?,?,?);";
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
             FileReader fr = new FileReader(getPath()+getProjectName()+"/data_change_path.json");
             BufferedJSONReader br = new BufferedJSONReader(fr);
-            BatchedStatement bstmt = new BatchedStatement(sql)
+            BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.change_path", sql,
+                    new String[]{"repo_id", "version_id", "file"},
+                    new int[]{java.sql.Types.INTEGER, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}
+            ) {
+                @Override
+                protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+                    int repo_id = (int)values[0];
+                    String version_id = (String)values[1];
+                    String file = (String)values[2];
+                    JSONObject jsonObject = (JSONObject) data;
+                    String insertions = (String) jsonObject.get("insertions");
+                    String deletions = (String) jsonObject.get("deletions");
+                    String change_type = (String) jsonObject.get("change_type");
+
+                    pstmt.setInt(1, repo_id);
+                    pstmt.setString(2, version_id);
+                    pstmt.setString(3, file);
+                    pstmt.setInt(4, Integer.parseInt(insertions));
+                    pstmt.setInt(5, Integer.parseInt(deletions));
+                    pstmt.setString(6, change_type);
+
+                    insertStmt.batch();
+                }
+            }
         ) {
-                
-            PreparedStatement pstmt = bstmt.getPreparedStatement();
-            
             Object o;
             while ((o = br.readObject()) != null) {
                 JSONObject jsonObject = (JSONObject) o;
@@ -45,28 +67,19 @@ public class ImpChangePath extends BaseImport {
                 String version_id = (String) jsonObject.get("version_id");
                 String repo_name = (String) jsonObject.get("repo_name");
                 String file = (String) jsonObject.get("file");
-                String insertions = (String) jsonObject.get("insertions");
-                String deletions = (String) jsonObject.get("deletions");
-                String change_type = (String) jsonObject.get("change_type");
                 
-                int repo_id = repoDb.check_repo(repo_name);
+                int repo_id = repoDb.check_repo(repo_name, projectID);
                 
                 if (repo_id == 0) { // if repo id does not exist, create repo with new id
-                    repoDb.insert_repo(repo_name);
-                    repo_id = repoDb.check_repo(repo_name); // set new id of repo
+                    repoDb.insert_repo(repo_name, projectID);
+                    repo_id = repoDb.check_repo(repo_name, projectID); // set new id of repo
                 }
                 
-                pstmt.setInt(1, repo_id);
-                pstmt.setString(2, version_id);
-                pstmt.setString(3, file);
-                pstmt.setInt(4, Integer.parseInt(insertions));
-                pstmt.setInt(5, Integer.parseInt(deletions));
-                pstmt.setString(6, change_type);
-
-                bstmt.batch();
+                Object[] values = new Object[]{repo_id, version_id, file};
+                cstmt.batch(values, o);                
             }
             
-            bstmt.execute();
+            cstmt.execute();
         }
         catch (FileNotFoundException ex) {
             getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
@@ -78,7 +91,7 @@ public class ImpChangePath extends BaseImport {
     
     @Override
     public String getImportName() {
-        return "VCS changed paths";
+        return "version control system changed paths";
     }
 
 }
