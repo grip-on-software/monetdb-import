@@ -12,6 +12,7 @@ from pymonetdb.control import Control
 from pymonetdb.sql.connections import Connection
 from pymonetdb.exceptions import OperationalError
 import requests
+from requests.auth import HTTPBasicAuth
 
 def check():
     """
@@ -54,6 +55,22 @@ def parse_args(config):
     parser.add_argument('-k', '--keep-jenkins', dest='delete_jenkins',
                         action='store_false', default=True,
                         help='Do not delete Jenkins workspace automatically')
+    parser.add_argument('--jenkins-host', dest='jenkins_host',
+                        default=config.get('jenkins', 'host'),
+                        help='Base URL of the Jenkins instance')
+    parser.add_argument('--jenkins-job', dest='jenkins_job',
+                        default=config.get('jenkins', 'job'),
+                        help='Jenkins job to delete workspace from')
+    parser.add_argument('--jenkins-username', dest='jenkins_username',
+                        default=config.get('jenkins', 'username'),
+                        help='Username to log in to Jenkins')
+    parser.add_argument('--jenkins-token', dest='jenkins_token',
+                        default=config.get('jenkins', 'token'),
+                        help='Password or API token to log in to Jenkins')
+    parser.add_argument('--jenkins-crumb', dest='jenkins_crumb',
+                        action='store_true',
+                        default=config.getboolean('jenkins', 'crumb'),
+                        help='Request a CSRF crumb from Jenkins')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
 
@@ -67,6 +84,27 @@ def parse_args(config):
                         level=getattr(logging, args.log.upper(), None))
 
     return args
+
+def delete_workspace(args):
+    """
+    Delete a Jenkins workspace.
+    """
+
+    if args.jenkins_username != '' and args.jenkins_token != '':
+        auth = HTTPBasicAuth(args.jenkins_username, args.jenkins_token)
+    else:
+        auth = None
+
+    if args.jenkins_crumb:
+        crumb_url = args.jenkins_host + '/crumbIssuer/api/json'
+        crumb_data = requests.get(crumb_url, auth=auth).json()
+        headers = {crumb_data['crumbRequestField']: crumb_data['crumb']}
+    else:
+        headers = {}
+
+    url = '{}/job/{}/doWipeOutWorkspace'.format(args.jenkins_host,
+                                                args.jenkins_job)
+    requests.post(url, auth=auth, headers=headers)
 
 def main():
     """
@@ -130,8 +168,7 @@ def main():
 
     if args.delete_jenkins:
         logging.info('Deleting Jenkins workspace...')
-        url = config.get('jenkins', 'url') + 'doWipeOutWorkspace'
-        requests.post(url)
+        delete_workspace(args)
 
     logging.info('Done.')
 
