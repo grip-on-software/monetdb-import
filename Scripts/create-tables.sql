@@ -286,6 +286,46 @@ CREATE TABLE "gros"."gitlab_repo" (
 		CONSTRAINT "pk_gitlab_repo_id" PRIMARY KEY ("repo_id", "gitlab_id")
 );
 
+CREATE TABLE "gros"."github_repo" (
+	"repo_id" INTEGER NOT NULL,
+	"github_id" INTEGER NOT NULL,
+	"description" TEXT NULL,
+	"create_date" TIMESTAMP NOT NULL,
+	"private" BOOL NOT NULL,
+	"forked" BOOL NOT NULL,
+	"star_count" INTEGER NOT NULL,
+	"watch_count" INTEGER NOT NULL,
+        CONSTRAINT "pk_github_repo_id" PRIMARY KEY ("repo_id", "github_id")
+);
+
+CREATE TABLE "gros"."github_issue" (
+	"repo_id" INTEGER NOT NULL,
+	"issue_id" INTEGER NOT NULL,
+	"title" TEXT NULL,
+	"description" TEXT NULL,
+	"status" VARCHAR(100) NULL,
+	"author_id" INTEGER NOT NULL,
+	"assignee_id" INTEGER NULL,
+	"created_date" TIMESTAMP NULL,
+	"updated_date" TIMESTAMP NULL,
+	"pull_request_id" INTEGER NULL,
+	"labels" INTEGER NULL,
+	"closed_date" TIMESTAMP NULL,
+	"closer_id" INTEGER NULL,
+		CONSTRAINT "pk_github_issue_id" PRIMARY KEY("repo_id", "issue_id")
+);
+
+CREATE TABLE "gros"."github_issue_note" (
+	"repo_id" INTEGER NOT NULL,
+	"issue_id" INTEGER NOT NULL,
+	"note_id" INTEGER NOT NULL,
+	"author_id" INTEGER NOT NULL,
+	"comment" TEXT NULL,
+	"created_date" TIMESTAMP NULL,
+	"updated_date" TIMESTAMP NULL,
+		CONSTRAINT "pk_github_issue_note_id" PRIMARY KEY("repo_id", "issue_id", "note_id")
+);
+
 CREATE TABLE "gros"."merge_request" (
 	"repo_id" INTEGER NOT NULL,
 	"request_id" INTEGER NOT NULL,
