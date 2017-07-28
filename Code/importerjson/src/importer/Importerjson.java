@@ -47,10 +47,10 @@ public class Importerjson {
             "metric_value", "metric_version", "metric_target"
         }));
 
-        // Version control systems and collaboration frontends (Git, GitLab, TFS, SVN)
+        // Version control systems and collaboration frontends (Git, GitHub, GitLab, TFS, SVN)
         groupedTasks.put("vcs", Arrays.asList(new String[]{
             "commit", "change_path", "tag", "vcs_event",
-            "gitlab_repo",
+            "gitlab_repo", "github_repo", "github_issue", "github_issue_note",
             "merge_request", "merge_request_review", "merge_request_note", "commit_comment"
         }));
         
@@ -111,6 +111,9 @@ public class Importerjson {
         importers.put("vcs_event", ImpVcsEvent.class);
         
         importers.put("gitlab_repo", ImpGitLabRepo.class);
+        importers.put("github_repo", ImpGitHubRepo.class);
+        importers.put("github_issue", ImpGitHubIssue.class);
+        importers.put("github_issue_note", ImpGitHubIssueNote.class);
         importers.put("merge_request", ImpMergeRequest.class);
         importers.put("merge_request_review", ImpMergeRequestReview.class);
         importers.put("merge_request_note", ImpMergeRequestNote.class);

@@ -26,6 +26,9 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertGitLabRepoStmt = null;
     private PreparedStatement checkGitLabRepoStmt = null;
     private BatchedStatement updateGitLabRepoStmt = null;
+    private BatchedStatement insertGitHubRepoStmt = null;
+    private PreparedStatement checkGitHubRepoStmt = null;
+    private BatchedStatement updateGitHubRepoStmt = null;
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -40,6 +43,12 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         
         sql = "update gros.gitlab_repo set description=?, create_date=?, archived=?, has_avatar=?, star_count=? where repo_id=? AND gitlab_id=?;";
         updateGitLabRepoStmt = new BatchedStatement(sql);
+
+        sql = "insert into gros.github_repo (repo_id,github_id,description,create_date,private,forked,star_count,watch_count) values (?,?,?,?,?,?,?,?);";
+        insertGitHubRepoStmt = new BatchedStatement(sql);
+        
+        sql = "update gros.github_repo set description=?, create_date=?, private=?, forked=?, star_count=?, watch_count=? where repo_id=? AND github_id=?;";
+        updateGitHubRepoStmt = new BatchedStatement(sql);
     }
     
     @Override
@@ -66,6 +75,17 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         if (checkGitLabRepoStmt != null) {
             checkGitLabRepoStmt.close();
             checkGitLabRepoStmt = null;
+        }
+
+        insertGitHubRepoStmt.execute();
+        insertGitHubRepoStmt.close();
+        
+        updateGitHubRepoStmt.execute();
+        updateGitHubRepoStmt.close();
+        
+        if (checkGitHubRepoStmt != null) {
+            checkGitHubRepoStmt.close();
+            checkGitHubRepoStmt = null;
         }
     }
     
@@ -273,6 +293,128 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(7, gitlab_id);
 
         updateGitLabRepoStmt.batch();
+    }
+
+    /**
+     * Insert the given repository in the github_repo table. 
+     * @param repo_id Repository ID from the repo table
+     * @param github_id GitHub internal repository ID
+     * @param description GitLab description
+     * @param create_date Date when the repository was created in GitHub
+     * @param is_private Whether the repository is private
+     * @param is_forked Whether the repository is forked from another repository
+     * @param star_count Number of stars from developers
+     * @param watch_count Number of watchers of the repository
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_github_repo(int repo_id, int github_id, String description, Timestamp create_date, boolean is_private, boolean is_forked, int star_count, int watch_count) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = insertGitHubRepoStmt.getPreparedStatement();
+        
+        pstmt.setInt(1, repo_id);
+        pstmt.setInt(2, github_id);
+        if (description != null) {
+            pstmt.setString(3, description);
+        }
+        else {
+            pstmt.setNull(3, java.sql.Types.VARCHAR);
+        }
+        
+        pstmt.setTimestamp(4, create_date);
+        pstmt.setBoolean(5, is_private);
+        pstmt.setBoolean(6, is_forked);
+        pstmt.setInt(7, star_count);
+        pstmt.setInt(8, watch_count);
+        
+        insertGitHubRepoStmt.batch();
+    }
+    
+    private void getCheckGitHubRepoStmt() throws SQLException, PropertyVetoException {
+        if (checkGitHubRepoStmt == null) {
+            Connection con = insertGitHubRepoStmt.getConnection();
+            String sql = "SELECT description,create_date,private,forked,star_count,watch_count FROM gros.github_repo WHERE repo_id=? AND github_id=?";
+            checkGitHubRepoStmt = con.prepareStatement(sql);
+        }
+    }
+
+    /**
+     * Check whether the given repository exists in the github_repo table and
+     * has the same properties.
+     * @param repo_id Repository ID from the repo table
+     * @param github_id GitHub internal repository ID
+     * @param description GitLab description
+     * @param create_date Date when the repository was created in GitHub
+     * @param is_private Whether the repository is private
+     * @param is_forked Whether the repository is forked from another repository
+     * @param star_count Number of stars from developers
+     * @param watch_count Number of watchers of the repository
+     * @return An indicator of the state of the database regarding the given GitHub
+     * repository. This is CheckResult.MISSING if the repository with the provided
+     * repo and gitlab identifiers does not exist. This is CheckResult.DIFFERS if
+     * there is a row with the provided repo and gitlab identifiers in the database,
+     * but it has different values in its fields. This is CheckResult.EXISTS if
+     * there is a repository in the database that matches the provided parameters.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public CheckResult check_github_repo(int repo_id, int github_id, String description, Timestamp create_date, boolean is_private, boolean is_forked, int star_count, int watch_count) throws SQLException, PropertyVetoException {
+        getCheckGitHubRepoStmt();
+        
+        checkGitHubRepoStmt.setInt(1, repo_id);
+        checkGitHubRepoStmt.setInt(2, github_id);
+        CheckResult result;
+        try (ResultSet rs = checkGitLabRepoStmt.executeQuery()) {
+            result = CheckResult.MISSING;
+            while (rs.next()) {
+                if ((description == null ? rs.getString("description") == null : description.equals(rs.getString("description"))) &&
+                        create_date.equals(rs.getTimestamp("create_date")) &&
+                        is_private == rs.getBoolean("private") &&
+                        is_forked == rs.getBoolean("forked") &&
+                        star_count == rs.getInt("star_count") &&
+                        watch_count == rs.getInt("watch_count")) {
+                    result = CheckResult.EXISTS;
+                }
+                else {
+                    result = CheckResult.DIFFERS;
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Update the given repository in the github_repo table with new values.
+     * @param repo_id Repository ID from the repo table
+     * @param github_id GitHub internal repository ID
+     * @param description GitLab description
+     * @param create_date Date when the repository was created in GitHub
+     * @param is_private Whether the repository is private
+     * @param is_forked Whether the repository is forked from another repository
+     * @param star_count Number of stars from developers
+     * @param watch_count Number of watchers of the repository
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void update_github_repo(int repo_id, int github_id, String description, Timestamp create_date, boolean is_private, boolean is_forked, int star_count, int watch_count) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = updateGitHubRepoStmt.getPreparedStatement();
+        if (description != null) {
+            pstmt.setString(1, description);
+        }
+        else {
+            pstmt.setNull(1, java.sql.Types.VARCHAR);
+        }
+        
+        pstmt.setTimestamp(2, create_date);
+        pstmt.setBoolean(3, is_private);
+        pstmt.setBoolean(4, is_forked);
+        pstmt.setInt(5, star_count);
+        pstmt.setInt(6, watch_count);
+        
+        pstmt.setInt(7, repo_id);
+        pstmt.setInt(8, github_id);
+
+        updateGitHubRepoStmt.batch();
     }
 }
     

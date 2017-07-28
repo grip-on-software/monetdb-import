@@ -45,7 +45,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * Check whether a merge request exists in the database and that it has the same
      * properties as the provided parameters.
      * @param repo_id Idenitifer of the repository the request is made for
-     * @param request_id Internal identifier or the merge request
+     * @param request_id Internal identifier for the merge request
      * @param title The short header message describing what the merge request is about
      * @param description The contents of the request message
      * @param status The status of the request
@@ -63,7 +63,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
      * and request identifiers does not exist. This is CheckResult.DIFFERS if there
      * is a row with the provided repsoitory and merge request identifiers in the database,
      * but it has different values in its fields. This is CheckResult.EXISTS if there
-     * is an merge request in the database that matches all the provided parameters.
+     * is a merge request in the database that matches all the provided parameters.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
@@ -101,7 +101,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
     /**
      * Insert a new merge request in the database.
      * @param repo_id Idenitifer of the repository the request is made for
-     * @param request_id Internal identifier or the merge request
+     * @param request_id Internal identifier for the merge request
      * @param title The short header message describing what the merge request is about
      * @param description The contents of the request message
      * @param status The status of the request
@@ -141,7 +141,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
     /**
      * Update an existing merge request in the database with new values.
      * @param repo_id Idenitifer of the repository the request is made for
-     * @param request_id Internal identifier or the merge request
+     * @param request_id Internal identifier for the merge request
      * @param title The short header message describing what the merge request is about
      * @param description The contents of the request message
      * @param status The status of the request
