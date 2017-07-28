@@ -31,7 +31,6 @@ public class ImpDataIssue extends BaseImport {
     public void parser() {
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
-        int projectId = getProjectID();
         String[] fields = new String[NUMBER_OF_FIELDS];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
