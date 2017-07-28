@@ -280,7 +280,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getLinkVcsDeveloperStmt() throws SQLException, PropertyVetoException {
         if (linkVcsDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String condition = "(encryption=? AND (display_name=? OR (email IS NOT NULL AND email=?)))";
+            String condition = "(encryption=? AND ((display_name IS NOT NULL AND display_name=?) OR (email IS NOT NULL AND email=?)))";
             String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
             linkVcsDeveloperStmt = con.prepareStatement(sql);
         }
@@ -455,13 +455,13 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         linkVcsDeveloperStmt.setInt(1, jira_id);
         
         linkVcsDeveloperStmt.setInt(2, SaltDb.Encryption.NONE);
-        linkVcsDeveloperStmt.setString(3, dev.getDisplayName());
+        setString(linkVcsDeveloperStmt, 3, dev.getDisplayName());
         setString(linkVcsDeveloperStmt, 4, dev.getEmail());
 
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(project_id);
             linkVcsDeveloperStmt.setInt(5, project_id == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
-            linkVcsDeveloperStmt.setString(6, saltDb.hash(dev.getDisplayName(), pair));
+            setString(linkVcsDeveloperStmt, 6, saltDb.hash(dev.getDisplayName(), pair));
             setString(linkVcsDeveloperStmt, 7, saltDb.hash(dev.getEmail(), pair));
         }
         
