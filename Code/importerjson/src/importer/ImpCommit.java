@@ -57,11 +57,12 @@ public class ImpCommit extends BaseImport {
                     new String[]{"version_id", "repo_id"},
                     new int[]{java.sql.Types.VARCHAR, java.sql.Types.INTEGER}
             ) {
+                private final int projectID = getProjectID();
+                
                 @Override
                 protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
                     String version_id = (String)values[0];
-                    int projectID = (int)values[1];
-                    int repo_id = (int)values[2];
+                    int repo_id = (int)values[1];
 
                     JSONObject jsonObject = (JSONObject) data;
                     String commit_date = (String) jsonObject.get("commit_date");
