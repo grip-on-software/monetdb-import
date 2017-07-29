@@ -6,7 +6,6 @@
 package importer;
 
 import dao.BatchedCheckStatement;
-import dao.BatchedStatement;
 import dao.RepositoryDb;
 import java.beans.PropertyVetoException;
 import java.io.FileNotFoundException;
@@ -29,7 +28,7 @@ public class ImpChangePath extends BaseImport {
     @Override
     public void parser() {
         int projectID = getProjectID();
-        String sql = "insert into gros.change_path(repo_id,version_id,file,insertions,deletions,type) values (?,?,?,?,?,?,?);";
+        String sql = "insert into gros.change_path(repo_id,version_id,file,insertions,deletions,type) values (?,?,?,?,?,?);";
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
@@ -76,7 +75,7 @@ public class ImpChangePath extends BaseImport {
                 }
                 
                 Object[] values = new Object[]{repo_id, version_id, file};
-                cstmt.batch(values, o);                
+                cstmt.batch(values, o);
             }
             
             cstmt.execute();
