@@ -44,7 +44,7 @@ public class ImpMergeRequestReview extends BaseImport {
                 String repo_name = (String) jsonObject.get("repo_name");
                 String merge_request_id = (String) jsonObject.get("merge_request_id");
                 String reviewer = (String) jsonObject.get("reviewer");
-                String reviewer_name = (String) jsonObject.get("reviewer_name");
+                String reviewer_username = (String) jsonObject.get("reviewer_username");
                 String weight = (String) jsonObject.get("vote");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
@@ -54,7 +54,7 @@ public class ImpMergeRequestReview extends BaseImport {
                     throw new Exception("Cannot determine repository: " + repo_name);
                 }
                 int request_id = Integer.parseInt(merge_request_id);
-                Developer dev = new Developer(reviewer, reviewer_name, reviewer_name);
+                Developer dev = new Developer(reviewer_username, reviewer, reviewer);
                 int dev_id = devDb.update_vcs_developer(project_id, dev, encryption);
                 int vote = Integer.parseInt(weight);
                 

@@ -69,6 +69,7 @@ public class ImpCommit extends BaseImport {
                     String author_date = (String) jsonObject.get("author_date");
                     String sprint = (String) jsonObject.get("sprint_id");
                     String developer = (String) jsonObject.get("developer");
+                    String developer_username = (String) jsonObject.get("developer_username");
                     String developer_email = (String) jsonObject.get("developer_email");
                     String message = (String) jsonObject.get("message");
                     String size_of_commit = (String) jsonObject.get("size");
@@ -96,7 +97,7 @@ public class ImpCommit extends BaseImport {
                     }
                     int encryption = Encryption.parseInt(encrypted);
 
-                    Developer dev = new Developer(developer, developer_email);
+                    Developer dev = new Developer(developer_username, developer, developer_email);
                     int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
 
                     pstmt.setString(1, version_id);

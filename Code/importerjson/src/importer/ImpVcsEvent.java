@@ -48,6 +48,7 @@ public class ImpVcsEvent extends BaseImport {
                 String ref = (String) jsonObject.get("ref");
                 String date = (String) jsonObject.get("date");
                 String user = (String) jsonObject.get("user");
+                String username = (String) jsonObject.get("username");
                 String email = (String) jsonObject.get("email");
                 String encrypted = (String) jsonObject.get("encrypted");
                 
@@ -59,7 +60,7 @@ public class ImpVcsEvent extends BaseImport {
                 }
 
                 Timestamp event_date = Timestamp.valueOf(date);
-                Developer author_dev = new Developer(user, user, email);
+                Developer author_dev = new Developer(username, user, email);
                 int author_id = devDb.update_vcs_developer(project_id, author_dev, encryption);
                 
                 if (!eventDb.check_event(repo_id, action, kind, commit_id, ref, event_date, author_id)) {
