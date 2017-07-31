@@ -1,14 +1,19 @@
 # Database structure
 
-The database structure will be split per data source.
-
-The structure will be shown as follows:
+The database structure is shown here divided by the data sources from
+which we retrieve the contents. The structure of each table is shown as
+follows:
 
 -   **Table**: Description
     -   **Attribute** - TYPE - (pseudo)reference: Description
     -   **Attribute** - TYPE: Description
     -   **Attribute** - TYPE(Special field type)
     -   **Attribute** - TYPE
+
+Additional details about how the data is imported can be found by
+browsing the
+[Javadoc](http://www.jenkins.example:8080/job/build-importerjson/Javadoc/)
+of the importer, especially the dao package.
 
 ## Special field types
 
