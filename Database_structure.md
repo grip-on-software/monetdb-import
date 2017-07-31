@@ -503,7 +503,7 @@ These tables include data from Gitlab/Git and Subversion.
         of overlapping sprints, the latest sprint that still contains
         the date is used.
 
-### GitHub/GitLab/TFS tables
+### Review system tables (GitHub, GitLab, TFS)
 
 -   **vcs_event**: An event from an activity timeline of a repository.
     The events include pushes of commits or tags, or possibly also other
@@ -553,7 +553,7 @@ These tables include data from Gitlab/Git and Subversion.
 -   **github_repo**: GitHub-specific metadata of a repository. Primary
     key is (repo_id, github_id).
     -   **repo_id** - INT - reference to repo.id: Repository that the
-        GitLab repo stores.
+        GitHub repo stores.
     -   **github_id** - INT: internal GitHub identifier of the
         repository.
     -   **description** - TEXT: Description of the repository.
