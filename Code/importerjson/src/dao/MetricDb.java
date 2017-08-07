@@ -246,6 +246,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     }
     
     public MetricName split_metric_name(String metric_name, boolean aggressive) throws Exception {
+        fillNameCache();
+        
         metric_name = metric_name.replaceFirst("<[A-Za-z.]+?([^.]+)(?: object at .*)>$", "$1");
         String base_name = metric_name;
         String domain_name = "";
