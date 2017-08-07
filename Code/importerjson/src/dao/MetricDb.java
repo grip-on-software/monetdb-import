@@ -85,12 +85,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
-        pstmt.setString(2, base_name);
-        pstmt.setString(3, domain_name);
+        setString(pstmt, 2, base_name);
+        setString(pstmt, 3, domain_name);
         
         // Insert immediately because we need to have the row available
         pstmt.execute();
-        baseNameCache.add(base_name);
+        if (base_name != null) {
+            baseNameCache.add(base_name);
+        }
     }
     
     /**
@@ -179,7 +181,9 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 String base_name = rs.getString("base_name");
                 Integer id = Integer.parseInt(rs.getString("metric_id"));
                 nameCache.put(key, id);
-                baseNameCache.add(base_name);
+                if (base_name != null) {
+                    baseNameCache.add(base_name);
+                }
             }
         }
     }
@@ -252,14 +256,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 String domain_part = matcher.group();
                 String new_base_name = base_name.replaceFirst(domain_part + "$", "");
                 if (base_name.equals(new_base_name)) {
-                    throw new Exception("Could not split metric name correctly");
+                    // Cannot be split any further
+                    return new MetricName(metric_name);
                 }
                 base_name = new_base_name;
                 domain_name = domain_part + domain_name;
             }
         }
-        MetricName nameParts = new MetricName(metric_name);
-        return nameParts;
+        return new MetricName(metric_name, base_name, domain_name);
     }
 
     private void getCheckVersionStmt() throws SQLException, PropertyVetoException {
