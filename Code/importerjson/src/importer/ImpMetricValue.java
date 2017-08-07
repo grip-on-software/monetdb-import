@@ -183,7 +183,7 @@ public class ImpMetricValue extends BaseImport {
             int metric_id = mDB.check_metric(metric_name);
 
             if (metric_id == 0) {
-                MetricName nameParts = mDB.split_metric_name(metric_name);
+                MetricName nameParts = mDB.split_metric_name(metric_name, false);
                 // Check the metric name after splitting because the original name
                 // may have been altered.
                 metric_id = mDB.check_metric(nameParts.getName());

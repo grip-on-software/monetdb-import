@@ -245,11 +245,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idMetric;
     }
     
-    public MetricName split_metric_name(String metric_name) throws Exception {
+    public MetricName split_metric_name(String metric_name, boolean aggressive) throws Exception {
         metric_name = metric_name.replaceFirst("<[A-Za-z.]+?([^.]+)(?: object at .*)>$", "$1");
         String base_name = metric_name;
         String domain_name = "";
-        Pattern pattern = Pattern.compile("(?<![A-Z ])[A-Z]+[^A-Z ]*(?: .+)?$");
+        Pattern pattern = Pattern.compile(aggressive ? ".$" : "(?<![A-Z ])[A-Z]+[^A-Z ]*(?: .+)?$");
         while (!baseNameCache.contains(base_name)) {
             Matcher matcher = pattern.matcher(base_name);
             if (matcher.find()) {
@@ -261,6 +261,9 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 }
                 base_name = new_base_name;
                 domain_name = domain_part + domain_name;
+            }
+            else {
+                return new MetricName(metric_name);
             }
         }
         return new MetricName(metric_name, base_name, domain_name);

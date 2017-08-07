@@ -70,7 +70,7 @@ public class ImpMetricTarget extends BaseImport {
     
     public void updateDomainNames() {
         String sql = "SELECT metric_id, name FROM gros.metric WHERE base_name IS NULL AND domain_name IS NULL";
-        String updateSql = "UPDATE gros.metric SET base_name = ?, domain_name = ? WHERE metric_id = ?";
+        String updateSql = "UPDATE gros.metric SET name = ?, base_name = ?, domain_name = ? WHERE metric_id = ?";
         try (
             MetricDb metricDb = new MetricDb();
             Connection con = DataSource.getInstance().getConnection();
@@ -82,11 +82,12 @@ public class ImpMetricTarget extends BaseImport {
                 PreparedStatement pstmt = bstmt.getPreparedStatement();
                 int metric_id = rs.getInt("metric_id");
                 String metric_name = rs.getString("name");
-                MetricName nameParts = metricDb.split_metric_name(metric_name);
+                MetricName nameParts = metricDb.split_metric_name(metric_name, true);
                 if (nameParts.getBaseName() != null && nameParts.getDomainName() != null) {
-                    pstmt.setString(1, nameParts.getBaseName());
-                    pstmt.setString(2, nameParts.getDomainName());
-                    pstmt.setInt(3, metric_id);
+                    pstmt.setString(1, nameParts.getName());
+                    pstmt.setString(2, nameParts.getBaseName());
+                    pstmt.setString(3, nameParts.getDomainName());
+                    pstmt.setInt(4, metric_id);
                     
                     bstmt.batch();
                 }
