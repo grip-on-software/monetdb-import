@@ -147,7 +147,9 @@ CREATE TABLE "gros"."test_execution" (
 
 CREATE TABLE "gros"."metric" (
 	"metric_id"       INTEGER     NOT NULL AUTO_INCREMENT,
-	"name"            VARCHAR(100)   NOT NULL
+	"name"            VARCHAR(100)   NOT NULL,
+	"base_name"       VARCHAR(100)   NULL,
+	"domain_name"     VARCHAR(100)   NULL
 );
 
 CREATE TABLE "gros"."metric_value" (

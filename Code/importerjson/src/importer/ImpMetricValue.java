@@ -7,6 +7,7 @@ package importer;
 
 import util.BaseImport;
 import dao.MetricDb;
+import dao.MetricDb.MetricName;
 import dao.SprintDb;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -181,11 +182,17 @@ public class ImpMetricValue extends BaseImport {
             // Using the metric name, check if the metric was not already stored
             int metric_id = mDB.check_metric(metric_name);
 
-            if (metric_id == 0){
-                mDB.insert_metric(metric_name);
-                metric_id = mDB.check_metric(metric_name);
+            if (metric_id == 0) {
+                MetricName nameParts = mDB.split_metric_name(metric_name);
+                // Check the metric name after splitting because the original name
+                // may have been altered.
+                metric_id = mDB.check_metric(nameParts.getName());
                 if (metric_id == 0) {
-                    throw new Exception("could not determine metric name");
+                    mDB.insert_metric(nameParts.getName(), nameParts.getBaseName(), nameParts.getDomainName());
+                    metric_id = mDB.check_metric(nameParts.getName(), true);
+                    if (metric_id == 0) {
+                        throw new Exception("Could not determine ID for metric name");
+                    }
                 }
             }
             
@@ -193,7 +200,7 @@ public class ImpMetricValue extends BaseImport {
 
             mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, date, sprint_id, since_date, projectID);
         }
-
+        
         @Override
         public void close() throws Exception {
             mDB.close();

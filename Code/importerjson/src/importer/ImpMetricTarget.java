@@ -40,11 +40,13 @@ public class ImpMetricTarget extends BaseImport {
                 String type = (String) jsonObject.get("type");
                 String comment = (String) jsonObject.get("comment");
                 String revision = (String) jsonObject.get("revision");
+                String base_name = (String) jsonObject.get("base_name");
+                String domain_name = (String) jsonObject.get("domain_name");
                 
                 metric_id = metricDb.check_metric(name);
                 if (metric_id == 0) {
-                    metricDb.insert_metric(name);
-                    metric_id = metricDb.check_metric(name);
+                    metricDb.insert_metric(name, base_name, domain_name);
+                    metric_id = metricDb.check_metric(name, true);
                 }
                 
                 metricDb.insert_target(projectId, Integer.parseInt(revision), metric_id, type, Integer.parseInt(target), Integer.parseInt(low_target), comment);

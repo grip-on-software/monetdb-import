@@ -44,7 +44,7 @@ public class Importerjson {
 
         // Quality dashboard metrics
         groupedTasks.put("metrics", Arrays.asList(new String[]{
-            "metric_value", "metric_version", "metric_target"
+            "metric_target", "metric_value", "metric_version"
         }));
 
         // Version control systems and collaboration frontends (Git, GitHub, GitLab, TFS, SVN)
