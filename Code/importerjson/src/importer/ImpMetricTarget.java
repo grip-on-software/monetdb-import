@@ -5,9 +5,16 @@
  */
 package importer;
 
+import dao.BatchedStatement;
+import dao.DataSource;
 import dao.MetricDb;
+import dao.MetricDb.MetricName;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -59,6 +66,37 @@ public class ImpMetricTarget extends BaseImport {
             logException(ex);
         }
 
+    }
+    
+    public void updateDomainNames() {
+        String sql = "SELECT metric_id, name FROM gros.metric WHERE base_name IS NULL AND domain_name IS NULL";
+        String updateSql = "UPDATE gros.metric SET base_name = ?, domain_name = ? WHERE metric_id = ?";
+        try (
+            MetricDb metricDb = new MetricDb();
+            Connection con = DataSource.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            BatchedStatement bstmt = new BatchedStatement(updateSql)
+        ) {
+            while (rs.next()) {
+                PreparedStatement pstmt = bstmt.getPreparedStatement();
+                int metric_id = rs.getInt("metric_id");
+                String metric_name = rs.getString("name");
+                MetricName nameParts = metricDb.split_metric_name(metric_name);
+                if (nameParts.getBaseName() != null && nameParts.getDomainName() != null) {
+                    pstmt.setString(1, nameParts.getBaseName());
+                    pstmt.setString(2, nameParts.getDomainName());
+                    pstmt.setInt(3, metric_id);
+                    
+                    bstmt.batch();
+                }
+            }
+            
+            bstmt.execute();
+        }
+        catch (Exception ex) {
+            logException(ex);
+        }
     }
 
     @Override

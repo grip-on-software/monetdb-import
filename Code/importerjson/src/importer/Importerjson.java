@@ -76,7 +76,8 @@ public class Importerjson {
     }
     
     private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
-        "sprintlink", "developerproject", "developerlink", "encrypt"
+        "sprintlink", "developerproject", "developerlink", "metric_domain_name",
+        "encrypt"
     });
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
@@ -304,6 +305,16 @@ public class Importerjson {
             impCommit.showUnknownDevs();
             
             showCompleteTask("Fixed JIRA and VCS developer linking", startTime);
+        }
+        
+        if (tasks.contains("metric_domain_name")) {
+            ImpMetricTarget impMetric = new ImpMetricTarget();
+            
+            long startTime = System.currentTimeMillis();
+            
+            impMetric.updateDomainNames();
+                        
+            showCompleteTask("Updated metric domain names", startTime);            
         }
         
         if (tasks.contains("encrypt")) {        
