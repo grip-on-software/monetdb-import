@@ -26,8 +26,8 @@ import java.util.regex.Pattern;
 public class MetricDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkMetricStmt = null;
     private PreparedStatement insertMetricStmt = null;
-    private PreparedStatement updateMetricStmt = null;
-    private PreparedStatement deleteMetricStmt = null;
+    private BatchedStatement updateMetricStmt = null;
+    private BatchedStatement deleteMetricStmt = null;
     private BatchedStatement insertMetricValueStmt = null;
     private BatchedStatement updateMetricValueStmt = null;
     private PreparedStatement checkMetricVersionStmt = null;
@@ -81,7 +81,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     }
     
     public MetricDb() {
-        String sql = "insert into gros.metric_value(metric_id,value,category,date,sprint_id,since_date,project_id) values (?,?,?,?,?,?,?);";
+        String sql = "UPDATE gros.metric SET name = ?, base_name = ?, domain_name = ? WHERE metric_id = ?";
+        updateMetricStmt = new BatchedStatement(sql);
+        sql = "DELETE FROM gros.metric WHERE metric_id = ?";
+        deleteMetricStmt = new BatchedStatement(sql);
+        sql = "insert into gros.metric_value(metric_id,value,category,date,sprint_id,since_date,project_id) values (?,?,?,?,?,?,?);";
         insertMetricValueStmt = new BatchedStatement(sql);
         sql = "update gros.metric_value set metric_id = ? where metric_id = ?";
         updateMetricValueStmt = new BatchedStatement(sql);
@@ -113,7 +117,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         setString(insertMetricStmt, 2, name.getBaseName());
         setString(insertMetricStmt, 3, name.getDomainName());
         
-        // Insert immediately because we need to have the row available
+        // Insert immediately because we need to have the row available for the identifier.
         insertMetricStmt.execute();
         if (name.getBaseName() != null) {
             baseNameCache.add(name.getBaseName());
@@ -163,16 +167,12 @@ public class MetricDb extends BaseDb implements AutoCloseable {
             insertMetricStmt.close();
             insertMetricStmt = null;
         }
-        
-        if (updateMetricStmt != null) {
-            updateMetricStmt.close();
-            updateMetricStmt = null;
-        }
-        
-        if (deleteMetricStmt != null) {
-            deleteMetricStmt.close();
-            deleteMetricStmt = null;
-        }
+
+        updateMetricStmt.execute();
+        updateMetricStmt.close();
+
+        deleteMetricStmt.execute();
+        deleteMetricStmt.close();
         
         if (checkMetricVersionStmt != null) {
             checkMetricVersionStmt.close();
@@ -308,14 +308,6 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idMetric;
     }
     
-    private void getUpdateMetricStmt() throws SQLException, PropertyVetoException {
-        if (updateMetricStmt == null) {
-            Connection con = insertMetricValueStmt.getConnection();
-            String sql = "UPDATE gros.metric SET name = ?, base_name = ?, domain_name = ? WHERE metric_id = ?";
-            updateMetricStmt = con.prepareStatement(sql);
-        }
-    }
-    
     /**
      * Update a metric to refer to a different name.
      * @param metric_id The internal identifier of the metric.
@@ -326,33 +318,25 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void update_metric(int metric_id, String old_name, MetricName name) throws SQLException, PropertyVetoException {
-        getUpdateMetricStmt();
-        
         if (nameCache != null) {
             // Safety check based on cache
-            Integer cacheId = nameCache.get(caseFold(old_name));
+            String key = caseFold(old_name);
+            Integer cacheId = nameCache.get(key);
             if (cacheId != null && cacheId != metric_id) {
                 throw new IllegalArgumentException("Incorrect metric ID provided");
             }
             // Update the name cache to use the new name to refer to the metric ID
-            nameCache.remove(caseFold(old_name));
+            nameCache.put(key, 0);
             nameCache.put(caseFold(name.getName()), metric_id);
         }
         
-        updateMetricStmt.setString(1, name.getName());
-        setString(updateMetricStmt, 2, name.getBaseName());
-        setString(updateMetricStmt, 3, name.getDomainName());
-        updateMetricStmt.setInt(4, metric_id);
+        PreparedStatement pstmt = updateMetricStmt.getPreparedStatement();
+        pstmt.setString(1, name.getName());
+        setString(pstmt, 2, name.getBaseName());
+        setString(pstmt, 3, name.getDomainName());
+        pstmt.setInt(4, metric_id);
         
-        updateMetricStmt.execute();
-    }
-    
-    private void getDeleteMetricStmt() throws SQLException, PropertyVetoException {
-        if (deleteMetricStmt == null) {
-            Connection con = insertMetricValueStmt.getConnection();
-            String sql = "DELETE FROM gros.metric WHERE metric_id = ?";
-            deleteMetricStmt = con.prepareStatement(sql);
-        }
+        updateMetricStmt.batch();
     }
     
     /**
@@ -366,18 +350,20 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void delete_metric(int metric_id, String old_name, int other_id) throws SQLException, PropertyVetoException {
-        getDeleteMetricStmt();
-        
         if (nameCache != null) {
-            // Remove the name from the cache if it refers to this metric ID
-            nameCache.remove(caseFold(old_name), metric_id);
+            // Mark the name as removed in the cache, but only if it refers to this metric ID
+            String key = caseFold(old_name);
+            if (!nameCache.containsKey(key) || nameCache.get(key) == metric_id) {
+                nameCache.put(key, 0);
+            }
         }
         
-        deleteMetricStmt.setInt(1, metric_id);
-        deleteMetricStmt.execute();
+        PreparedStatement pstmt = deleteMetricStmt.getPreparedStatement();
+        pstmt.setInt(1, metric_id);
+        deleteMetricStmt.batch();
         
         // Refer to other metric in metric values.
-        PreparedStatement pstmt = updateMetricValueStmt.getPreparedStatement();
+        pstmt = updateMetricValueStmt.getPreparedStatement();
         pstmt.setInt(1, other_id);
         pstmt.setInt(2, metric_id);
         updateMetricValueStmt.batch();
