@@ -52,7 +52,7 @@ public class ImpMetricTarget extends BaseImport {
                 
                 metric_id = metricDb.check_metric(name);
                 if (metric_id == 0) {
-                    metricDb.insert_metric(name, base_name, domain_name);
+                    metricDb.insert_metric(new MetricName(name, base_name, domain_name));
                     metric_id = metricDb.check_metric(name, true);
                 }
                 
@@ -70,30 +70,34 @@ public class ImpMetricTarget extends BaseImport {
     
     public void updateDomainNames() {
         String sql = "SELECT metric_id, name FROM gros.metric WHERE base_name IS NULL AND domain_name IS NULL";
-        String updateSql = "UPDATE gros.metric SET name = ?, base_name = ?, domain_name = ? WHERE metric_id = ?";
         try (
             MetricDb metricDb = new MetricDb();
             Connection con = DataSource.getInstance().getConnection();
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            BatchedStatement bstmt = new BatchedStatement(updateSql)
         ) {
+            try (FileReader fr = new FileReader(getRootPath()+"/metric_base_names.json")) {
+                JSONParser parser = new JSONParser();
+                JSONArray a = (JSONArray) parser.parse(fr);
+                metricDb.load_metric_base_names(a);
+            }
+            catch (FileNotFoundException ex) {
+                getLogger().log(Level.WARNING, "Cannot load extra base names: {0}", ex.getMessage());
+            }
             while (rs.next()) {
-                PreparedStatement pstmt = bstmt.getPreparedStatement();
                 int metric_id = rs.getInt("metric_id");
                 String metric_name = rs.getString("name");
                 MetricName nameParts = metricDb.split_metric_name(metric_name, true);
                 if (nameParts.getBaseName() != null && nameParts.getDomainName() != null) {
-                    pstmt.setString(1, nameParts.getName());
-                    pstmt.setString(2, nameParts.getBaseName());
-                    pstmt.setString(3, nameParts.getDomainName());
-                    pstmt.setInt(4, metric_id);
-                    
-                    bstmt.batch();
+                    int other_metric_id = metricDb.check_metric(nameParts.getName());
+                    if (other_metric_id != 0 && other_metric_id != metric_id) {
+                        metricDb.delete_metric(metric_id, metric_name, other_metric_id);
+                    }
+                    else {
+                        metricDb.update_metric(metric_id, metric_name, nameParts);
+                    }
                 }
             }
-            
-            bstmt.execute();
         }
         catch (Exception ex) {
             logException(ex);

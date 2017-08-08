@@ -188,7 +188,7 @@ public class ImpMetricValue extends BaseImport {
                 // may have been altered.
                 metric_id = mDB.check_metric(nameParts.getName());
                 if (metric_id == 0) {
-                    mDB.insert_metric(nameParts.getName(), nameParts.getBaseName(), nameParts.getDomainName());
+                    mDB.insert_metric(nameParts);
                     metric_id = mDB.check_metric(nameParts.getName(), true);
                     if (metric_id == 0) {
                         throw new Exception("Could not determine ID for metric name");

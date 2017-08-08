@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Matcher;
@@ -24,27 +25,46 @@ import java.util.regex.Pattern;
  */
 public class MetricDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkMetricStmt = null;
-    private BatchedStatement insertMetricStmt = null;
+    private PreparedStatement insertMetricStmt = null;
+    private PreparedStatement updateMetricStmt = null;
+    private PreparedStatement deleteMetricStmt = null;
     private BatchedStatement insertMetricValueStmt = null;
+    private BatchedStatement updateMetricValueStmt = null;
     private PreparedStatement checkMetricVersionStmt = null;
     private BatchedStatement insertMetricVersionStmt = null;
     private BatchedStatement insertMetricTargetStmt = null;
     private HashMap<String, Integer> nameCache = null;
     private HashSet<String> baseNameCache = null;
     
+    /**
+     * Object describing a name of a metric as well as the components in it.
+     */
     public static class MetricName {
         private final String name;
         private final String base_name;
         private final String domain_name;
         
+        /**
+         * Create a metric name.
+         * @param name The name of the metric, possibly including project-specific
+         * domain names.
+         */
         public MetricName(String name) {
             this(name, null, null);
         }
         
+        /**
+         * Create a fully loaded metric name.
+         * @param name The name of the metric, possibly including project-specific
+         * domain names.
+         * @param base_name The base name of the metric, shared with other projects.
+         * @param domain_name The domain name of the metric, such as a project name,
+         * team name, or product name.
+         */
         public MetricName(String name, String base_name, String domain_name) {
             this.name = name;
-            this.base_name = name;
-            this.domain_name = name;
+            this.base_name = base_name;
+            this.domain_name = domain_name;
         }
         
         public String getName() {
@@ -61,37 +81,42 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     }
     
     public MetricDb() {
-        String sql = "insert into gros.metric(name,base_name,domain_name) values (?,?,?);";
-        insertMetricStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_value(metric_id,value,category,date,sprint_id,since_date,project_id) values (?,?,?,?,?,?,?);";
+        String sql = "insert into gros.metric_value(metric_id,value,category,date,sprint_id,since_date,project_id) values (?,?,?,?,?,?,?);";
         insertMetricValueStmt = new BatchedStatement(sql);
+        sql = "update gros.metric_value set metric_id = ? where metric_id = ?";
+        updateMetricValueStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_version(project_id,version_id,developer,message,commit_date,sprint_id) values (?,?,?,?,?,?);";
         insertMetricVersionStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
     }
     
+    private void getInsertMetricStmt() throws SQLException, PropertyVetoException {
+        if (insertMetricStmt == null) {
+            Connection con = insertMetricValueStmt.getConnection();
+            String sql = "insert into gros.metric(name,base_name,domain_name) values (?,?,?)";
+            insertMetricStmt = con.prepareStatement(sql);
+        }
+    }
+    
     /**
      * Insert a metric name into the metrics table.
-     * @param name The name of the metric, possibly including project-specific
-     * domain names.
-     * @param base_name The base name of the metric, shared with other projects.
-     * @param domain_name The domain name of the metric, such as a project name,
-     * team name, or product name.
+     * @param name Object describing the name of the metric, and possibly the
+     * components in the name.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_metric(String name, String base_name, String domain_name) throws SQLException, PropertyVetoException {
-        PreparedStatement pstmt = insertMetricStmt.getPreparedStatement();
+    public void insert_metric(MetricName name) throws SQLException, PropertyVetoException {
+        getInsertMetricStmt();
         
-        pstmt.setString(1, name);
-        setString(pstmt, 2, base_name);
-        setString(pstmt, 3, domain_name);
+        insertMetricStmt.setString(1, name.getName());
+        setString(insertMetricStmt, 2, name.getBaseName());
+        setString(insertMetricStmt, 3, name.getDomainName());
         
         // Insert immediately because we need to have the row available
-        pstmt.execute();
-        if (base_name != null) {
-            baseNameCache.add(base_name);
+        insertMetricStmt.execute();
+        if (name.getBaseName() != null) {
+            baseNameCache.add(name.getBaseName());
         }
     }
     
@@ -123,15 +148,30 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     
     @Override
     public void close() throws SQLException {
-        // All metric names are already commited
-        insertMetricStmt.close();
-        
         insertMetricValueStmt.execute();
         insertMetricValueStmt.close();
+        
+        updateMetricValueStmt.execute();
+        updateMetricValueStmt.close();
         
         if (checkMetricStmt != null) {
             checkMetricStmt.close();
             checkMetricStmt = null;
+        }
+        
+        if (insertMetricStmt != null) {
+            insertMetricStmt.close();
+            insertMetricStmt = null;
+        }
+        
+        if (updateMetricStmt != null) {
+            updateMetricStmt.close();
+            updateMetricStmt = null;
+        }
+        
+        if (deleteMetricStmt != null) {
+            deleteMetricStmt.close();
+            deleteMetricStmt = null;
         }
         
         if (checkMetricVersionStmt != null) {
@@ -143,7 +183,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         insertMetricTargetStmt.execute();
         insertMetricTargetStmt.close();
-        
+
+        clearCaches();
+    }
+    
+    private void getCheckMetricStmt() throws SQLException, PropertyVetoException {
+        if (checkMetricStmt == null) {
+            Connection con = insertMetricValueStmt.getConnection();
+            String sql = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = ?";
+            checkMetricStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    private void clearCaches() {
         if (nameCache != null) {
             nameCache.clear();
             nameCache = null;
@@ -153,13 +205,9 @@ public class MetricDb extends BaseDb implements AutoCloseable {
             baseNameCache = null;
         }
     }
-    
-    private void getCheckMetricStmt() throws SQLException, PropertyVetoException {
-        if (checkMetricStmt == null) {
-            Connection con = insertMetricStmt.getConnection();
-            String sql = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = ?";
-            checkMetricStmt = con.prepareStatement(sql);
-        }
+
+    private static String caseFold(String name) {
+        return name.toUpperCase().trim();
     }
     
     private void fillNameCache() throws SQLException, PropertyVetoException {
@@ -169,7 +217,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         nameCache = new HashMap<>();
         baseNameCache = new HashSet<>();
         
-        Connection con = insertMetricStmt.getConnection();
+        Connection con = insertMetricValueStmt.getConnection();
         String sql = "SELECT UPPER(name) AS key, base_name, metric_id FROM gros.metric";
         
         try (
@@ -186,6 +234,21 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 }
             }
         }
+    }
+    
+    /**
+     * Load a collection of base names into the base name cache.
+     * This is only used for matching base and domain names from metric names,
+     * and is not stored as is in the database. The cache is loaded based on
+     * existing database data and the base name cache.
+     * @param base_names The collection of base names to load
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void load_metric_base_names(Collection<String> base_names) throws SQLException, PropertyVetoException {
+        fillNameCache();
+        
+        baseNameCache.addAll(base_names);
     }
     
     /**
@@ -218,7 +281,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     public int check_metric(String name, boolean recache) throws SQLException, PropertyVetoException {
         fillNameCache();
         
-        String key = name.toUpperCase().trim();
+        String key = caseFold(name);
         Integer cacheId = nameCache.get(key);
         if (cacheId != null) {
             return cacheId;
@@ -245,7 +308,91 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return idMetric;
     }
     
-    public MetricName split_metric_name(String metric_name, boolean aggressive) throws Exception {
+    private void getUpdateMetricStmt() throws SQLException, PropertyVetoException {
+        if (updateMetricStmt == null) {
+            Connection con = insertMetricValueStmt.getConnection();
+            String sql = "UPDATE gros.metric SET name = ?, base_name = ?, domain_name = ? WHERE metric_id = ?";
+            updateMetricStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    /**
+     * Update a metric to refer to a different name.
+     * @param metric_id The internal identifier of the metric.
+     * @param old_name The old name of the metric
+     * @param name Object describing the new name of the metric, and possibly the
+     * components in the name.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void update_metric(int metric_id, String old_name, MetricName name) throws SQLException, PropertyVetoException {
+        getUpdateMetricStmt();
+        
+        if (nameCache != null) {
+            // Safety check based on cache
+            Integer cacheId = nameCache.get(caseFold(old_name));
+            if (cacheId != null && cacheId != metric_id) {
+                throw new IllegalArgumentException("Incorrect metric ID provided");
+            }
+            // Update the name cache to use the new name to refer to the metric ID
+            nameCache.remove(caseFold(old_name));
+            nameCache.put(caseFold(name.getName()), metric_id);
+        }
+        
+        updateMetricStmt.setString(1, name.getName());
+        setString(updateMetricStmt, 2, name.getBaseName());
+        setString(updateMetricStmt, 3, name.getDomainName());
+        updateMetricStmt.setInt(4, metric_id);
+        
+        updateMetricStmt.execute();
+    }
+    
+    private void getDeleteMetricStmt() throws SQLException, PropertyVetoException {
+        if (deleteMetricStmt == null) {
+            Connection con = insertMetricValueStmt.getConnection();
+            String sql = "DELETE FROM gros.metric WHERE metric_id = ?";
+            deleteMetricStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    /**
+     * Delete a metric by removing the name from the metrics table.
+     * This also updates the metric values to refer to another metric.
+     * Note that metric targets are not updated.
+     * @param metric_id The internal identifier of the metric.
+     * @param old_name The name of the metric that is removed.
+     * @param other_id The internal identifier of the metric to point values to.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void delete_metric(int metric_id, String old_name, int other_id) throws SQLException, PropertyVetoException {
+        getDeleteMetricStmt();
+        
+        if (nameCache != null) {
+            // Remove the name from the cache if it refers to this metric ID
+            nameCache.remove(caseFold(old_name), metric_id);
+        }
+        
+        deleteMetricStmt.setInt(1, metric_id);
+        deleteMetricStmt.execute();
+        
+        // Refer to other metric in metric values.
+        PreparedStatement pstmt = updateMetricValueStmt.getPreparedStatement();
+        pstmt.setInt(1, other_id);
+        pstmt.setInt(2, metric_id);
+        updateMetricValueStmt.batch();
+    }
+    
+    /**
+     * Split a metric name into an object describing its components.
+     * @param metric_name Name of the metric
+     * @param aggressive Whether to aggressively search for components
+     * @return An object describing the metric name, and the components found in
+     * the name if possible. The metric name itself may be changed as well.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public MetricName split_metric_name(String metric_name, boolean aggressive) throws SQLException, PropertyVetoException {
         fillNameCache();
         
         metric_name = metric_name.replaceFirst("<[A-Za-z.]+?([^.]+)(?: object at .*)>$", "$1");
@@ -256,7 +403,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
             Matcher matcher = pattern.matcher(base_name);
             if (matcher.find()) {
                 String domain_part = matcher.group();
-                String new_base_name = base_name.replaceFirst(domain_part + "$", "");
+                if (domain_part.isEmpty()) {
+                    // Match went wrong
+                    return new MetricName(metric_name);
+                }
+                String new_base_name = matcher.replaceFirst("");
                 if (base_name.equals(new_base_name)) {
                     // Cannot be split any further
                     return new MetricName(metric_name);
@@ -265,6 +416,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 domain_name = domain_part + domain_name;
             }
             else {
+                // No more match, so bail out
                 return new MetricName(metric_name);
             }
         }
@@ -273,7 +425,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
 
     private void getCheckVersionStmt() throws SQLException, PropertyVetoException {
         if (checkMetricVersionStmt == null) {
-            Connection con = insertMetricStmt.getConnection();
+            Connection con = insertMetricValueStmt.getConnection();
             String sql = "SELECT version_id FROM gros.metric_version WHERE project_id = ? AND version_id = ?";
             checkMetricVersionStmt = con.prepareStatement(sql);
         }
