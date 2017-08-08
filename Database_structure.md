@@ -778,6 +778,17 @@ dashboard project definition.
     -   **name** - VARCHAR(100): Amalgamated name of the metric, based
         on the type of metric and the component, product, team or other
         domain object it measures.
+    -   **base_name** - VARCHAR(100): Name of the metric that is being
+        measured, based on the class name from the quality report
+        repository used by the project definitions. There may be
+        multiple rows with the same base_name. This is NULL if the base
+        name has not been deduced yet.
+    -   **domain_name** - VARCHAR(100): Domain name that the metric
+        measures. This is often a component, product, team, build
+        street, repository name or other domain object. For some metrics
+        before August 2014, the domain name is the type of domain
+        object, e.g., 'Product' or 'Street'. This is NULL if the domain
+        name has not been deduced yet.
 
 
 -   **metric_value**: Singular metric data from quality report
