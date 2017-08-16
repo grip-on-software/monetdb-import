@@ -384,6 +384,15 @@ CREATE TABLE "gros"."commit_comment" (
 	"updated_date" TIMESTAMP NULL
 );
 
+CREATE TABLE "gros"."jenkins" (
+	"project_id" INTEGER NOT NULL,
+	"host" VARCHAR(255) NOT NULL,
+	"jobs" INTEGER NOT NULL,
+	"views" INTEGER NOT NULL,
+	"nodes" INTEGER NOT NULL,
+		CONSTRAINT "pk_jenkins_id" PRIMARY KEY("project_id", "host")
+);
+
 CREATE TABLE "gros"."reservation" (
 	"reservation_id" VARCHAR(10) NOT NULL,
 	"project_id" INTEGER NOT NULL,

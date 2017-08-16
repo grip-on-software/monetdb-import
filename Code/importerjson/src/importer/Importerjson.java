@@ -65,6 +65,8 @@ public class Importerjson {
         defaultTasks.addAll(GROUPED_TASKS.get("metrics"));
         defaultTasks.addAll(GROUPED_TASKS.get("vcs"));
         
+        // Jenkins
+        defaultTasks.add("jenkins");
         // Self-Service Desk
         defaultTasks.add("reservation");
         // Tracking
@@ -120,6 +122,7 @@ public class Importerjson {
         importers.put("merge_request_note", ImpMergeRequestNote.class);
         importers.put("commit_comment", ImpCommitComment.class);
         
+        importers.put("jenkins", ImpJenkins.class);
         importers.put("reservation", ImpReservation.class);
         importers.put("update", ImpUpdateTracker.class);
         
