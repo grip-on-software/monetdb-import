@@ -196,6 +196,11 @@ CREATE TABLE "gros"."sprint" (
 CREATE TABLE "gros"."project" (
 	"project_id"      INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL,
+	"main_project"    VARCHAR(100)   NULL,
+	"github_team"     VARCHAR(100)   NULL,
+	"gitlab_group"    VARCHAR(100)   NULL,
+	"quality_name"    VARCHAR(100)   NULL,
+	"quality_display_name"    VARCHAR(100)    NULL,
         CONSTRAINT "pk_project_id" PRIMARY KEY ("project_id")
 );
 
