@@ -283,8 +283,8 @@ such fields more thoroughly and uniformly.
     fields duplicate those of *developer*, but the values are encrypted
     differently and some of the fields of the latter table may be
     removed.
-    -   **project_id** - INT - reference to project.id: Project that the
-        JIRA developer worked on.
+    -   **project_id** - INT - reference to project.project_id: Project
+        that the JIRA developer worked on.
     -   **developer_id** - INT - reference to developer.id: Global
         version of the developer.
     -   **name** - VARCHAR(JIRA developer): Abbreviation of the JIRA
@@ -299,8 +299,8 @@ such fields more thoroughly and uniformly.
 -   **fixversion**: Indicators in JIRA issues of the version to fix the
     issue before that version is released.
     -   **id** - INT - primary key: Internal JIRA identifier
-    -   **project_id** - INT - reference to project.id: The project this
-        version belongs to.
+    -   **project_id** - INT - reference to project.project_id: The
+        project this version belongs to.
     -   **name** - VARCHAR(100): The name (version numbering scheme) of
         the release version.
     -   **description** - VARCHAR(500): Description provided to the
@@ -849,15 +849,27 @@ dashboard project definition.
     -   **comment** - TEXT: Comment for technical debt targets
         describing the reason of the norm change.
 
+## Build system tables (Jenkins)
+
+-   **jenkins**: Generic usage statistics retrieved from Jenkins.
+    Primary key is (project_id, host)
+    -   **project_id** - INT - reference to project.project_id: The
+        project to which the Jenkins instance belongs.
+    -   **host** - VARCHAR(255): Base host URL of the Jenkins instance.
+    -   **jobs** - INT: Number of jobs on the Jenkins instance.
+    -   **views** - INT: Number of views on the Jenkins instance.
+    -   **nodes** - INT: Number of computer nodes attached to the
+        Jenkins instance.
+
 ## Reservation tables (Topdesk)
 
 -   **reservation**: A reservation that is planned in the Topdesk
     self-service tool.
     -   **reservation_id** - VARCHAR(10) - primary key: Reservation
         identifier as a formatted number.
-    -   **project_id** - INT - reference to project.id: Project to which
-        the reservation belongs according to whitelist/blacklist
-        matching.
+    -   **project_id** - INT - reference to project.project_id: Project
+        to which the reservation belongs according to
+        whitelist/blacklist matching.
     -   **requester** - VARCHAR(500): Name of the person who requests
         the reservation.
     -   **number_of_people** - INT: Number of people that the
@@ -888,8 +900,8 @@ dashboard project definition.
 -   **update_tracker**: Files that keep track of where to start
     gathering data from for incremental updates and database
     synchronization.
-    -   **project_id** - INT - reference to project.id: The project to
-        which the tracker file belongs.
+    -   **project_id** - INT - reference to project.project_id: The
+        project to which the tracker file belongs.
     -   **filename** - VARCHAR(255): The name of the file (without path)
         that keeps track of the update state.
     -   **contents** - TEXT: The textual (JSON or otherwise readable)
@@ -900,8 +912,8 @@ dashboard project definition.
 
 -   **project_salt**: Project-specific hash pairs that are used for
     one-way encryption of [sensitive data](sensitive_data).
-    -   **project_id** - INT - reference to project.id: The project for
-        which the hash holds. If this is 0, then it indicates a global
-        hash pair.
+    -   **project_id** - INT - reference to project.project_id: The
+        project for which the hash holds. If this is 0, then it
+        indicates a global hash pair.
     -   **salt** - VARCHAR(32): First salt of the project data.
     -   **pepper** - VARCHAR(32): Second salt of the project data.
