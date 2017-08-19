@@ -164,7 +164,7 @@ CREATE TABLE "gros"."metric_value" (
 
 CREATE TABLE "gros"."metric_version" (
 	"project_id"     INTEGER     NOT NULL,
-	"version_id"     INTEGER     NOT NULL,
+	"version_id"     VARCHAR(100)     NOT NULL,
 	"developer"      VARCHAR(64) NOT NULL,
 	"message"        TEXT      NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE "gros"."metric_version" (
 
 CREATE TABLE "gros"."metric_target" (
 	"project_id"     INTEGER     NOT NULL,
-	"version_id"     INTEGER     NOT NULL,
+	"version_id"     VARCHAR(100)     NOT NULL,
 	"metric_id"      INTEGER     NOT NULL,
 	"type"           VARCHAR(100) NOT NULL,
 	"target"         INTEGER     NOT NULL,

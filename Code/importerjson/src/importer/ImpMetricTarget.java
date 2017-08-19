@@ -54,7 +54,7 @@ public class ImpMetricTarget extends BaseImport {
                     metric_id = metricDb.check_metric(name, true);
                 }
                 
-                metricDb.insert_target(projectId, Integer.parseInt(revision), metric_id, type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
+                metricDb.insert_target(projectId, revision, metric_id, type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
             }            
         }
         catch (FileNotFoundException ex) {

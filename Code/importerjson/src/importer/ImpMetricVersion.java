@@ -42,14 +42,13 @@ public class ImpMetricVersion extends BaseImport {
                 String revision = (String) jsonObject.get("version_id");
                 String date = (String) jsonObject.get("commit_date");
                 
-                int version = Integer.parseInt(revision);
-                version_id = metricDb.check_version(projectId, version);
+                version_id = metricDb.check_version(projectId, revision);
             
                 if (version_id == 0) {
                     Timestamp commit_date = Timestamp.valueOf(date);
                     int sprint_id = sprintDb.find_sprint(projectId, commit_date);
 
-                    metricDb.insert_version(projectId, version, developer, message, commit_date, sprint_id);
+                    metricDb.insert_version(projectId, revision, developer, message, commit_date, sprint_id);
                     
                 }
             }            

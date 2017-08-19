@@ -420,17 +420,17 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     /**
      * Check whether a metric version exists in the database.
      * @param projectId Identifier of the project to which the metric version change applies
-     * @param version The revision number of the change
+     * @param version The version identifier of the change
      * @return The revision number if the version exists, or 0 if it is not found
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int check_version(int projectId, int version) throws SQLException, PropertyVetoException {
+    public int check_version(int projectId, String version) throws SQLException, PropertyVetoException {
         getCheckVersionStmt();
         int idVersion = 0;
         
         checkMetricVersionStmt.setInt(1, projectId);
-        checkMetricVersionStmt.setInt(2, version);
+        checkMetricVersionStmt.setString(2, version);
         try (ResultSet rs = checkMetricVersionStmt.executeQuery()) {
             while (rs.next()) {
                 idVersion = rs.getInt("version_id");
@@ -443,7 +443,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     /**
      * Insert a new metric version in the database
      * @param projectId Identifier of the project to which the metric version change applies
-     * @param version The revision number of the change
+     * @param version The version identifier of the change
      * @param developer Shorthand name of the developer that made the change
      * @param message Commit message describing the change 
      * @param commit_date Timestamp at which the target change took place
@@ -451,11 +451,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_version(int projectId, int version, String developer, String message, Timestamp commit_date, int sprint_id) throws SQLException, PropertyVetoException {
+    public void insert_version(int projectId, String version, String developer, String message, Timestamp commit_date, int sprint_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricVersionStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
-        pstmt.setInt(2, version);
+        pstmt.setString(2, version);
         pstmt.setString(3, developer);
         pstmt.setString(4, message);
         pstmt.setTimestamp(5, commit_date);
@@ -467,7 +467,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     /**
      * Insert a new project-specific target norm change in the metric targets table.
      * @param projectId Identifier of the project to which the metric norm change applies
-     * @param version The revision number of the change
+     * @param version The version identifier of the change
      * @param metricId Identifier of the metric name
      * @param type The type of norm change: 'options', 'old_options', 'TechnicalDebtTarget' or 'DynamicTechnicalDebtTarget'
      * @param target The norm value at which the category changes from green to yellow
@@ -476,11 +476,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_target(int projectId, int version, int metricId, String type, int target, int low_target, String comment) throws SQLException, PropertyVetoException {
+    public void insert_target(int projectId, String version, int metricId, String type, int target, int low_target, String comment) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricTargetStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
-        pstmt.setInt(2, version);
+        pstmt.setString(2, version);
         pstmt.setInt(3, metricId);
         pstmt.setString(4, type);
         pstmt.setInt(5, target);
