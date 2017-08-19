@@ -30,7 +30,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         String sql = "insert into gros.fixversion(id,project_id,name,description,start_date,release_date,released) values (?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.fixversion set name=?, description=? start_date=?, release_date=?, released=? where id=? and project_id=?;";
+        sql = "update gros.fixversion set name=?, description=?, start_date=?, release_date=?, released=? where id=? and project_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
