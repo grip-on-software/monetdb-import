@@ -398,6 +398,15 @@ CREATE TABLE "gros"."jenkins" (
 		CONSTRAINT "pk_jenkins_id" PRIMARY KEY("project_id", "host")
 );
 
+CREATE TABLE "gros"."bigboat_status" (
+	"project_id" INTEGER NOT NULL,
+	"name" VARCHAR(100) NOT NULL,
+	"checked_date" TIMESTAMP NOT NULL,
+	"ok" BOOL NOT NULL,
+	"value" FLOAT NULL,
+	"max" FLOAT NULL
+);
+
 CREATE TABLE "gros"."reservation" (
 	"reservation_id" VARCHAR(10) NOT NULL,
 	"project_id" INTEGER NOT NULL,
