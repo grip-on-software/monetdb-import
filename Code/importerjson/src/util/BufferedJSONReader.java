@@ -48,7 +48,8 @@ public class BufferedJSONReader extends LineNumberReader {
      * The accepted JSON data must be empty, a string or an array of objects.
      * The data must be formatted in such as way that we can detect starts and
      * ends of strings, arrays and objects easily: no whitespace or empty lines,
-     * array starts and ends on their own line, and object ends with "},".
+     * array starts and ends on their own line, and object ends with "}," with
+     * no nesting of objects or arrays within the objects of tha main array.
      * @return Object The JSON object: Either a JSONObject containing the map
      * of keys and values in the object, or a String if the input stream consists
      * of only a JSON-encoded string, or null if the input stream consists of

@@ -29,6 +29,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import util.Bisect;
 import util.BufferedJSONReader;
 import util.StringReplacer;
 
@@ -37,15 +38,13 @@ import util.StringReplacer;
  * @author Enrique
  */
 public class ImpMetricValue extends BaseImport {
-    private static class MetricReader implements AutoCloseable {
-        private final JSONParser parser = new JSONParser();
+    private static class MetricCollector implements AutoCloseable {
         private MetricDb mDB = null;
         private SprintDb sprintDb = null;
         private final String path;
         private final int projectID;
-        private static final int BUFFER_SIZE = 65536;
         
-        public MetricReader(String path, int projectID) {
+        public MetricCollector(String path, int projectID) {
             this.mDB = new MetricDb();
             this.sprintDb = new SprintDb();
             this.path = path;
@@ -53,31 +52,130 @@ public class ImpMetricValue extends BaseImport {
         }
         
         private void readPath(String path) throws Exception {
-            if (path.contains("|")) {
-                String[] parts = path.split("\\|");
-                String filename = parts[0];
-                int start_from = Integer.parseInt(parts[1].substring(1));
-                try (InputStream is = new FileInputStream(filename)) {
-                    readGzip(is, start_from);
-                }
+            MetricReader reader;
+            if (path.contains("compact-history")) {
+                reader = new CompactHistoryReader(this);
             }
             else {
-                readNetworked(new URL(path));
+                reader = new HistoryReader(this);
+            }
+            
+            if (path.contains("|")) {
+                readLocal(reader, path);
+            }
+            else {
+                readNetworked(reader, new URL(path));
+            }
+        }
+        
+        private void readLocal(MetricReader reader, String path) throws Exception {
+            String[] parts = path.split("\\|");
+            String filename = parts[0];
+            reader.parseFragment(parts[1].substring(1));
+            try (InputStream is = new FileInputStream(filename)) {
+                reader.read(is);
             }
         }
 
-        private void readNetworked(URL url) throws Exception {
+        private void readNetworked(MetricReader reader, URL url) throws Exception {
             String fragment = url.getRef();
-            int start_from = Integer.parseInt(fragment);
+            reader.parseFragment(fragment);
             
             URLConnection con = url.openConnection();
             con.connect();
             try (InputStream is = con.getInputStream()) {
-                readGzip(is, start_from);
+                reader.read(is);
             }
         }
         
-        private void readGzip(InputStream is, int start_from) throws Exception {
+        public void readBufferedJSON(BufferedJSONReader br) throws Exception {
+            Object object;
+            while ((object = br.readObject()) != null) {
+                if (object instanceof String) {
+                    readPath((String) object);
+                    break;
+                }
+                else {
+                    handleObject((JSONObject) object);
+                }
+            }
+        }
+
+        private void handleObject(JSONObject jsonObject) throws Exception {
+            String metric_name = (String) jsonObject.get("name");
+            String value = (String) jsonObject.get("value");
+            String category = (String) jsonObject.get("category");
+            String date = (String) jsonObject.get("date");
+            String since_date = (String) jsonObject.get("since_date");
+
+            insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), Timestamp.valueOf(since_date));
+        }
+
+        public void insert(String metric_name, int value, String category, Timestamp date, Timestamp since_date) throws Exception {
+            // Using the metric name, check if the metric was not already stored
+            int metric_id = mDB.check_metric(metric_name);
+
+            if (metric_id == 0) {
+                MetricName nameParts = mDB.split_metric_name(metric_name, false);
+                // Check the metric name after splitting because the original name
+                // may have been altered.
+                metric_id = mDB.check_metric(nameParts.getName());
+                if (metric_id == 0) {
+                    mDB.insert_metric(nameParts);
+                    metric_id = mDB.check_metric(nameParts.getName(), true);
+                    if (metric_id == 0) {
+                        throw new Exception("Could not determine ID for metric name");
+                    }
+                }
+            }
+            
+            int sprint_id = sprintDb.find_sprint(projectID, date);
+
+            mDB.insert_metricValue(metric_id, value, category, date, sprint_id, since_date, projectID);
+        }
+        
+        @Override
+        public void close() throws Exception {
+            mDB.close();
+            sprintDb.close();
+        }
+
+        public String getPath() {
+            return path;
+        }
+    }
+    
+    private abstract static class MetricReader {
+        public static final int BUFFER_SIZE = 65536;
+        protected final MetricCollector collector;
+        
+        public MetricReader(MetricCollector collector) {
+            this.collector = collector;
+        }
+        
+        public abstract void parseFragment(String fragment);
+        public abstract void read(InputStream is) throws Exception;
+    }
+    
+    private final static class HistoryReader extends MetricReader {
+        private int start_from = 0;
+
+        public HistoryReader(MetricCollector collector) {
+            super(collector);
+        }
+
+        @Override
+        public void parseFragment(String fragment) {
+            try {
+                start_from = Integer.parseInt(fragment);
+            }
+            catch (NumberFormatException ex) {
+            }
+        }
+        
+        @Override
+        public void read(InputStream is) throws Exception {
+            JSONParser parser = new JSONParser();
             int line_count = 0;
             Boolean success = false;
             try (
@@ -134,7 +232,7 @@ public class ImpMetricValue extends BaseImport {
                                 since_date = null;
                             }
 
-                            insert(metric_name, value, category, date, since_date);
+                            collector.insert(metric_name, Integer.parseInt(value), category, date, since_date);
                         }
                     }
                 }
@@ -148,63 +246,86 @@ public class ImpMetricValue extends BaseImport {
                 // Do this upon midway failure as well, but not if we did not read further than the start line.
                 // If we failed somewhere midway, then next time start from the line we failed on.
                 if (line_count > start_from) {
-                    try (PrintWriter writer = new PrintWriter(path+"/history_line_count.txt")) {
+                    try (PrintWriter writer = new PrintWriter(collector.getPath()+"/history_line_count.txt")) {
                         writer.println(String.valueOf(success ? line_count : line_count-1));
                     }
                 }
             }
         }
+    }
+    
+    private final static class CompactHistoryReader extends MetricReader {
+        private String max_record_time = "";
 
-        public void readBufferedJSON(BufferedJSONReader br) throws Exception {
-            Object object;
-            while ((object = br.readObject()) != null) {
-                if (object instanceof String) {
-                    readPath((String) object);
-                    break;
-                }
-                else {
-                    handleObject((JSONObject) object);
-                }
-            }
-        }
-
-        private void handleObject(JSONObject jsonObject) throws Exception {        
-            String metric_name = (String) jsonObject.get("name");
-            String value = (String) jsonObject.get("value");
-            String category = (String) jsonObject.get("category");
-            String date = (String) jsonObject.get("date");
-            String since_date = (String) jsonObject.get("since_date");
-
-            insert(metric_name, value, category, Timestamp.valueOf(date), Timestamp.valueOf(since_date));
-        }
-
-        private void insert(String metric_name, String value, String category, Timestamp date, Timestamp since_date) throws Exception {
-            // Using the metric name, check if the metric was not already stored
-            int metric_id = mDB.check_metric(metric_name);
-
-            if (metric_id == 0) {
-                MetricName nameParts = mDB.split_metric_name(metric_name, false);
-                // Check the metric name after splitting because the original name
-                // may have been altered.
-                metric_id = mDB.check_metric(nameParts.getName());
-                if (metric_id == 0) {
-                    mDB.insert_metric(nameParts);
-                    metric_id = mDB.check_metric(nameParts.getName(), true);
-                    if (metric_id == 0) {
-                        throw new Exception("Could not determine ID for metric name");
-                    }
-                }
-            }
-            
-            int sprint_id = sprintDb.find_sprint(projectID, date);
-
-            mDB.insert_metricValue(metric_id, Integer.parseInt(value), category, date, sprint_id, since_date, projectID);
+        public CompactHistoryReader(MetricCollector collector) {
+            super(collector);
         }
         
         @Override
-        public void close() throws Exception {
-            mDB.close();
-            sprintDb.close();
+        public void parseFragment(String fragment) {
+            try {
+                Timestamp.valueOf(fragment);
+                max_record_time = fragment;
+            }
+            catch (IllegalArgumentException ex) {
+                
+            }
+        }
+        
+        @Override
+        public void read(InputStream is) throws Exception {
+            JSONParser parser = new JSONParser();
+            try (
+                GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
+                Reader reader = new InputStreamReader(gis, "UTF-8");
+            ) {
+                JSONObject object = (JSONObject) parser.parse(reader);
+                
+                JSONArray dateArray = (JSONArray) object.get("dates");
+                String[] dates = (String[]) dateArray.toArray();
+                int max_index = dateArray.size();
+                JSONObject metrics = (JSONObject) object.get("metrics");
+                
+                for (Iterator it = metrics.entrySet().iterator(); it.hasNext();) {
+                    int previous_index = 0;
+                    Map.Entry pair = (Map.Entry)it.next();
+                    String metric_name = (String) pair.getKey();
+                    JSONArray data = (JSONArray) pair.getValue();
+                    
+                    for (Object record : data) {
+                        JSONObject measurement = (JSONObject) record;
+                        String start_time = (String) measurement.get("start");
+                        String end_time = (String) measurement.get("end");
+                        String status = (String) measurement.get("status");
+                        int value = (int) measurement.getOrDefault("value", -1);
+
+                        Timestamp since_date = Timestamp.valueOf(start_time);
+                        if (start_time.compareTo(max_record_time) < 0) {
+                            start_time = max_record_time;
+                        }
+                        
+                        int start_index = Bisect.bisectLeft(dates, start_time, previous_index, max_index);
+                        int end_index = Bisect.bisectLeft(dates, end_time, start_index, max_index);
+                        for (int i = start_index; i < end_index; i++) {
+                            String date = dates[i];
+                            collector.insert(metric_name, value, status, Timestamp.valueOf(date), since_date);
+                        }
+                        
+                        previous_index = end_index;
+                        if (end_time.compareTo(max_record_time) > 0) {
+                            max_record_time = end_time;
+                        }
+                    }
+                }
+                
+                // Write a progress file so that we can read new metric value
+                // additions later on. Only do this if the import succeeds.
+                if (!max_record_time.isEmpty()) {
+                    try (PrintWriter writer = new PrintWriter(collector.getPath()+"/history_record_time.txt")) {
+                        writer.println(String.valueOf(max_record_time));
+                    }
+                }
+            }            
         }
     }
 
@@ -213,11 +334,11 @@ public class ImpMetricValue extends BaseImport {
         String path = getPath()+getProjectName();
 
         try (
-            MetricReader reader = new MetricReader(path, this.getProjectID());
+            MetricCollector collector = new MetricCollector(path, this.getProjectID());
             // Read metrics JSON using buffered readers so that Java does not run out of memory
             BufferedJSONReader br = new BufferedJSONReader(new FileReader(path+"/data_metrics.json"))
         ) {
-            reader.readBufferedJSON(br);
+            collector.readBufferedJSON(br);
         }
         catch (FileNotFoundException ex) {
             getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
