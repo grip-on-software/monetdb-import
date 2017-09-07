@@ -148,6 +148,7 @@ public class ImpMetricValue extends BaseImport {
     private abstract static class MetricReader {
         public static final int BUFFER_SIZE = 65536;
         protected final MetricCollector collector;
+        protected final static Logger LOGGER = Logger.getLogger("importer");
         
         public MetricReader(MetricCollector collector) {
             this.collector = collector;
@@ -209,7 +210,7 @@ public class ImpMetricValue extends BaseImport {
                         date = Timestamp.valueOf((String) metric_row.get("date"));
                     }
                     catch (IllegalArgumentException ex) {
-                        Logger.getLogger("importer").logp(Level.SEVERE, "MetricReader", "readGzip", "Date parsing exception", ex);
+                        LOGGER.logp(Level.SEVERE, "MetricReader", "readGzip", "Date parsing exception", ex);
                         continue;
                     }
                     
@@ -287,34 +288,12 @@ public class ImpMetricValue extends BaseImport {
                 JSONObject metrics = (JSONObject) object.get("metrics");
                 
                 for (Iterator it = metrics.entrySet().iterator(); it.hasNext();) {
-                    int previous_index = 0;
                     Map.Entry pair = (Map.Entry)it.next();
                     String metric_name = (String) pair.getKey();
                     JSONArray data = (JSONArray) pair.getValue();
                     
-                    for (Object record : data) {
-                        JSONObject measurement = (JSONObject) record;
-                        String start_time = (String) measurement.get("start");
-                        String end_time = (String) measurement.get("end");
-                        String status = (String) measurement.get("status");
-                        int value = (int) measurement.getOrDefault("value", -1);
-
-                        Timestamp since_date = Timestamp.valueOf(start_time);
-                        if (start_time.compareTo(max_record_time) < 0) {
-                            start_time = max_record_time;
-                        }
-                        
-                        int start_index = Bisect.bisectLeft(dates, start_time, previous_index, max_index);
-                        int end_index = Bisect.bisectLeft(dates, end_time, start_index, max_index);
-                        for (int i = start_index; i < end_index; i++) {
-                            String date = dates[i];
-                            collector.insert(metric_name, value, status, Timestamp.valueOf(date), since_date);
-                        }
-                        
-                        previous_index = end_index;
-                        if (end_time.compareTo(max_record_time) > 0) {
-                            max_record_time = end_time;
-                        }
+                    if (!parseMetric(metric_name, data, dates, max_index)) {
+                        break;
                     }
                 }
                 
@@ -325,7 +304,47 @@ public class ImpMetricValue extends BaseImport {
                         writer.println(String.valueOf(max_record_time));
                     }
                 }
-            }            
+            }
+        }
+
+        private boolean parseMetric(String metric_name, JSONArray data, String[] dates, int max_index) throws Exception {
+            int previous_index = 0;
+            for (Object record : data) {
+                JSONObject measurement = (JSONObject) record;
+                String start_time = (String) measurement.get("start");
+                String end_time = (String) measurement.get("end");
+                String status = (String) measurement.get("status");
+                int value = (int) measurement.getOrDefault("value", -1);
+
+                Timestamp since_date = Timestamp.valueOf(start_time);
+                if (start_time.compareTo(max_record_time) < 0) {
+                    start_time = max_record_time;
+                }
+
+                int start_index = Bisect.bisectLeft(dates, start_time, previous_index, max_index);
+                if (start_index >= max_index) {
+                    LOGGER.log(Level.INFO, "Start time {0} with index {1} out of range ({2}, {3})", new Object[]{start_time, start_index, previous_index, max_index});
+                    return false;
+                }
+                int end_index = Bisect.bisectLeft(dates, end_time, start_index, max_index);
+                
+                for (int i = start_index; i < end_index; i++) {
+                    String date = dates[i];
+                    collector.insert(metric_name, value, status, Timestamp.valueOf(date), since_date);
+                }
+
+                previous_index = end_index;
+                if (end_time.compareTo(max_record_time) > 0) {
+                    max_record_time = end_time;
+                }
+                
+                if (end_index >= max_index) {
+                    LOGGER.log(Level.WARNING, "End time {0} with index {1} went out of range, max index is {2}", new Object[]{end_time, end_index, max_index});
+                    return true;
+                }
+            }
+            
+            return true;
         }
     }
 

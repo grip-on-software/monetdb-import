@@ -27,7 +27,7 @@ public class BaseDb {
     private String password;
     private final String rootPath;
     private String path;
-    private Logger logger;
+    private static final Logger LOGGER = Logger.getLogger("importer");
     
     public BaseDb() {
         try {
@@ -46,7 +46,6 @@ public class BaseDb {
         rootPath = dir.toString() + "/";
         String relPath = getProperty("relPath");
         path = rootPath + relPath + "/";
-        logger = Logger.getLogger("importer");
     }
     
     /**
@@ -66,13 +65,13 @@ public class BaseDb {
     protected final void logException(Exception ex) {
         // Get the source method
         StackTraceElement source = Thread.currentThread().getStackTrace()[2];
-        logger.logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Exception", ex);
+        LOGGER.logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Exception", ex);
 
         if (ex instanceof SQLException) {
             SQLException prev = (SQLException)ex;
             SQLException next = prev.getNextException();
             while (next != null && !next.getMessage().equals(prev.getMessage())) {
-                logger.logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Earlier exception", next);
+                LOGGER.logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Earlier exception", next);
                 prev = next;
                 next = prev.getNextException();
             }
@@ -84,7 +83,7 @@ public class BaseDb {
      * @return The logger
      */
     protected final Logger getLogger() {
-        return logger;
+        return LOGGER;
     }
     
     /**
