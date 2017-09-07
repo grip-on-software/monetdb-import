@@ -317,15 +317,26 @@ public class ImpMetricValue extends BaseImport {
                 int value = (int) measurement.getOrDefault("value", -1);
 
                 Timestamp since_date = Timestamp.valueOf(start_time);
+
+                // Search for the indexes of the dates that correspond with the
+                // start and end dates, such that we can loop over this range to
+                // add all measurement dates. For the start time, use right
+                // bisection if the start time is set from the max record time.
+                // In all other cases, use left bisection.
+
+                int start_index;
                 if (start_time.compareTo(max_record_time) < 0) {
                     start_time = max_record_time;
+                    start_index = Bisect.bisectRight(dates, start_time, previous_index, max_index);
                 }
-
-                int start_index = Bisect.bisectLeft(dates, start_time, previous_index, max_index);
+                else {
+                    start_index = Bisect.bisectLeft(dates, start_time, previous_index, max_index);
+                }
                 if (start_index >= max_index) {
                     LOGGER.log(Level.INFO, "Start time {0} with index {1} out of range ({2}, {3})", new Object[]{start_time, start_index, previous_index, max_index});
                     return false;
                 }
+                
                 int end_index = Bisect.bisectLeft(dates, end_time, start_index, max_index);
                 
                 for (int i = start_index; i < end_index; i++) {
@@ -333,6 +344,7 @@ public class ImpMetricValue extends BaseImport {
                     collector.insert(metric_name, value, status, Timestamp.valueOf(date), since_date);
                 }
 
+                // Track latest date indices and new dates.
                 previous_index = end_index;
                 if (end_time.compareTo(max_record_time) > 0) {
                     max_record_time = end_time;

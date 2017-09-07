@@ -37,6 +37,31 @@ public class Bisect {
 
     /**
      * Locate the index at which the key should be inserted into the array in
+     * order to keep the sorted order of the specified range in the array.
+     * If the key is equal to one of the elements in the range, then the
+     * returned index is the one after this element.
+     * 
+     * The range must be sorted into ascending order according to the natural
+     * ordering of its elements prior to making this call. If it is not sorted,
+     * the results are undefined. (If the range contains elements that are not
+     * mutually comparable (for example, strings and integers), it cannot be
+     * sorted according to the natural ordering of its elements, hence results
+     * are undefined.) If the range contains multiple elements equal to the
+     * specified object, there is no guarantee which index is returned.
+     * @param array The array to be searched
+     * @param key The value to be searched for
+     * @param from_index The index of the first element to consider in the
+     * bisection search. The range includes this element.
+     * @param to_index The index after the last element to consider in the
+     * bisection search. The range excludes this element.
+     * @return The index to insert at
+     */
+    public static int bisectRight(Object[] array, Object key, int from_index, int to_index) {
+        return Math.abs(Arrays.binarySearch(array, from_index, to_index, key) + 1);
+    }
+    
+    /**
+     * Locate the index at which the key should be inserted into the array in
      * order to keep the sorted order of the array. If the key is equal to one
      * of the elements in the array, then the returned index corresponds to this
      * element's position in the array.
