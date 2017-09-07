@@ -30,6 +30,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private BatchedStatement deleteMetricStmt = null;
     private BatchedStatement insertMetricValueStmt = null;
     private BatchedStatement updateMetricValueStmt = null;
+    private PreparedStatement latestMetricDateStmt = null;
     private PreparedStatement checkMetricVersionStmt = null;
     private BatchedStatement insertMetricVersionStmt = null;
     private BatchedStatement insertMetricTargetStmt = null;
@@ -148,6 +149,35 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(7, project);
                     
         insertMetricValueStmt.batch();
+    }
+
+    private void getLatestMetricDateStmt() throws SQLException, PropertyVetoException {
+        if (latestMetricDateStmt == null) {
+            Connection con = insertMetricValueStmt.getConnection();
+            String sql = "select max(date) as latest_date from gros.metric_value where project_id=?";
+            latestMetricDateStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    /**
+     * Retrieve the latest date within all metric value measurements for the
+     * given project.
+     * @param project_id Identifier of the project in which the measurements were made
+     * @return A timestamp of the latest date, or null if there are no measurements
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public Timestamp get_latest_metric_date(int project_id) throws SQLException, PropertyVetoException {
+        getLatestMetricDateStmt();
+        
+        latestMetricDateStmt.setInt(1, project_id);
+        
+        try (ResultSet rs = latestMetricDateStmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getTimestamp("latest_date");
+            }
+        }
+        return null;
     }
     
     @Override

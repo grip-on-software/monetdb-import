@@ -9,6 +9,7 @@ import util.BaseImport;
 import dao.MetricDb;
 import dao.MetricDb.MetricName;
 import dao.SprintDb;
+import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,7 +20,9 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
@@ -264,12 +267,24 @@ public class ImpMetricValue extends BaseImport {
         
         @Override
         public void parseFragment(String fragment) {
-            try {
-                Timestamp.valueOf(fragment);
-                max_record_time = fragment;
+            if ("0".equals(fragment)) {
+                try {
+                    Timestamp latest_date = collector.mDB.get_latest_metric_date(collector.projectID);
+                    if (latest_date != null) {
+                        max_record_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(latest_date);
+                    }
+                } catch (SQLException | PropertyVetoException ex) {
+                    LOGGER.log(Level.SEVERE, null, ex);
+                }
             }
-            catch (IllegalArgumentException ex) {
-                
+            else {
+                try {
+                    Timestamp.valueOf(fragment);
+                    max_record_time = fragment;
+                }
+                catch (IllegalArgumentException ex) {
+
+                }
             }
         }
         
