@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -263,6 +262,7 @@ public class ImpMetricValue extends BaseImport {
     
     private final static class CompactHistoryReader extends MetricReader {
         private String max_record_time = "";
+        private String current_record_time = "";
 
         public CompactHistoryReader(MetricCollector collector) {
             super(collector);
@@ -289,6 +289,7 @@ public class ImpMetricValue extends BaseImport {
 
                 }
             }
+            current_record_time = max_record_time;
         }
         
         @Override
@@ -340,7 +341,7 @@ public class ImpMetricValue extends BaseImport {
                 String start_time = (String) measurement.get("start");
                 String end_time = (String) measurement.get("end");
                 String status = (String) measurement.get("status");
-                int value = (int) measurement.getOrDefault("value", -1);
+                Long value = (Long)measurement.getOrDefault("value", -1L);
 
                 Timestamp since_date = Timestamp.valueOf(start_time);
 
@@ -351,8 +352,8 @@ public class ImpMetricValue extends BaseImport {
                 // In all other cases, use left bisection.
 
                 int start_index;
-                if (start_time.compareTo(max_record_time) < 0) {
-                    start_time = max_record_time;
+                if (start_time.compareTo(current_record_time) < 0) {
+                    start_time = current_record_time;
                     start_index = Bisect.bisectRight(dates, start_time, previous_index, max_index);
                 }
                 else {
@@ -367,7 +368,7 @@ public class ImpMetricValue extends BaseImport {
                 
                 for (int i = start_index; i < end_index; i++) {
                     String date = dates[i];
-                    collector.insert(metric_name, value, status, Timestamp.valueOf(date), since_date);
+                    collector.insert(metric_name, value.intValue(), status, Timestamp.valueOf(date), since_date);
                 }
 
                 // Track latest date indices and new dates.
