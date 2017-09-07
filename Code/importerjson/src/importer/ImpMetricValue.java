@@ -23,7 +23,10 @@ import java.net.URLConnection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -298,8 +301,8 @@ public class ImpMetricValue extends BaseImport {
                 JSONObject object = (JSONObject) parser.parse(reader);
                 
                 JSONArray dateArray = (JSONArray) object.get("dates");
-                String[] dates = (String[]) dateArray.toArray();
                 int max_index = dateArray.size();
+                String[] dates = parseDates(dateArray, max_index);
                 JSONObject metrics = (JSONObject) object.get("metrics");
                 
                 for (Iterator it = metrics.entrySet().iterator(); it.hasNext();) {
@@ -320,6 +323,14 @@ public class ImpMetricValue extends BaseImport {
                     }
                 }
             }
+        }
+        
+        private String[] parseDates(JSONArray dateArray, int length) {
+            List<String> dateList = new ArrayList<>();
+            for (Object item : dateArray) {
+                dateList.add((String)item);
+            }
+            return dateList.toArray(new String[length]);
         }
 
         private boolean parseMetric(String metric_name, JSONArray data, String[] dates, int max_index) throws Exception {
