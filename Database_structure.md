@@ -849,6 +849,28 @@ dashboard project definition.
     -   **comment** - TEXT: Comment for technical debt targets
         describing the reason of the norm change.
 
+## Docker dashboard tables (BigBoat)
+
+-   **bigboat_status**: Environment health status metrics that are
+    regularly retrieved from the Docker dashboard by the data gathering
+    agent.
+    -   **project_id** - INT - reference to project.project_id: The
+        project to which the dashboard instance belongs.
+    -   **name** - VARCHAR(100): The name of the health status metric as
+        displayed in the dashboard.
+    -   **checked_date** - TIMESTAMP: The time at which the health
+        status information was refreshed.
+    -   **ok** - BOOL: Whether the health status is OK, and the
+        dashboard is thus functioning normally.
+    -   **value** - FLOAT: The value of the health status metric at the
+        time it was refreshed. This is NULL if the numeric value is not
+        available for this metric or was unknown at the time of
+        collection.
+    -   **max** - FLOAT: The maximum reachable value of the health
+        status metric at the time it was refreshed. This is NULL if the
+        numeric value is not available for this metric or was unknown at
+        the time of collection.
+
 ## Build system tables (Jenkins)
 
 -   **jenkins**: Generic usage statistics retrieved from Jenkins.
