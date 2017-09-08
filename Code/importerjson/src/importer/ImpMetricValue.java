@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,35 +58,51 @@ public class ImpMetricValue extends BaseImport {
         }
         
         private void readPath(String path) throws Exception {
+            // Parse the path, consisting of the actual location followed by
+            // a fragment identifier (#), after which we have a list of flags,
+            // delimited by vertical bars (|). The first flag is always the
+            // tracker record from which to start reading the history file.
+            // Other flags are "compact" to use a compact history reader, and
+            // "local" to indicate that the path is a local file.
+            String[] parts = path.split("#");
+            String location = parts[0];
+            List<String> flags = Arrays.asList(parts[1].split("\\|"));
+            
             MetricReader reader;
-            if (path.contains("compact-history")) {
+            if (flags.contains("compact")) {
                 reader = new CompactHistoryReader(this);
             }
             else {
                 reader = new HistoryReader(this);
             }
             
-            if (path.contains("|")) {
-                readLocal(reader, path);
+            reader.parseFragment(flags.get(0));
+            
+            // For compatibility, locations ending in a vertical bar are local.
+            boolean local;
+            if (location.endsWith("|")) {
+                location = location.substring(0, location.length() - 1);
+                local = true;
             }
             else {
-                readNetworked(reader, new URL(path));
+                local = flags.contains("local");
+            }
+            
+            if (local) {
+                readLocal(reader, location);
+            }
+            else {
+                readNetworked(reader, new URL(location));
             }
         }
         
         private void readLocal(MetricReader reader, String path) throws Exception {
-            String[] parts = path.split("\\|");
-            String filename = parts[0];
-            reader.parseFragment(parts[1].substring(1));
-            try (InputStream is = new FileInputStream(filename)) {
+            try (InputStream is = new FileInputStream(path)) {
                 reader.read(is);
             }
         }
 
         private void readNetworked(MetricReader reader, URL url) throws Exception {
-            String fragment = url.getRef();
-            reader.parseFragment(fragment);
-            
             URLConnection con = url.openConnection();
             con.connect();
             try (InputStream is = con.getInputStream()) {
