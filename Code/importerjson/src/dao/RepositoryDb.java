@@ -250,7 +250,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     public void update_repo_sources(int project_id) throws SQLException, PropertyVetoException {
         fillSourceCache(project_id);
         
-        String sql = "update gros.repo set \"type\" = ?, url = ? where name = ? and project_id = ?";
+        String sql = "update gros.repo set \"type\" = ?, url = ? where repo_name = ? and project_id = ?";
         try (BatchedStatement bstmt = new BatchedStatement(sql)) {
             PreparedStatement pstmt = bstmt.getPreparedStatement();
             for (Map.Entry<String, Source> pair : sourceCache.get(project_id).entrySet()) {
