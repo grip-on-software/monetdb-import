@@ -461,6 +461,12 @@ These tables include data from Gitlab/Git and Subversion.
     -   **project_id** - INTEGER - reference to project.project_id: The
         project to which the repository belongs to. This, alongside the
         *id*, distinguishes repositories with the same name.
+    -   **type** - VARCHAR(32): The literal type of the source related
+        to the repository. This is null if the source information is not
+        available.
+    -   **url** - VARCHAR(255): The URL to the source related to the
+        repository. This is null if the source information is not
+        available.
 
 
 -   **change_path**: Statistics on files that are changed in versions in
