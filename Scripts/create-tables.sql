@@ -391,6 +391,13 @@ CREATE TABLE "gros"."commit_comment" (
 	"updated_date" TIMESTAMP NULL
 );
 
+CREATE TABLE "gros"."source_environment" (
+	"project_id" INTEGER NOT NULL,
+	"source_type" VARCHAR(32) NULL,
+	"url" VARCHAR(255) NOT NULL,
+		CONSTRAINT "pk_source_environment_id" PRIMARY KEY ("project_id", "url")
+);
+
 CREATE TABLE "gros"."jenkins" (
 	"project_id" INTEGER NOT NULL,
 	"host" VARCHAR(255) NOT NULL,
