@@ -393,9 +393,10 @@ CREATE TABLE "gros"."commit_comment" (
 
 CREATE TABLE "gros"."source_environment" (
 	"project_id" INTEGER NOT NULL,
-	"source_type" VARCHAR(32) NULL,
+	"source_type" VARCHAR(32) NOT NULL,
 	"url" VARCHAR(255) NOT NULL,
-		CONSTRAINT "pk_source_environment_id" PRIMARY KEY ("project_id", "source_type", "url")
+	"environment" VARCHAR(500) NOT NULL,
+		CONSTRAINT "pk_source_environment_id" PRIMARY KEY ("project_id", "source_type", "environment")
 );
 
 CREATE TABLE "gros"."jenkins" (

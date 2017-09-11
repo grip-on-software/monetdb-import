@@ -36,18 +36,9 @@ public class ImpEnvironment extends BaseImport {
                 
                 Object environment = jsonObject.get("environment");
                 String type = (String) jsonObject.get("type");
-                String url = null;
-                if (environment instanceof String) {
-                    url = (String) environment;
-                }
-                else if (environment instanceof JSONArray) {
-                    JSONArray environmentArray = (JSONArray) environment;
-                    url = (String) environmentArray.get(0);
-                }
-                if (url != null) {
-                    if (!envDb.check_source(project, url)) {
-                        envDb.insert_source(project, type, url);
-                    }
+                String url = (String) jsonObject.get("url");
+                if (url != null && !envDb.check_source(project, environment.toString())) {
+                    envDb.insert_source(project, type, url, environment.toString());
                 }
             }
         }
