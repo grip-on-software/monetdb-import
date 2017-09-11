@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -237,6 +238,33 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         catch (Exception ex) {
             logException(ex);
         }        
+    }
+    
+    /**
+     * Alter the source type and URL stored in the database for the repositories
+     * of the given project based on the collected data sources.
+     * @param project_id The project for which to update the repositories.
+     * @throws SQLException
+     * @throws PropertyVetoException 
+     */
+    public void update_repo_sources(int project_id) throws SQLException, PropertyVetoException {
+        fillSourceCache(project_id);
+        
+        String sql = "update gros.repo set \"type\" = ?, url = ? where name = ? and project_id = ?";
+        try (BatchedStatement bstmt = new BatchedStatement(sql)) {
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
+            for (Map.Entry<String, Source> pair : sourceCache.get(project_id).entrySet()) {
+                String name = pair.getKey();
+                Source source = pair.getValue();
+
+                pstmt.setString(1, source.getType());
+                pstmt.setString(2, source.getURL());
+                pstmt.setString(3, name);
+                pstmt.setInt(4, project_id);
+                bstmt.batch();
+            }
+            bstmt.execute();
+        }
     }
     
     /**

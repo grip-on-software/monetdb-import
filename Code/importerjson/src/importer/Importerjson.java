@@ -5,6 +5,7 @@
  */
 package importer;
 
+import dao.RepositoryDb;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class Importerjson {
     
     private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
         "sprintlink", "developerproject", "developerlink", "metric_domain_name",
-        "encrypt"
+        "repo_sources", "encrypt"
     });
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
@@ -318,6 +319,18 @@ public class Importerjson {
             impMetric.updateDomainNames();
                         
             showCompleteTask("Updated metric domain names", startTime);            
+        }
+        
+        if (tasks.contains("repo_source")) {
+            long startTime = System.currentTimeMillis();
+            
+            try (RepositoryDb repoDb = new RepositoryDb()) {
+                repoDb.update_repo_sources(projectID);
+                showCompleteTask("Updated repository sources", startTime);
+            }
+            catch (Exception ex) {
+                LOGGER.log(Level.SEVERE, "Cannot update repository sources", ex);
+            }
         }
         
         if (tasks.contains("encrypt")) {        
