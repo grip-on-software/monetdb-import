@@ -880,12 +880,15 @@ dashboard project definition.
 ## Source tables (Quality dashboard project definitions)
 
 -   **source_environment**: Environments that certain sources may share.
-    Primary key is (project_id, source_type, url).
+    Primary key is (project_id, source_type, environment).
     -   **project_id** - INT - reference to project.project_id: The
         project in which the environment lives.
     -   **source_type** - VARCHAR(32): The type of the representative
         source in the environment.
     -   **url** - VARCHAR(255): The URL to the source environment.
+    -   **environment** - VARCHAR(500): The descriptor of the
+        environment. This may be equal to the URL or it is a
+        JSON-serialized array of elements that identify the environment.
 
 ## Build system tables (Jenkins)
 
