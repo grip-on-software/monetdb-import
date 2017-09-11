@@ -249,6 +249,10 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
      */
     public void update_repo_sources(int project_id) throws SQLException, PropertyVetoException {
         fillSourceCache(project_id);
+        if (!sourceCache.containsKey(project_id)) {
+            getLogger().log(Level.WARNING, "Project has no sources");
+            return;
+        }
         
         String sql = "update gros.repo set \"type\" = ?, url = ? where repo_name = ? and project_id = ?";
         try (BatchedStatement bstmt = new BatchedStatement(sql)) {
