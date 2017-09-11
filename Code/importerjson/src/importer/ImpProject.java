@@ -7,7 +7,9 @@ package importer;
 
 import util.BaseImport;
 import dao.ProjectDb;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.logging.Level;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -44,6 +46,9 @@ public class ImpProject extends BaseImport {
                 quality_name = (String) jsonObject.get("quality_name");
                 quality_display_name = (String) jsonObject.get("quality_display_name");
                 has_metadata = true;
+            }
+            catch (FileNotFoundException ex) {
+                getLogger().log(Level.WARNING, "Cannot import {0} (only the JIRA key): {1}", new Object[]{getImportName(), ex.getMessage()});
             }
             catch (Exception ex) {
                 logException(ex);
