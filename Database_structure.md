@@ -877,6 +877,16 @@ dashboard project definition.
         numeric value is not available for this metric or was unknown at
         the time of collection.
 
+## Source tables (Quality dashboard project definitions)
+
+-   **source_environment**: Environments that certain sources may share.
+    Primary key is (project_id, source_type, url).
+    -   **project_id** - INT - reference to project.project_id: The
+        project in which the environment lives.
+    -   **source_type** - VARCHAR(32): The type of the representative
+        source in the environment.
+    -   **url** - VARCHAR(255): The URL to the source environment.
+
 ## Build system tables (Jenkins)
 
 -   **jenkins**: Generic usage statistics retrieved from Jenkins.
