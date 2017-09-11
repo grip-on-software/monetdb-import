@@ -29,16 +29,20 @@ public class ImpJenkins extends BaseImport {
         ) {
             JSONObject jsonObject = (JSONObject) parser.parse(fr);
             String host = (String) jsonObject.get("host");
-            int jobs = (int) jsonObject.get("jobs");
-            int views = (int) jsonObject.get("views");
-            int nodes = (int) jsonObject.get("nodes");
+            Long jobs = (Long) jsonObject.get("jobs");
+            Long views = (Long) jsonObject.get("views");
+            Long nodes = (Long) jsonObject.get("nodes");
             
-            JenkinsDb.CheckResult result = jenkinsDb.check(projectID, host, jobs, views, nodes);
+            int num_jobs = jobs.intValue();
+            int num_views = views.intValue();
+            int num_nodes = nodes.intValue();
+            
+            JenkinsDb.CheckResult result = jenkinsDb.check(projectID, host, num_jobs, num_views, num_nodes);
             if (result == JenkinsDb.CheckResult.MISSING) {
-                jenkinsDb.insert(projectID, host, jobs, views, nodes);
+                jenkinsDb.insert(projectID, host, num_jobs, num_views, num_nodes);
             }
             else if (result == JenkinsDb.CheckResult.DIFFERS) {
-                jenkinsDb.update(projectID, host, jobs, views, nodes);
+                jenkinsDb.update(projectID, host, num_jobs, num_views, num_nodes);
             }
         }
         catch (FileNotFoundException ex) {
