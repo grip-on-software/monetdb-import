@@ -129,7 +129,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
         
         checkIdStmt.setInt(1, id);
         
-        try (ResultSet rs = checkNameStmt.executeQuery()) {
+        try (ResultSet rs = checkIdStmt.executeQuery()) {
             if (rs.next()) {
                 name = rs.getString("name");
             }
