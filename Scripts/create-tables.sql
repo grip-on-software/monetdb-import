@@ -248,6 +248,8 @@ CREATE TABLE "gros"."repo" (
 	"id"       INTEGER       NOT NULL AUTO_INCREMENT,
 	"repo_name" VARCHAR(1000) NOT NULL,
 	"project_id" INTEGER       NOT NULL,
+	"type"    VARCHAR(32)    NULL,
+	"url"     VARCHAR(255)   NULL,
         CONSTRAINT "pk_repo_id" PRIMARY KEY ("id")
 );
 

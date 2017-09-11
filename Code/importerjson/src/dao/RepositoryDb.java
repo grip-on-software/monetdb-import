@@ -6,6 +6,8 @@
 package dao;
 
 import java.beans.PropertyVetoException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +15,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.logging.Level;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import util.BaseDb;
 
 /**
@@ -20,22 +26,53 @@ import util.BaseDb;
  * @author Enrique, Thomas
  */
 public class RepositoryDb extends BaseDb implements AutoCloseable {
+    /**
+     * A source object.
+     */
+    public static class Source {
+        private final String type;
+        private final String url;
+        
+        public Source(String type, String url) {
+            this.type = type;
+            this.url = url;
+        }
+        
+        /**
+         * Retrieve the source type.
+         * @return The literal type of the source.
+         */
+        public String getType() {
+            return this.type;
+        }
+        
+        /**
+         * Retrieve the source URL
+         * @return The URL of the source.
+         */
+        public String getURL() {
+            return this.url;
+        }
+    }
+    
     private BatchedStatement insertRepoStmt = null;
     private PreparedStatement checkRepoStmt = null;
     private HashMap<Integer, HashMap<String, Integer>> nameCache = null;
+    private HashMap<Integer, HashMap<String, Source>> sourceCache = null;
     private BatchedStatement insertGitLabRepoStmt = null;
     private PreparedStatement checkGitLabRepoStmt = null;
     private BatchedStatement updateGitLabRepoStmt = null;
     private BatchedStatement insertGitHubRepoStmt = null;
     private PreparedStatement checkGitHubRepoStmt = null;
     private BatchedStatement updateGitHubRepoStmt = null;
+    private final ProjectDb pDB;
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
     };
     
     public RepositoryDb() {
-        String sql = "insert into gros.repo (repo_name,project_id) values (?,?);";
+        String sql = "insert into gros.repo (repo_name,project_id,type,url) values (?,?,?,?);";
         insertRepoStmt = new BatchedStatement(sql);
         
         sql = "insert into gros.gitlab_repo (repo_id,gitlab_id,description,create_date,archived,has_avatar,star_count) values (?,?,?,?,?,?,?);";
@@ -49,6 +86,8 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         
         sql = "update gros.github_repo set description=?, create_date=?, private=?, forked=?, star_count=?, watch_count=? where repo_id=? AND github_id=?;";
         updateGitHubRepoStmt = new BatchedStatement(sql);
+        
+        pDB = new ProjectDb();
     }
     
     @Override
@@ -87,6 +126,8 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
             checkGitHubRepoStmt.close();
             checkGitHubRepoStmt = null;
         }
+        
+        pDB.close();
     }
     
     /**
@@ -96,11 +137,25 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_repo(String name, int project_id) throws SQLException, PropertyVetoException{
+    public void insert_repo(String name, int project_id) throws SQLException, PropertyVetoException {
+        fillSourceCache(project_id);
         PreparedStatement pstmt = insertRepoStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
         pstmt.setInt(2, project_id);
+        
+        Source source = null;
+        if (sourceCache.containsKey(project_id)) {
+            source = sourceCache.get(project_id).get(name);
+        }
+        if (source != null) {
+            pstmt.setString(3, source.getType());
+            pstmt.setString(4, source.getURL());
+        }
+        else {
+            pstmt.setNull(3, java.sql.Types.VARCHAR);
+            pstmt.setNull(4, java.sql.Types.VARCHAR);
+        }
         
         // Insert immediately because we need to have the row available
         pstmt.execute();
@@ -114,7 +169,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private void insertCache(String key, Integer project_id, Integer id) {
+    private void insertNameCache(String key, Integer project_id, Integer id) {
         if (!nameCache.containsKey(project_id)) {
             nameCache.put(project_id, new HashMap<String, Integer>());
         }
@@ -135,9 +190,53 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
                 String key = rs.getString("repo_key");
                 Integer project_id = rs.getInt("project_id");
                 Integer id = rs.getInt("id");
-                insertCache(key, project_id, id);
+                insertNameCache(key, project_id, id);
             }
         }
+    }
+    
+    private void insertSourceCache(Integer project_id, String name, String type, String url) throws Exception {
+        if (!sourceCache.containsKey(project_id)) {
+            sourceCache.put(project_id, new HashMap<String, Source>());
+        }
+        Source source = new Source(type, url);
+        sourceCache.get(project_id).put(name, source);
+    }
+    
+    private void fillSourceCache(Integer project_id) throws SQLException, PropertyVetoException {
+        if (sourceCache == null) {
+            sourceCache = new HashMap<>();
+        }
+        if (sourceCache.containsKey(project_id)) {
+            return;
+        }
+        
+        String project = pDB.check_project(project_id);
+        if (project == null) {
+            getLogger().log(Level.WARNING, "Cannot deduce project key for {0}", project_id);
+            return;
+        }
+        
+        try (
+            FileReader fr = new FileReader(getPath()+project+"/data_sources.json")
+        ) {
+            JSONParser parser = new JSONParser();
+            JSONArray a = (JSONArray) parser.parse(fr);
+            
+            for (Object o : a) {
+                JSONObject jsonObject = (JSONObject) o;
+                String name = (String) jsonObject.get("name");
+                String type = (String) jsonObject.get("type");
+                String url = (String) jsonObject.get("url");
+                insertSourceCache(project_id, name, type, url);
+            }
+        }
+        catch (IOException ex) {
+            getLogger().log(Level.WARNING, "Project sources are unavailable, cannot insert repository sources: {0}", ex.getMessage());
+        }
+        catch (Exception ex) {
+            logException(ex);
+        }        
     }
     
     /**
@@ -171,7 +270,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
             }
         }
         
-        insertCache(key, project_id, idRepo);
+        insertNameCache(key, project_id, idRepo);
         if (idRepo == null) {
             return 0;
         }

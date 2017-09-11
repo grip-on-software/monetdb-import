@@ -18,7 +18,8 @@ import java.sql.SQLException;
  */
 public class ProjectDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertStmt = null;
-    private PreparedStatement checkStmt = null;
+    private PreparedStatement checkIdStmt = null;
+    private PreparedStatement checkNameStmt = null;
     private BatchedStatement updateStmt = null;
     
     public ProjectDb() {
@@ -28,11 +29,19 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
         updateStmt = new BatchedStatement(sql);
     }
     
-    private void getCheckStatement() throws SQLException, PropertyVetoException {
-        if (checkStmt == null) {
+    private void getCheckIdStatement() throws SQLException, PropertyVetoException {
+        if (checkIdStmt == null) {
+            Connection con = insertStmt.getConnection();
+            String sql = "SELECT UPPER(name) AS name FROM gros.project WHERE project_id = ?";
+            checkIdStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    private void getCheckNameStatement() throws SQLException, PropertyVetoException {
+        if (checkNameStmt == null) {
             Connection con = insertStmt.getConnection();
             String sql = "SELECT project_id FROM gros.project WHERE UPPER(name) = ?";
-            checkStmt = con.prepareStatement(sql);
+            checkNameStmt = con.prepareStatement(sql);
         }
     }
     
@@ -107,7 +116,30 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
     }
     
     /**
-     * Check whether the project exists in the database
+     * Check whether the project with the given ID exists in the database
+     * @param id The identifier of the project
+     * @return The uppercase name of the project if it exists in the database,
+     * or null if the project is not yet in the database.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public String check_project(int id) throws SQLException, PropertyVetoException {
+        getCheckIdStatement();
+        String name = null;
+        
+        checkIdStmt.setInt(1, id);
+        
+        try (ResultSet rs = checkNameStmt.executeQuery()) {
+            if (rs.next()) {
+                name = rs.getString("name");
+            }
+        }
+        
+        return name;
+    }
+
+    /**
+     * Check whether the project with the given name exists in the database
      * @param name The shorthand name of the project
      * @return The identifier of the project if it exists in the database, or 0
      * if the project is not yet in the database.
@@ -115,12 +147,12 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public int check_project(String name) throws SQLException, PropertyVetoException {
-        getCheckStatement();
+        getCheckNameStatement();
         int idProject = 0;
         
-        checkStmt.setString(1, name.toUpperCase().trim());
+        checkNameStmt.setString(1, name.toUpperCase().trim());
         
-        try (ResultSet rs = checkStmt.executeQuery()) {
+        try (ResultSet rs = checkNameStmt.executeQuery()) {
             if (rs.next()) {
                 idProject = rs.getInt("project_id");
             }
@@ -130,16 +162,21 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws SQLException {
         // All inserts have already been executed
         insertStmt.close();
         
         updateStmt.execute();
         updateStmt.close();
         
-        if (checkStmt != null) {
-            checkStmt.close();
-            checkStmt = null;
+        if (checkIdStmt != null) {
+            checkIdStmt.close();
+            checkIdStmt = null;
+        }
+        
+        if (checkNameStmt != null) {
+            checkNameStmt.close();
+            checkNameStmt = null;
         }
     }
 
