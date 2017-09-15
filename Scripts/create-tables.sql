@@ -154,7 +154,7 @@ CREATE TABLE "gros"."metric" (
 
 CREATE TABLE "gros"."metric_value" (
 	"metric_id"       INTEGER     NOT NULL,
-	"value"           INTEGER     NOT NULL,
+	"value"           FLOAT       NOT NULL,
 	"category"        VARCHAR(100) NOT NULL,
 	"date"            TIMESTAMP  NULL,
 	"sprint_id"       INTEGER    NULL,

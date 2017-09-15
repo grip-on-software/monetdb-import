@@ -137,11 +137,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_metricValue(int metric_id, int value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, PropertyVetoException {
+    public void insert_metricValue(int metric_id, float value, String category, Timestamp date, int sprint_id, Timestamp since_date, int project) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricValueStmt.getPreparedStatement();
         
         pstmt.setInt(1, metric_id);
-        pstmt.setInt(2, value);
+        pstmt.setFloat(2, value);
         pstmt.setString(3, category);
         pstmt.setTimestamp(4, date);
         pstmt.setInt(5, sprint_id);

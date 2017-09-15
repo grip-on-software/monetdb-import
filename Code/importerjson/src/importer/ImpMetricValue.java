@@ -133,7 +133,7 @@ public class ImpMetricValue extends BaseImport {
             insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), Timestamp.valueOf(since_date));
         }
 
-        public void insert(String metric_name, int value, String category, Timestamp date, Timestamp since_date) throws Exception {
+        public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date) throws Exception {
             // Using the metric name, check if the metric was not already stored
             int metric_id = mDB.check_metric(metric_name);
 
@@ -358,7 +358,20 @@ public class ImpMetricValue extends BaseImport {
                 String start_time = (String) measurement.get("start");
                 String end_time = (String) measurement.get("end");
                 String status = (String) measurement.get("status");
-                Long value = (Long)measurement.getOrDefault("value", -1L);
+                Object value = measurement.get("value");
+                float metric_value;
+                if (value == null) {
+                    metric_value = -1;
+                }
+                else if (value instanceof Long) {
+                    metric_value = ((Long) value).floatValue();
+                }
+                else if (value instanceof Double) {
+                    metric_value = ((Double) value).floatValue();
+                }
+                else {
+                    throw new Exception("Unexpected type of value: " + value.getClass().getSimpleName());
+                }
 
                 Timestamp since_date = Timestamp.valueOf(start_time);
 
@@ -385,7 +398,7 @@ public class ImpMetricValue extends BaseImport {
                 
                 for (int i = start_index; i < end_index; i++) {
                     String date = dates[i];
-                    collector.insert(metric_name, value.intValue(), status, Timestamp.valueOf(date), since_date);
+                    collector.insert(metric_name, metric_value, status, Timestamp.valueOf(date), since_date);
                 }
 
                 // Track latest date indices and new dates.
