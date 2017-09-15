@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.ConsoleHandler;
@@ -201,8 +202,32 @@ public class Importerjson {
         return tasks;
     }
     
-    public static void main(String[] args) {
+    private static String formatUsage() {
+        return formatUsage(false);
+    }
+    
+    private static String formatUsage(boolean all) {
         String usage = "\nUsage: java [-Dimporter.log=LEVEL] -jar importerjson.jar <project> [tasks]";
+        
+        if (all) {
+            usage += "\n\nTask groups and tasks:\n\n - all: All default (non-special) tasks\n";
+            
+            List<String> otherTasks = new ArrayList<>(DEFAULT_TASKS);
+            for (Map.Entry<String, List<String>> group : GROUPED_TASKS.entrySet()) {
+                usage += "\n - " + group.getKey() + ": ";
+                usage += String.join(", ", group.getValue());
+                
+                otherTasks.removeAll(group.getValue());
+            }
+            
+            usage += "\n\n - Other (default) tasks: " + String.join(", ", otherTasks);
+            usage += "\n - Special tasks: " + String.join(", ", SPECIAL_TASKS);
+        }
+        
+        return usage;
+    }
+    
+    public static void main(String[] args) {
         String logLevel = System.getProperty("importer.log", "WARNING");
         System.setProperty("java.util.logging.SimpleFormatter.format",
                            "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS:%4$s:%2$s:%5$s%6$s%n");
@@ -216,10 +241,10 @@ public class Importerjson {
             LOGGER.log(Level.FINE, "Set log level to {0}", level.getName());
         }
         catch (IllegalArgumentException ex) {
-            throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + usage);
+            throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + formatUsage());
         }
         if (args.length <= 0 || "--help".equals(args[0])) {
-            throw new RuntimeException(usage);
+            throw new RuntimeException(formatUsage(true));
         }
         
         // Determine a set of tasks to run. With a missing argumet, we run all
@@ -240,7 +265,7 @@ public class Importerjson {
         if ("--".equals(args[0])) {
             // Only allow special tasks that may run project-independently
             if (!SPECIAL_TASKS.containsAll(tasks)) {
-                throw new RuntimeException("Project must given for the provided tasks" + usage);
+                throw new RuntimeException("Project must given for the provided tasks" + formatUsage());
             }
         }
         else {
