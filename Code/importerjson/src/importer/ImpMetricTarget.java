@@ -13,6 +13,8 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -77,7 +79,12 @@ public class ImpMetricTarget extends BaseImport {
             try (FileReader fr = new FileReader(getRootPath()+"/metric_base_names.json")) {
                 JSONParser parser = new JSONParser();
                 JSONArray a = (JSONArray) parser.parse(fr);
-                metricDb.load_metric_base_names(a);
+                List<String> base_names = new ArrayList<>();
+                for (Object name : a) {
+                    base_names.add((String)name);
+                }
+                
+                metricDb.load_metric_base_names(base_names);
             }
             catch (FileNotFoundException ex) {
                 getLogger().log(Level.WARNING, "Cannot load extra base names: {0}", ex.getMessage());
