@@ -800,9 +800,10 @@ dashboard project definition.
 -   **metric_value**: Singular metric data from quality report
     -   **metric_id** - INT - reference to metric.metric_id: The metric
         that is measured
-    -   **value** - INT: The raw value. This is -1 if there is a problem
-        with measuring the metric (category is grey, missing, or
-        missing_source).
+    -   **value** - FLOAT: The raw value. This is -1 if there is a
+        problem with measuring the metric (category is grey, missing, or
+        missing_source). Prior to the introduction of compact history
+        (September 2017), all values are integers.
     -   **category** - VARCHAR(100): 'red' (below low target), 'yellow'
         (below target), green (at or above target), perfect (cannot be
         improved), grey (disabled), missing (internal problem),
