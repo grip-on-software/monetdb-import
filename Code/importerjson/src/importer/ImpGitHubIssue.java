@@ -71,7 +71,10 @@ public class ImpGitHubIssue extends BaseImport {
 
                 Timestamp created_date = Timestamp.valueOf(created_at);
                 Timestamp updated_date = Timestamp.valueOf(updated_at);
-                Timestamp closed_date = Timestamp.valueOf(closed_at);
+                Timestamp closed_date = null;
+                if (!closed_at.equals("0")) {
+                    closed_date = Timestamp.valueOf(closed_at);
+                }
                 
                 DeveloperDb.Developer author_dev = new DeveloperDb.Developer(author, author, null);
                 int author_id = devDb.update_vcs_developer(project_id, author_dev, encryption);
