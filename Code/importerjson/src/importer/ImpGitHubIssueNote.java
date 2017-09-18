@@ -42,7 +42,7 @@ public class ImpGitHubIssueNote extends BaseImport {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String repo_name = (String) jsonObject.get("repo_name");
-                String id = (String) jsonObject.get("id");
+                String id = (String) jsonObject.get("note_id");
                 String issue = (String) jsonObject.get("issue_id");
                 String comment = (String) jsonObject.get("comment");
                 String author = (String) jsonObject.get("author");
