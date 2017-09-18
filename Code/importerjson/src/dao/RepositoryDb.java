@@ -494,7 +494,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         checkGitHubRepoStmt.setInt(1, repo_id);
         checkGitHubRepoStmt.setInt(2, github_id);
         CheckResult result;
-        try (ResultSet rs = checkGitLabRepoStmt.executeQuery()) {
+        try (ResultSet rs = checkGitHubRepoStmt.executeQuery()) {
             result = CheckResult.MISSING;
             while (rs.next()) {
                 if ((description == null ? rs.getString("description") == null : description.equals(rs.getString("description"))) &&
