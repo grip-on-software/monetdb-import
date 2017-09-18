@@ -34,7 +34,7 @@ public class ImpCommitComment extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
             NoteDb noteDb = new NoteDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_commit_comment.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -126,6 +126,11 @@ public class ImpCommitComment extends BaseImport {
     @Override
     public String getImportName() {
         return "GitLab/TFS commit comments";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_commit_comment.json"};
     }
     
 }

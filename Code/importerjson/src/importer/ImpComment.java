@@ -16,13 +16,13 @@ import util.BufferedJSONReader;
  * Importer for the JIRA comments.
  * @author Enrique
  */
-public class ImpComment extends BaseImport{
+public class ImpComment extends BaseImport {
     
     @Override
     public void parser() {
         try (
             CommentDb commentDb = new CommentDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_comments.json");
+            FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr)
         ) {
             Object o;
@@ -59,6 +59,11 @@ public class ImpComment extends BaseImport{
     @Override
     public String getImportName() {
         return "JIRA comments";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_comments.json"};
     }
         
 

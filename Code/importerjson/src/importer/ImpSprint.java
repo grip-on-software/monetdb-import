@@ -25,7 +25,7 @@ public class ImpSprint extends BaseImport {
         int project = getProjectID();
  
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_sprint.json");
+            FileReader fr = new FileReader(getMainImportPath());
             SprintDb sprintDb = new SprintDb()
         ) {            
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -82,6 +82,11 @@ public class ImpSprint extends BaseImport {
     @Override
     public String getImportName() {
         return "JIRA sprints";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_sprint.json"};
     }
         
 

@@ -419,12 +419,10 @@ public class ImpMetricValue extends BaseImport {
 
     @Override
     public void parser(){
-        String path = getPath()+getProjectName();
-
         try (
-            MetricCollector collector = new MetricCollector(path, this.getProjectID());
+            MetricCollector collector = new MetricCollector(getExportPath(), getProjectID());
             // Read metrics JSON using buffered readers so that Java does not run out of memory
-            BufferedJSONReader br = new BufferedJSONReader(new FileReader(path+"/data_metrics.json"))
+            BufferedJSONReader br = new BufferedJSONReader(new FileReader(getMainImportPath()))
         ) {
             collector.readBufferedJSON(br);
         }
@@ -440,6 +438,11 @@ public class ImpMetricValue extends BaseImport {
     @Override
     public String getImportName() {
         return "metric values";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_metrics.json"};
     }
 
 }

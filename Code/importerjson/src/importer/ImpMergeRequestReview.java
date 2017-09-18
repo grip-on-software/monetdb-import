@@ -33,7 +33,7 @@ public class ImpMergeRequestReview extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
             ReviewDb reviewDb = new ReviewDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_merge_request_review.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -79,6 +79,11 @@ public class ImpMergeRequestReview extends BaseImport {
     @Override
     public String getImportName() {
         return "TFS pull request reviews";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_merge_request_review.json"};
     }
     
 }

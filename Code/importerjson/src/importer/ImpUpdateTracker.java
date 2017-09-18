@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import util.BaseImport;
 
 /**
@@ -25,16 +24,11 @@ public class ImpUpdateTracker extends BaseImport {
     @Override
     public void parser() {
         int project_id = getProjectID();
-        String updateFiles = System.getProperty("importer.update", "").trim();
-        if (updateFiles.isEmpty()) {
-            getLogger().log(Level.WARNING, "No update tracker files specified");
-            return;
-        }
-        String[] updateNames = updateFiles.split(" ");
+        String[] updateNames = getImportFiles();
         try (UpdateDb updateDb = new UpdateDb()) {
             for (String updateFilename : updateNames) {
                 try {
-                    String pathName = getPath()+getProjectName()+"/"+updateFilename;
+                    String pathName = getExportPath() + "/" + updateFilename;
                     Path path = Paths.get(pathName);
                     File file = new File(pathName);
                     Timestamp update_date = new Timestamp(file.lastModified());
@@ -59,6 +53,16 @@ public class ImpUpdateTracker extends BaseImport {
     @Override
     public String getImportName() {
         return "update tracking files";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        String updateFiles = System.getProperty("importer.update", "").trim();
+        if (updateFiles.isEmpty()) {
+            getLogger().log(Level.WARNING, "No update tracker files specified");
+            return new String[]{};
+        }
+        return updateFiles.split(" ");
     }
     
 }

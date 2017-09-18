@@ -33,7 +33,7 @@ public class ImpGitHubIssue extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
             GitHubIssueDb issueDb = new GitHubIssueDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_github_issue.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -118,6 +118,11 @@ public class ImpGitHubIssue extends BaseImport {
     @Override
     public String getImportName() {
         return "GitHub issues";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_github_issue.json"};
     }
     
 }

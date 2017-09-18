@@ -16,7 +16,7 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Enrique
  */
-public class ImpGitFeatures extends BaseImport{
+public class ImpGitFeatures extends BaseImport {
     
     @Override
     public void parser(){
@@ -26,7 +26,7 @@ public class ImpGitFeatures extends BaseImport{
 
         int user_id = 0;
  
-        try (FileReader fr = new FileReader(getPath()+getProjectName()+"/data_features.json")) {
+        try (FileReader fr = new FileReader(getMainImportPath())) {
             
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -58,6 +58,11 @@ public class ImpGitFeatures extends BaseImport{
     @Override
     public String getImportName() {
         return "Git features";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_features.json"};
     }
         
 

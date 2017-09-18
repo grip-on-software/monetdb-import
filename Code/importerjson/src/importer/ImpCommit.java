@@ -51,7 +51,7 @@ public class ImpCommit extends BaseImport {
             DeveloperDb devDb = new DeveloperDb();
             RepositoryDb repoDb = new RepositoryDb();
             SprintDb sprintDb = new SprintDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_versions.json");
+            FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.commits", sql,
                     new String[]{"version_id", "repo_id"},
@@ -481,6 +481,11 @@ public class ImpCommit extends BaseImport {
     @Override
     public String getImportName() {
         return "version control system commit versions";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_vcs_versions.json"};
     }
 
 }

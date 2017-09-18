@@ -30,7 +30,7 @@ public class ImpMetricVersion extends BaseImport {
         try (
             MetricDb metricDb = new MetricDb();
             SprintDb sprintDb = new SprintDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_metric_versions.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -65,5 +65,10 @@ public class ImpMetricVersion extends BaseImport {
     @Override
     public String getImportName() {
         return "metric versions";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_metric_versions.json"};
     }
 }

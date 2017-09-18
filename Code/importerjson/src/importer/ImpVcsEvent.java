@@ -34,7 +34,7 @@ public class ImpVcsEvent extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
             VcsEventDb eventDb = new VcsEventDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_vcs_event.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -77,6 +77,11 @@ public class ImpVcsEvent extends BaseImport {
     @Override
     public String getImportName() {
         return "version control system events";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_vcs_event.json"};
     }
     
 }

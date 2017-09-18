@@ -166,7 +166,7 @@ public class BaseDb {
     public final void setPath(String path) {
         this.path = path;
     }
-
+    
     /**
      * Set a string parameter to a prepared statement. If the parameter is null,
      * then this method performs the appropriate action to set the designated

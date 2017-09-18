@@ -34,7 +34,7 @@ public class ImpDataSubtask extends BaseImport {
         String sql = "insert into gros.subtask values (?,?);";
  
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_subtasks.json");
+            FileReader fr = new FileReader(getMainImportPath());
             BatchedStatement bstmt = new BatchedStatement(sql)
         ) {
             con = DataSource.getInstance().getConnection();
@@ -81,6 +81,11 @@ public class ImpDataSubtask extends BaseImport {
     @Override
     public String getImportName() {
         return "JIRA issue subtasks";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_subtasks.json"};
     }
         
 

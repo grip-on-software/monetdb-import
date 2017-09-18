@@ -25,7 +25,7 @@ public class ImpJenkins extends BaseImport {
         JSONParser parser = new JSONParser();
         try (
             JenkinsDb jenkinsDb = new JenkinsDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_jenkins.json");
+            FileReader fr = new FileReader(getMainImportPath());
         ) {
             JSONObject jsonObject = (JSONObject) parser.parse(fr);
             String host = (String) jsonObject.get("host");
@@ -56,6 +56,11 @@ public class ImpJenkins extends BaseImport {
     @Override
     public String getImportName() {
         return "Jenkins usage statistics";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_jenkins.json"};
     }
     
 }

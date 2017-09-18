@@ -34,7 +34,7 @@ public class ImpTag extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             SprintDb sprintDb = new SprintDb();
             TagDb tagDb = new TagDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_tag.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -102,6 +102,11 @@ public class ImpTag extends BaseImport {
     @Override
     public String getImportName() {
         return "version control system tags";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_tag.json"};
     }
     
 }

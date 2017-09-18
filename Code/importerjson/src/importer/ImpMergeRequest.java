@@ -36,7 +36,7 @@ public class ImpMergeRequest extends BaseImport {
             DeveloperDb devDb = new DeveloperDb();
             SprintDb sprintDb = new SprintDb();
             MergeRequestDb requestDb = new MergeRequestDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_merge_request.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -110,6 +110,11 @@ public class ImpMergeRequest extends BaseImport {
     @Override
     public String getImportName() {
         return "GitLab/TFS merge requests";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_merge_request.json"};
     }
     
 }

@@ -32,7 +32,7 @@ public class ImpChangePath extends BaseImport {
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_change_path.json");
+            FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.change_path", sql,
                     new String[]{"repo_id", "version_id", "file"},
@@ -91,6 +91,11 @@ public class ImpChangePath extends BaseImport {
     @Override
     public String getImportName() {
         return "version control system changed paths";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_change_path.json"};
     }
 
 }

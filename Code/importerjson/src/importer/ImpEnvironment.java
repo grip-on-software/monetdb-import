@@ -26,7 +26,7 @@ public class ImpEnvironment extends BaseImport {
         int project = getProjectID();
          
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_environments.json");
+            FileReader fr = new FileReader(getMainImportPath());
             EnvironmentDb envDb = new EnvironmentDb()
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -53,6 +53,11 @@ public class ImpEnvironment extends BaseImport {
     @Override
     public String getImportName() {
         return "source environments";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_environments.json"};
     }
     
 }

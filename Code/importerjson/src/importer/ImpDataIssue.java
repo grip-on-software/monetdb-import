@@ -36,7 +36,7 @@ public class ImpDataIssue extends BaseImport {
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
         
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data.json");
+            FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr);
             BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.issue", sql,
                     new String[]{"issue_id", "changelog_id"}
@@ -253,6 +253,11 @@ public class ImpDataIssue extends BaseImport {
     @Override
     public String getImportName() {
         return "JIRA issues";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data.json"};
     }
 }
     

@@ -33,7 +33,7 @@ public class ImpGitHubIssueNote extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
             GitHubIssueNoteDb noteDb = new GitHubIssueNoteDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_github_issue_note.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -84,6 +84,11 @@ public class ImpGitHubIssueNote extends BaseImport {
     @Override
     public String getImportName() {
         return "GitHub issue comments";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_github_issue_note.json"};
     }
     
 }

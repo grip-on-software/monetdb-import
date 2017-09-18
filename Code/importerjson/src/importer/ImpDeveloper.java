@@ -17,7 +17,7 @@ import util.BaseImport;
  * Importer for JIRA developers.
  * @author Thomas and Enrique
  */
-public class ImpDeveloper extends BaseImport{
+public class ImpDeveloper extends BaseImport {
     
     @Override
     public void parser(){
@@ -26,7 +26,7 @@ public class ImpDeveloper extends BaseImport{
  
         try (
             DeveloperDb devDb = new DeveloperDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_developer.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -57,6 +57,11 @@ public class ImpDeveloper extends BaseImport{
     @Override
     public String getImportName() {
         return "JIRA developers";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_developer.json"};
     }
 
 }

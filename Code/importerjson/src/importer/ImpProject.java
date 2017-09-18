@@ -36,7 +36,7 @@ public class ImpProject extends BaseImport {
         try (ProjectDb pDB = new ProjectDb()) {
             project = pDB.check_project(name);
             try (
-                FileReader fr = new FileReader(getPath()+getProjectName()+"/data_project.json");
+                FileReader fr = new FileReader(getMainImportPath());
             ) {
                 JSONObject jsonObject = (JSONObject) parser.parse(fr);
                 
@@ -74,6 +74,11 @@ public class ImpProject extends BaseImport {
     @Override
     public String getImportName() {
         return "project metadata";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_project.json"};
     }
 
 }

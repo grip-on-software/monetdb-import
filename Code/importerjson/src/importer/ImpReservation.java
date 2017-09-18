@@ -30,7 +30,7 @@ public class ImpReservation extends BaseImport {
         try (
             ReservationDb reservationDb = new ReservationDb();
             SprintDb sprintDb = new SprintDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_reservations.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -70,6 +70,11 @@ public class ImpReservation extends BaseImport {
     @Override
     public String getImportName() {
         return "reservations";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_reservations.json"};
     }
     
 }

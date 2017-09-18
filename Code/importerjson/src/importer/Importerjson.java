@@ -280,7 +280,12 @@ public class Importerjson {
             performTask(impProject, "project");
             projectID = impProject.getProjectID();
         }
+        
+        performTasks(tasks);
+        performSpecialTasks(tasks);
+    }
     
+    private static void performTasks(SortedSet<String> tasks) {
         for (String task : DEFAULT_TASKS) {
             if (tasks.contains(task)) {
                 if (TASK_IMPORTERS.containsKey(task)) {
@@ -310,7 +315,9 @@ public class Importerjson {
                 }
             }
         }
+    }
         
+    private static void performSpecialTasks(SortedSet<String> tasks) {
         ImpCommit impCommit = new ImpCommit();
         impCommit.setProjectName(projectName);
         impCommit.setProjectID(projectID);

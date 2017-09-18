@@ -34,7 +34,7 @@ public class ImpMergeRequestNote extends BaseImport {
             RepositoryDb repoDb = new RepositoryDb();
             DeveloperDb devDb = new DeveloperDb();
             NoteDb noteDb = new NoteDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_merge_request_note.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -94,6 +94,11 @@ public class ImpMergeRequestNote extends BaseImport {
     @Override
     public String getImportName() {
         return "GitLab/TFS merge request notes";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_merge_request_note.json"};
     }
     
 }

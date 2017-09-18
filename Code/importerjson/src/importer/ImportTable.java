@@ -54,7 +54,7 @@ public class ImportTable extends BaseImport {
         Integer row_id;
          
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_"+name+".json");
+            FileReader fr = new FileReader(getMainImportPath());
             TableDb db = new TableDb(name, fieldName, metadataName);
         ) {
             JSONArray jsonArray = (JSONArray) parser.parse(fr);
@@ -88,6 +88,11 @@ public class ImportTable extends BaseImport {
     @Override
     public String getImportName() {
         return description;
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_"+name+".json"};
     }
     
 }

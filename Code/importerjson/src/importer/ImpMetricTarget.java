@@ -34,7 +34,7 @@ public class ImpMetricTarget extends BaseImport {
  
         try (
             MetricDb metricDb = new MetricDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_metric_targets.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -76,7 +76,7 @@ public class ImpMetricTarget extends BaseImport {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
         ) {
-            try (FileReader fr = new FileReader(getRootPath()+"/metric_base_names.json")) {
+            try (FileReader fr = new FileReader(getMainImportPath())) {
                 JSONParser parser = new JSONParser();
                 JSONArray a = (JSONArray) parser.parse(fr);
                 List<String> base_names = new ArrayList<>();
@@ -112,5 +112,10 @@ public class ImpMetricTarget extends BaseImport {
     @Override
     public String getImportName() {
         return "metric targets";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_metric_targets.json"};
     }
 }

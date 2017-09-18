@@ -19,7 +19,7 @@ import util.BaseImport;
  * Importer for GitLab repositories.
  * @author Leon Helwerda
  */
-public class ImpGitLabRepo extends BaseImport{
+public class ImpGitLabRepo extends BaseImport {
     
     @Override
     public void parser() {
@@ -28,7 +28,7 @@ public class ImpGitLabRepo extends BaseImport{
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_gitlab_repo.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -81,6 +81,11 @@ public class ImpGitLabRepo extends BaseImport{
     @Override
     public String getImportName() {
         return "GitLab repositories";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_gitlab_repo.json"};
     }
     
 }

@@ -55,4 +55,23 @@ public abstract class BaseImport extends BaseDb {
      * @return The importer name, a noun phrase that can be used in status messages
      */
     public abstract String getImportName();
+    
+    /**
+     * Get a list of file names that live in the gatherer's export directory
+     * which are used during the import.
+     * @return List of imported file names
+     */
+    public abstract String[] getImportFiles();
+    
+    public final String getExportPath() {
+        return getPath() + getProjectName();
+    }
+
+    /**
+     * Get the path to the main file that is imported.
+     * @return File path
+     */
+    public String getMainImportPath() {
+        return getExportPath() + "/" + getImportFiles()[0];
+    }
 }

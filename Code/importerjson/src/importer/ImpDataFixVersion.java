@@ -25,7 +25,7 @@ public class ImpDataFixVersion extends BaseImport {
         int project = getProjectID();
          
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_fixVersion.json");
+            FileReader fr = new FileReader(getMainImportPath());
             FixVersionDb versionDb = new FixVersionDb()
         ) {            
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -74,6 +74,11 @@ public class ImpDataFixVersion extends BaseImport {
     @Override
     public String getImportName() {
         return "JIRA fix and release versions";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_fixVersion.json"};
     }
 
 }

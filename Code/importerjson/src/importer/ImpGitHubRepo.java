@@ -28,7 +28,7 @@ public class ImpGitHubRepo extends BaseImport {
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_github_repo.json")
+            FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -82,6 +82,11 @@ public class ImpGitHubRepo extends BaseImport {
     @Override
     public String getImportName() {
         return "GitHub repositories";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_github_repo.json"};
     }
     
 }

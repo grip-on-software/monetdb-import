@@ -25,7 +25,7 @@ public class ImpDataIssueLink extends BaseImport {
         JSONParser parser = new JSONParser();
  
         try (
-            FileReader fr = new FileReader(getPath()+getProjectName()+"/data_issuelinks.json");
+            FileReader fr = new FileReader(getMainImportPath());
             IssueLinkDb linkDb = new IssueLinkDb()
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -82,6 +82,11 @@ public class ImpDataIssueLink extends BaseImport {
     @Override
     public String getImportName() {
         return "JIRA issue links";
+    }
+
+    @Override
+    public String[] getImportFiles() {
+        return new String[]{"data_issuelinks.json"};
     }
 }
     
