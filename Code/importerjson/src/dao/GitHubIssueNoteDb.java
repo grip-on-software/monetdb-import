@@ -37,7 +37,7 @@ public class GitHubIssueNoteDb extends BaseDb implements AutoCloseable {
     private void getCheckNoteStmt() throws SQLException, PropertyVetoException {
         if (checkNoteStmt == null) {
             Connection con = insertNoteStmt.getConnection();
-            checkNoteStmt = con.prepareStatement("select author_id, comment, created_date, updated_date from gros.github_issue where repo_id=? AND issue_id=? AND note_id=?;");
+            checkNoteStmt = con.prepareStatement("select author_id, comment, created_date, updated_date from gros.github_issue_note where repo_id=? AND issue_id=? AND note_id=?;");
         }
     }
     
