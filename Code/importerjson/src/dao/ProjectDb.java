@@ -23,9 +23,9 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
     private BatchedStatement updateStmt = null;
     
     public ProjectDb() {
-        String sql = "insert into gros.project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name) values (?,?,?,?,?,?);";
+        String sql = "insert into gros.project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team) values (?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
-        sql = "update gros.project set main_project=?, github_team=?, gitlab_group=?, quality_name=?, quality_display_name=? where project_id=?;";
+        sql = "update gros.project set main_project=?, github_team=?, gitlab_group=?, quality_name=?, quality_display_name=?, is_support_team=? where project_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
@@ -52,7 +52,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void insert_project(String name) throws SQLException, PropertyVetoException {
-        insert_project(name, null, null, null, null, null);
+        insert_project(name, null, null, null, null, null, null);
     }
 
     /**
@@ -68,10 +68,12 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * project definitions, or null if not known/set.
      * @param quality_display_name The name of the project as shown in the quality
      * dashboard interface, or null if not known/set.
+     * @param is_support_team Whether the project is maintained by a support team,
+     * or null if not known/set.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */    
-    public void insert_project(String name, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name) throws SQLException, PropertyVetoException {
+    public void insert_project(String name, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name, Boolean is_support_team) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
@@ -80,6 +82,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
         setString(pstmt, 4, gitlab_group);
         setString(pstmt, 5, quality_name);
         setString(pstmt, 6, quality_display_name);
+        setBoolean(pstmt, 7, is_support_team);
         
         // Execute immediately because we need to have the row available.
         pstmt.execute();
@@ -98,10 +101,12 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * project definitions, or null if not known/set.
      * @param quality_display_name The name of the project as shown in the quality
      * dashboard interface, or null if not known/set.
+     * @param is_support_team Whether the project is maintained by a support team,
+     * or null if not known/set.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */    
-    public void update_project(int project_id, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name) throws SQLException, PropertyVetoException {
+    public void update_project(int project_id, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name, Boolean is_support_team) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         
         setString(pstmt, 1, main_project);
@@ -109,8 +114,9 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
         setString(pstmt, 3, gitlab_group);
         setString(pstmt, 4, quality_name);
         setString(pstmt, 5, quality_display_name);
+        setBoolean(pstmt, 6, is_support_team);
         
-        pstmt.setInt(6, project_id);
+        pstmt.setInt(7, project_id);
         
         updateStmt.batch();
     }

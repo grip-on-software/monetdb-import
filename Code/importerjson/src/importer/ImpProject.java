@@ -29,6 +29,7 @@ public class ImpProject extends BaseImport {
         String gitlab_group = null;
         String quality_name = null;
         String quality_display_name = null;
+        Boolean is_support_team = null;
         JSONParser parser = new JSONParser();
 
         int project = 0;
@@ -45,6 +46,7 @@ public class ImpProject extends BaseImport {
                 gitlab_group = (String) jsonObject.get("gitlab_group");
                 quality_name = (String) jsonObject.get("quality_name");
                 quality_display_name = (String) jsonObject.get("quality_display_name");
+                is_support_team = (Boolean) jsonObject.get("is_support_team");
                 has_metadata = true;
             }
             catch (FileNotFoundException ex) {
@@ -55,11 +57,11 @@ public class ImpProject extends BaseImport {
             }
             
             if (project == 0) {
-                pDB.insert_project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name);
+                pDB.insert_project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team);
                 project = pDB.check_project(name);
             }
             else if (has_metadata) {
-                pDB.update_project(project, main_project, github_team, gitlab_group, quality_name, quality_display_name);
+                pDB.update_project(project, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team);
             }
         }
         catch (Exception ex) {

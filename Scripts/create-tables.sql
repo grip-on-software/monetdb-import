@@ -201,6 +201,7 @@ CREATE TABLE "gros"."project" (
 	"gitlab_group"    VARCHAR(100)   NULL,
 	"quality_name"    VARCHAR(100)   NULL,
 	"quality_display_name"    VARCHAR(100)    NULL,
+	"is_support_team" BOOLEAN        NULL,
         CONSTRAINT "pk_project_id" PRIMARY KEY ("project_id")
 );
 

@@ -204,6 +204,24 @@ public class BaseDb {
     }
     
     /**
+     * Set a boolean parameter to a prepared statement. If the parameter is null,
+     * then this method performs the appropriate action to set the designated
+     * parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value, possibly null
+     * @throws SQLException If a database access error occurred
+     */
+    protected void setBoolean(PreparedStatement pstmt, int index, Boolean value) throws SQLException {
+        if (value != null) {
+            pstmt.setBoolean(index, value);
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.BOOLEAN);
+        }
+    }
+    
+    /**
      * Set a timestamp parameter to a prepared statement. If the parameter is null,
      * then this method performs the appropriate action to set the designated
      * parameter to NULL.
