@@ -14,12 +14,16 @@ from pymonetdb.exceptions import OperationalError
 import requests
 from requests.auth import HTTPBasicAuth
 
-def check():
+def check(database):
     """
     Check whether the user confirms the action.
     """
 
-    answer = raw_input('Are you sure you want to delete all data and recreate the database? [y/N] ')
+    prompt = '''This action wipes out the {0} database.
+This is a destructive process!
+Are you sure you want to delete all data from the {0} database,
+and replace the {0} database with a clean state? [y/N] '''.format(database)
+    answer = raw_input(prompt)
 
     if answer.lower() != 'y':
         return False
@@ -120,7 +124,8 @@ def main():
     except socket.error as error:
         raise RuntimeError('Cannot connect, address resolution error: {}'.format(error.strerror))
 
-    if not check():
+    if not check(args.database):
+        logging.info('Canceling process due to user input.')
         return
 
     try:
@@ -148,11 +153,12 @@ def main():
                             username=args.username, password=args.password,
                             autocommit=True)
 
-    logging.info('Creating schema and tables...')
+    logging.info('Creating schema...')
     connection.execute('CREATE SCHEMA "gros";')
     connection.execute('SET SCHEMA "gros";')
 
     if args.import_tables:
+        logging.info('Creating tables...')
         with open('create-tables.sql', 'r') as table_file:
             command = ""
             for line in table_file:
