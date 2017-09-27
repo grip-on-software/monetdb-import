@@ -124,7 +124,7 @@ public class ImpDataIssue extends BaseImport {
                     setTimestamp(pstmt, 11, created);
                     setTimestamp(pstmt, 12, updated);
 
-                    pstmt.setString(13, description);
+                    setString(pstmt, 13, description);
 
                     setDate(pstmt, 14, duedate);
 
