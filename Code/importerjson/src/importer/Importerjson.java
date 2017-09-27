@@ -286,6 +286,7 @@ public class Importerjson {
                 
         if ("--files".equals(args[0])) {
             FileCollector performer = new FileCollector();
+            projectName = "ANY";
             performTasks(tasks, performer);
             System.out.println(String.join(" ", performer.getFiles()));
             return;
