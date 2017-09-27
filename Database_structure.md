@@ -208,11 +208,35 @@ such fields more thoroughly and uniformly.
         provided for all sprints.
 
 
--   **project**: The projects that were collected. The name is the JIRA
-    key, the project ID is unrelated to internal JIRA IDs.
+-   **project**: The projects that were collected and additional
+    metadata. The name is the JIRA key, the project ID is unrelated to
+    internal JIRA IDs.
     -   **project_id** - INT - primary key: Sequence number of the
         project when it is inserted into the database.
     -   **name** - VARCHAR(100): JIRA key prefix abbreviation.
+    -   **main_project** - VARCHAR(100): JIRA key of the main project in
+        case that this project is a subproject of another. If this
+        project is a main project or we have no information about
+        project relations, then this is NULL.
+    -   **github_team** - VARCHAR(100): GitHub public identifier of a
+        team within an organization that maintains the GitHub
+        repositories of the project. If no such GitHub team is known to
+        exist, then this is NULL.
+    -   **gitlab_group** - VARCHAR(100): GitLab public identifier of the
+        main group in which the GitLab repositories of the project are
+        stored. This is determined by the sources and credentials
+        available for the GitLab instance. This is NULL if there are no
+        GitLab sources or if the information is not available.
+    -   **quality_name** - VARCHAR(100): Public identifier of the
+        project in the quality reporting dashboard, used by the project
+        definition and history as storage location. This is NULL if the
+        information is not available.
+    -   **quality_display_name** - VARCHAR(100): Human-readable name of
+        the project as shown in the quality reporting dashboard. This is
+        NULL if the information is not available.
+    -   **is_support_team** - BOOLEAN: Whether the project is maintained
+        by a support team. This is NULL if the information is not
+        available.
 
 
 -   **comment**: Individual comment that was added to a JIRA issue.
