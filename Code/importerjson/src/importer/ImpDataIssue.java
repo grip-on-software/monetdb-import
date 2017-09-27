@@ -6,6 +6,7 @@
 package importer;
 
 import dao.BatchedCheckStatement;
+import dao.ProjectDb;
 import dao.SaltDb;
 import java.beans.PropertyVetoException;
 import util.BaseImport;
@@ -25,7 +26,7 @@ import util.BufferedJSONReader;
  * @author Enrique
  */
 public class ImpDataIssue extends BaseImport {
-    private static final int NUMBER_OF_FIELDS = 42;
+    private static final int NUMBER_OF_FIELDS = 44;
     
     @Override
     public void parser() {
@@ -43,97 +44,80 @@ public class ImpDataIssue extends BaseImport {
             ) {
                 private final BigDecimal max_points = BigDecimal.valueOf(999.0);
                 private final int projectID = getProjectID();
+                private final ProjectDb projectDb = new ProjectDb();
+                
+                private String getField(JSONObject jsonObject, String field) {
+                    String value = (String) jsonObject.get(field);
+                    // Convert zeroes to null values
+                    if ("0".equals(value)) {
+                        return null;
+                    }
+                    return value;
+                }
 
                 @Override
                 protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
                     int issue_id = (int)values[0];
                     int changelog_id = (int)values[1];
                     
+                    // Keep fields for which "0" could be a valid value as is.
+                    // E.g., integral amounts, user input text, flags (but not -1/1 booleans).
+                    // User names cannot be "0" naturally for backward compatibility.
+                    // Fields that do not have "0" as valid value are parsed using getField.
+                    // Fields that can be null, including the ones parsed with
+                    // getField, are passed through one of the set* methods.
                     JSONObject jsonObject = (JSONObject) data;
                     String additional_information = (String) jsonObject.get("additional_information");
-                    String assignee = (String) jsonObject.get("assignee");
+                    String assignee = getField(jsonObject, "assignee");
                     String title = (String) jsonObject.get("title");
-                    String fixVersions = (String) jsonObject.get("fixVersions");
-                    String priority = (String) jsonObject.get("priority");
+                    String fixVersions = getField(jsonObject, "fixVersions");
+                    String priority = getField(jsonObject, "priority");
                     String attachment = (String) jsonObject.get("attachment");
                     String type = (String) jsonObject.get("issuetype");
-                    String duedate = (String) jsonObject.get("duedate");
-                    String status = (String) jsonObject.get("status");
-                    String updated = (String) jsonObject.get("updated");
+                    String duedate = getField(jsonObject, "duedate");
+                    String status = getField(jsonObject, "status");
+                    String updated = getField(jsonObject, "updated");
                     String updated_by = (String) jsonObject.get("updated_by");
                     String description = (String) jsonObject.get("description");
-                    String reporter = (String) jsonObject.get("reporter");
+                    String reporter = getField(jsonObject, "reporter");
                     String key = (String) jsonObject.get("key");
-                    String resolution_date = (String) jsonObject.get("resolution_date");
-                    String storypoint = (String) jsonObject.get("storypoint");
+                    String project = (String) jsonObject.get("project");
+                    String resolution_date = getField(jsonObject, "resolution_date");
+                    String storypoint = getField(jsonObject, "storypoint");
                     String watchers = (String) jsonObject.get("watchers");
-                    String created = (String) jsonObject.get("created");
-                    String bugfix = (String) jsonObject.get("bugfix");
+                    String created = getField(jsonObject, "created");
+                    String bugfix = getField(jsonObject, "bugfix");
                     String review_comments = (String) jsonObject.get("review_comments");
-                    String resolution = (String) jsonObject.get("resolution");
-                    String sprint = (String) jsonObject.get("sprint");
-                    String rank_change = (String) jsonObject.get("rank_change");
-                    String epic = (String) jsonObject.get("epic");
+                    String resolution = getField(jsonObject, "resolution");
+                    String sprint = getField(jsonObject, "sprint");
+                    String rank_change = getField(jsonObject, "rank_change");
+                    String epic = getField(jsonObject, "epic");
                     String flagged = (String) jsonObject.get("flagged");
-                    String ready_status = (String) jsonObject.get("ready_status");
+                    String ready_status = getField(jsonObject, "ready_status");
                     String ready_status_reason = (String) jsonObject.get("ready_status_reason");
                     String approved = (String) jsonObject.get("approved");
                     String approved_by_po = (String) jsonObject.get("approved_by_po");
                     String labels = (String) jsonObject.get("labels");
-                    String affectedVersion = (String) jsonObject.get("versions");
+                    String affected_version = getField(jsonObject, "versions");
                     String expected_ltcs = (String) jsonObject.get("expected_ltcs");
                     String expected_phtcs = (String) jsonObject.get("expected_phtcs");
-                    String test_given = (String) jsonObject.get("test_given");
-                    String test_when = (String) jsonObject.get("test_when");
-                    String test_then = (String) jsonObject.get("test_then");
-                    String test_execution = (String) jsonObject.get("test_execution");
+                    String test_given = getField(jsonObject, "test_given");
+                    String test_when = getField(jsonObject, "test_when");
+                    String test_then = getField(jsonObject, "test_then");
+                    String test_execution = getField(jsonObject, "test_execution");
                     String test_execution_time = (String) jsonObject.get("test_execution_time");
-                
-                    // Convert legacy format (null, None) and empty fields ("0") from the JSON fields to correct values.
-                    if ((sprint.trim()).equals("null")){
-                        sprint = "0";
-                    }
-
-                    if ((resolution.trim()).equals("None")){
-                        resolution = "0";
-                    }
-                    if ((assignee.trim()).equals("0") || (assignee.trim()).equals("None")){
-                        assignee = null;
-                    }
-                    if ((reporter.trim()).equals("0") || (reporter.trim()).equals("None")){
-                        reporter = null;
-                    }
-                    if ((created.trim()).equals("0") || (created.trim()).equals("None") ){
-                        created = null;
-                    }
-                    if ((updated.trim()).equals("0") || (updated.trim()).equals("None")){
-                        updated = null;
-                    }
-                    if ((duedate.trim()).equals("0") || (duedate.trim()).equals("None")){
-                        duedate = null;
-                    }
-                    if ((resolution_date.trim()).equals("0") || (resolution_date.trim()).equals("None")){
-                        resolution_date = null;
-                    }
-                    if ((storypoint.trim()).equals("0") || (storypoint.trim()).equals("None")){
-                        storypoint = null;
-                    }
-                    if ((bugfix.trim()).equals("0") || (bugfix.trim()).equals("None")){
-                        bugfix = null;
-                    }
-                    if (epic.equals("0")) {
-                        epic = null;
-                    }
-
+                    String environment = (String) jsonObject.get("environment");
+                    String external_project = (String) jsonObject.get("external_project");
+                    
                     // Fill the prepared statement with the new field values.
                     pstmt.setInt(1, issue_id);
                     pstmt.setInt(2, changelog_id);
                     pstmt.setString(3, key);
                     pstmt.setString(4, title);
-                    pstmt.setInt(5, Integer.parseInt(type));
-                    pstmt.setInt(6, Integer.parseInt(priority));
-                    pstmt.setInt(7, Integer.parseInt(resolution));
-                    pstmt.setInt(8, Integer.parseInt(fixVersions));
+                    setInteger(pstmt, 5, type);
+                    setInteger(pstmt, 6, priority);
+                    setInteger(pstmt, 7, resolution);
+                    setInteger(pstmt, 8, fixVersions);
                     setBoolean(pstmt, 9, bugfix);
                     pstmt.setInt(10, Integer.parseInt(watchers));
 
@@ -144,13 +128,19 @@ public class ImpDataIssue extends BaseImport {
 
                     setDate(pstmt, 14, duedate);
 
-                    pstmt.setInt(15, projectID);
-                    pstmt.setInt(16, Integer.parseInt(status));
+                    if (project == null) {
+                        pstmt.setInt(15, projectID);
+                    }
+                    else {
+                        int project_id = projectDb.check_project(project);
+                        pstmt.setInt(15, project_id);
+                    }
+                    setInteger(pstmt, 16, status);
                     setString(pstmt, 17, reporter);
                     setString(pstmt, 18, assignee);
                     pstmt.setInt(19, Integer.parseInt(attachment));
-                    pstmt.setString(20, additional_information);
-                    pstmt.setString(21, review_comments);
+                    setString(pstmt, 20, additional_information);
+                    setString(pstmt, 21, review_comments);
                     
                     if (storypoint != null) {
                         BigDecimal points = BigDecimal.valueOf(Double.parseDouble(storypoint));
@@ -162,36 +152,37 @@ public class ImpDataIssue extends BaseImport {
 
                     setTimestamp(pstmt, 23, resolution_date);
 
-                    pstmt.setInt(24, Integer.parseInt(sprint));
+                    setInteger(pstmt, 24, sprint);
 
-                    pstmt.setString(25, updated_by);
+                    setString(pstmt, 25, updated_by);
                     setBoolean(pstmt, 26, rank_change);
                     
-                    if (epic != null) {
-                        pstmt.setString(27, epic);
-                    }
-                    else {
-                        pstmt.setNull(27, java.sql.Types.VARCHAR);
-                    }
+                    setString(pstmt, 27, epic);
                     
+                    // Ready status
                     pstmt.setBoolean(28, flagged.equals("1"));
-                    pstmt.setInt(29, Integer.parseInt(ready_status));
-                    pstmt.setString(30, ready_status_reason);
+                    setInteger(pstmt, 29, ready_status);
+                    setString(pstmt, 30, ready_status_reason);
                     setBoolean(pstmt, 31, approved);
                     setBoolean(pstmt, 32, approved_by_po);
                     
                     pstmt.setInt(33, Integer.parseInt(labels));
-                    pstmt.setInt(34, Integer.parseInt(affectedVersion));
+                    setInteger(pstmt, 34, affected_version);
                     
+                    // Test cases
                     pstmt.setInt(35, Integer.parseInt(expected_ltcs));
                     pstmt.setInt(36, Integer.parseInt(expected_phtcs));
-                    pstmt.setString(37, test_given);
-                    pstmt.setString(38, test_when);
-                    pstmt.setString(39, test_then);
-                    pstmt.setInt(40, Integer.parseInt(test_execution));
+                    setString(pstmt, 37, test_given);
+                    setString(pstmt, 38, test_when);
+                    setString(pstmt, 39, test_then);
+                    setInteger(pstmt, 40, test_execution);
                     pstmt.setInt(41, Integer.parseInt(test_execution_time));
+                    
+                    setString(pstmt, 42, environment);
+                    setString(pstmt, 43, external_project);
+                    
                     // Encryption
-                    pstmt.setInt(42, SaltDb.Encryption.NONE);
+                    pstmt.setInt(44, SaltDb.Encryption.NONE);
 
                     insertStmt.batch();
                 }
@@ -223,7 +214,17 @@ public class ImpDataIssue extends BaseImport {
         
     }
     
+    private void setInteger(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null) {
+            int number = Integer.parseInt(value);
+            pstmt.setInt(index, number);
+        } else{
+            pstmt.setNull(index, java.sql.Types.INTEGER);
+        }
+    }
+    
     private void setBoolean(PreparedStatement pstmt, int index, String value) throws SQLException {
+        // For booleans, "-1" means false, "1" means true, and null or "0" means missing.
         if (value == null || value.equals("0")) {
             pstmt.setNull(index, java.sql.Types.BOOLEAN);
         }
