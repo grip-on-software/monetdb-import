@@ -17,7 +17,7 @@ CREATE TABLE "gros"."issue" (
 	"status"         INTEGER    NULL,
 	"reporter"       VARCHAR(64)    NULL,
 	"assignee"       VARCHAR(64)    NULL,
-	"attachments"    INTEGER    NULL,
+	"attachments"    INTEGER    NOT NULL,
 	"additional_information" TEXT  NULL,
 	"review_comments" TEXT  NULL,
 	"story_points"   DECIMAL(5,2)    NULL,
