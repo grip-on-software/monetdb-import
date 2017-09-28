@@ -517,7 +517,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             setString(pstmt, 5, saltDb.hash(dev.getEmail(), pair));
             pstmt.setInt(6, SaltDb.Encryption.PROJECT);
     
-            insertProjectDeveloperStmt.batch();
+            // Execute immediately to avoid primary key constraint violations
+            pstmt.execute();
         }
     }
     
