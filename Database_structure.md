@@ -47,6 +47,12 @@ such fields more thoroughly and uniformly.
     value as well as the global or project-specific salts. The field can
     be matched against other fields with the same encryption level.
 
+Where applicable, we describe the semantics of the field types in text.
+If a field can be NULL, then we explain the circumstances when this
+occurs. Some fields instead store a zero value for missing data, either
+as integer or string, but NULL should be the preferred storage for this
+purpose.
+
 ## Issue tables (JIRA)
 
 -   **issue**: Entries from the JIRA database. Each row is one changelog
@@ -62,41 +68,51 @@ such fields more thoroughly and uniformly.
         This reflects the title at the moment the issue version existed,
         based on the changelog.
     -   **type** - INT - reference to issuetype.id: The issue type
-        (Story, Bug, Use Case) as an internal JIRA identifier.
+        (Story, Bug, Use Case) as an internal JIRA identifier, or NULL
+        if this information is not provided by the API.
     -   **priority** - INT - reference to priority.id: The issue
-        priority (Low, Medium High) as an internal scale.
+        priority (Low, Medium High) as an internal scale, or NULL if
+        this information is not provided by the API.
     -   **resolution** - INT - reference to resolution.id: The issue
         resolution (Fixed, Duplicate, Works as designed) as an internal
-        JIRA identifier.
+        JIRA identifier, or NULL if this information is not provided by
+        the API.
     -   **fixversion** - INT - reference to fixversion.id: The earliest
         version in which the issue is fixed as an internal JIRA
         identifier, or NULL if not provided.
     -   **bugfix** - BOOL: Whether this is a bugfix issue (possibly
-        deduced from the issue type)
+        deduced from the issue type), or NULL if not provided.
     -   **watchers** - INT: The number of watchers of this issue at the
         moment that the data is scraped.
     -   **created** - TIMESTAMP: The time at which the issue was
         created, equal to updated_at of the first version. Provided as a
-        convenience on all versions.
+        convenience on all versions. This is NULL if the information is
+        not provided by the API.
     -   **updated** - TIMESTAMP: The time at which the change in this
         version of the issue was made. Equal to *created* for the first
-        version.
+        version. This is NULL if the information is not provided by the
+        API.
     -   **description** - TEXT: The human-readable description that is
         shown at the top of the issue by default. Can be updated in
-        changes.
+        changes. This is NULL if not provided.
     -   **duedate** - DATE: The due date of this issue, or NULL if not
         provided. Some projects use due dates for milestone and issue
         prioritization, in addition to sprint constraints.
     -   **project_id** - INT - reference to project.project_id: The JIRA
-        project in which this issue is contained.
+        project in which this issue is contained. This is 0 if this
+        version of the issue was created in a different project before
+        being moved to this project, and the other project is not known
+        to us.
     -   **status** - INT - reference to status.id: The issue status
         (Open, In Progress, Resolved, Closed) as an internal JIRA
-        identifier.
+        identifier, or NULL if this information is not provided by the
+        API.
     -   **reporter** - VARCHAR(JIRA developer) - reference to
         developer.name: The reporter of the issue according to the issue
         data. Usually, this is the same developer as *updated_by* on the
         first version, but this may be different due to cloned issues or
-        intermediate changes.
+        intermediate changes. This is NULL if this information is not
+        provided by the API.
     -   **assignee** - VARCHAR(JIRA developer) - reference to
         developer.name: The developer that should resolve the issue, or
         NULL if none is assigned thus far.
@@ -107,7 +123,7 @@ such fields more thoroughly and uniformly.
         filled in. Often used for extra implementation/functional
         details for user stories.
     -   **review_comments** - TEXT: Human-readable text that is shown in
-        a Review tab beside the description, or '0' if it is not filled
+        a Review tab beside the description, or NULL if it is not filled
         in. Updated by reviewing developers to check whether the story
         is complete enough to start with it or that an issue is fixed.
     -   **story_points** - DECIMAL(5,2): The number of points assigned
@@ -118,8 +134,8 @@ such fields more thoroughly and uniformly.
     -   **resolution_date** - TIMESTAMP: The time at which the issue was
         marked as resolved. This may be manually adjusted, but should
         match roughly with the time at which a change is made to mark
-        the issue as Resolved or Closed. If the issue is still open,
-        then this is NULL.
+        the issue as Resolved or Closed. If the issue is (still) open in
+        this version, then this is NULL.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         that this issue is pulled into. The sprint can differ by version
         if a change is made or if the issue has multiple sprints
@@ -127,24 +143,28 @@ such fields more thoroughly and uniformly.
         changes). In the case of multiple candidate sprints, the latest
         sprint which contains the changelog version updated date is
         used. If the issue is not yet explicitly added into a sprint,
-        then this is the integer 0. For example, subtasks may have a
-        sprint ID of 0 while only the parent task is in a sprint.
+        then this is NULL. For example, subtasks may have a sprint ID of
+        0 while only the parent task is in a sprint.
     -   **updated_by** - VARCHAR(JIRA developer) - reference to
         developer.name: The developer that made a change in this version
-        of the issue.
+        of the issue. This is NULL if this information is not provided
+        by the API.
     -   **rank_change** - BOOL: The rank change performed in this
         change. Possible values are *true*, meaning an increase in rank,
         *false*, meaning a decrease in rank, or NULL, which means that
         the rank was not changed. The actual rank cannot be deduced from
         the changes due to dependencies on the ranks of other issues.
-    -   **epic** - VARCHAR(Issue key): The issue key of the Epic link.
+    -   **epic** - VARCHAR(Issue key): The issue key of the Epic link,
+        or NULL if the issue is not linked to an Epic.
     -   **impediment** - BOOL: Whether the issue is currently marked as
         being blocked by an Impediment.
     -   **ready_status** - INT - reference to ready_status.id: The
-        refinement ready status as an internal JIRA identifier.
+        refinement ready status as an internal JIRA identifier, or NULL
+        if the issue does not have a ready status.
     -   **ready_status_reason** - TEXT: Additional text provided in the
         Review tab of the issue to describe why it currently has the
-        given ready status.
+        given ready status. This is NULL if the issue has no ready
+        status or reason.
     -   **approved** - BOOL: The Yes/No value of the Approved field, or
         NULL if it is not set. Not all projects use this field,
         preferring review comments, ready states or similar fields.
@@ -156,7 +176,7 @@ such fields more thoroughly and uniformly.
         has.
     -   **version** - INT - reference to fixversion.id: The first
         reported affected version that the issue describes a particular
-        bug of. If this is not set, then the field value is 0.
+        bug of. If this is not set, then the field value is NULL.
     -   **expected_ltcs** - INT: The number of expected logical test
         cases that are needed to sufficiently test the implementation of
         this story, use case or issue. If this is not set, then it is
@@ -166,18 +186,31 @@ such fields more thoroughly and uniformly.
         this story, use case or issue. If this is not set, then it is
         the integer 0.
     -   **test_given** - TEXT: The human-readable description of the
-        Given part of a test model for a particular use case.
+        Given part of a test model for a particular use case, or NULL if
+        the issue does not have a test description.
     -   **test_when** - TEXT: The human-readable description of the When
-        part of a test model for a particular use case.
+        part of a test model for a particular use case, or NULL if the
+        issue does not have a test description.
     -   **test_then** - TEXT: The human-readable description of the Then
-        part of a test model for a particular use case.
+        part of a test model for a particular use case, or NULL if the
+        issue does not have a test description.
     -   **test_execution** - INT - reference to test_execution.id: The
         test execution model (Manual, Automated, Will not be tested) as
-        an internal JIRA identifier.
+        an internal JIRA identifier, or NULL if the issue does not have
+        a test model.
     -   **test_execution_time** - INT: Units of time that the test
         execution appears to take. This is often set after the use case
         is resolved and tested. If this is not set, then it is the
         integer 0.
+    -   **environment** - VARCHAR(100): The environment to which the
+        issue applies. This can apply to a DTAP environment, a component
+        of the application, or other kinds of environments that the team
+        may define. This is NULL if the issue does not have an
+        environment specified.
+    -   **external_project** - VARCHAR(20) - reference to project.key:
+        The project for which this issue was created, in case the issue
+        is created in a support team board. This is NULL if the external
+        project is not defined.
     -   **encryption** - INT(row encryption)
 
 ### Context tables
