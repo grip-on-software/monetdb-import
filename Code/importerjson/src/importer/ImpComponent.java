@@ -37,7 +37,7 @@ public class ImpComponent extends BaseImport {
             for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String component_id = (String) jsonObject.get("component_id");
+                String component_id = (String) jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 String description = (String) jsonObject.get("description");
                 
