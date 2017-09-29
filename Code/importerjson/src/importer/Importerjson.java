@@ -41,7 +41,7 @@ public class Importerjson {
         groupedTasks.put("jira", Arrays.asList(new String[]{
             "issue", "issuetype", "status", "resolution", "relationshiptype",
             "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
-            "sprint", "comment", "developer"
+            "sprint", "comment", "developer", "component"
         }));
 
         // Quality dashboard metrics
@@ -107,6 +107,7 @@ public class Importerjson {
         importers.put("sprint", ImpSprint.class);
         importers.put("comment", ImpComment.class);
         importers.put("developer", ImpDeveloper.class);
+        importers.put("component", ImpComponent.class);
         
         importers.put("metric_value", ImpMetricValue.class);
         importers.put("metric_version", ImpMetricVersion.class);

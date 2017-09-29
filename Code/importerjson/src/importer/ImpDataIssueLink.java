@@ -5,14 +5,14 @@
  */
 package importer;
 
-import dao.IssueLinkDb;
-import dao.IssueLinkDb.CheckResult;
-import util.BaseImport;
 import java.io.FileReader;
 import java.sql.Timestamp;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import dao.IssueLinkDb;
+import util.BaseImport;
+import util.BaseLinkDb.CheckResult;
 
 /**
  * Importer for JIRA issue links.
@@ -68,7 +68,7 @@ public class ImpDataIssueLink extends BaseImport {
                         start = result.dates.start_date;
                     }
                     if (result.dates.end_date != null && end != null && end.before(result.dates.end_date)) {
-                        end= result.dates.end_date;
+                        end = result.dates.end_date;
                     }
                     linkDb.update_link(from_key, to_key, relationship_type, is_outward, start, end);
                 }

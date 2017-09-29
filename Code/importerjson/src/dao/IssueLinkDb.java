@@ -14,13 +14,13 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Objects;
-import util.BaseDb;
+import util.BaseLinkDb;
 
 /**
  * Database access management for the JIRA issue links table.
  * @author Leon Helwerda
  */
-public class IssueLinkDb extends BaseDb implements AutoCloseable {
+public class IssueLinkDb extends BaseLinkDb implements AutoCloseable {
     /**
      * Object containing the relationship properties of an issue link.
      */
@@ -78,60 +78,8 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
             hash = 17 * hash + this.relationship_type;
             hash = 13 * hash + Boolean.hashCode(this.outward);
             return hash;
-        }        
-    }
-    
-    /**
-     * Object containing temporal information related to a link relationship.
-     */
-    public static class LinkDates {
-        /**
-         * Timestamp since which the link exists, or null if the start date is unknown.
-         */
-        public Timestamp start_date;
-        /**
-         * Timestamp at which the link ceases to exist due to a change in the issues,
-         * or null if the link still exists.
-         */
-        public Timestamp end_date;
-        
-        public LinkDates() {
-            this.start_date = null;
-            this.end_date = null;
-        }
-        
-        public LinkDates(Timestamp start_date, Timestamp end_date) {
-            this.start_date = start_date;
-            this.end_date = end_date;
-        }
-        
-        @Override
-        public boolean equals(Object other) {
-            if (other == null) {
-                return false;
-            }
-            if (other instanceof LinkDates) {
-                LinkDates otherDates = (LinkDates) other;
-                return ((start_date == null ? otherDates.start_date == null : start_date.equals(otherDates.start_date)) &&
-                        (end_date == null ? otherDates.end_date == null : end_date.equals(otherDates.end_date)));
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = 53 * hash + Objects.hashCode(this.start_date);
-            hash = 53 * hash + Objects.hashCode(this.end_date);
-            return hash;
         }
     }
-    
-    public static class CheckResult {
-        public enum State { MISSING, DIFFERS, EXISTS };
-        public State state = State.MISSING;
-        public LinkDates dates = null;
-    };
     
     private HashMap<Link, LinkDates> linkCache = null;
     
@@ -161,42 +109,19 @@ public class IssueLinkDb extends BaseDb implements AutoCloseable {
         linkCache = new HashMap<>();
         
         Connection con = insertStmt.getConnection();
-        String sql = "SELECT from_key,to_key,relationship_type,outward,start_date,end_date FROM gros.issuelink";
-        ResultSet rs;
-        try (Statement stmt = con.createStatement()) {
-            rs = stmt.executeQuery(sql);
-            while(rs.next()) {
+        String sql = "SELECT from_key, to_key, relationship_type, outward, start_date,end_date FROM gros.issuelink";
+        try (
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)
+        ) {
+            while (rs.next()) {
                 Link link = new Link(rs.getString("from_key"), rs.getString("to_key"), rs.getInt("relationship_type"), rs.getBoolean("outward"));
                 LinkDates dates = new LinkDates(rs.getTimestamp("start_date"), rs.getTimestamp("end_date"));
                 linkCache.put(link, dates);
             }
         }
-        rs.close();
     }
     
-    private boolean compareTimestamps(Timestamp date, Timestamp current_date, boolean allowEarlier) {
-        if (date == null) {
-            return (current_date == null);
-        }
-        if (allowEarlier && current_date != null && date.after(current_date)) {
-            return true;
-        }
-        return date.equals(current_date);
-    }
-
-    private CheckResult compareLinkDates(LinkDates dates, LinkDates current_dates) {
-        CheckResult result = new CheckResult();
-        result.dates = current_dates;
-        if (compareTimestamps(dates.start_date, current_dates.start_date, true) &&
-                compareTimestamps(dates.end_date, current_dates.end_date, false)) {
-            result.state = CheckResult.State.EXISTS;
-        }
-        else {
-            result.state = CheckResult.State.DIFFERS;
-        }
-        return result;
-    }
-
     /**
      * Check whether an issue link exists in the database and that it has the same
      * properties as the provided arguments.
