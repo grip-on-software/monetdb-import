@@ -99,10 +99,12 @@ purpose.
         provided. Some projects use due dates for milestone and issue
         prioritization, in addition to sprint constraints.
     -   **project_id** - INT - reference to project.project_id: The JIRA
-        project in which this issue is contained. This is 0 if this
-        version of the issue was created in a different project before
-        being moved to this project, and the other project is not known
-        to us.
+        project in which this issue is contained. This may **differ from
+        the project in the latest version of the issue** if the issue
+        was created in a different project before being moved to this
+        project. If such a projects is otherwise not in the database,
+        then this points to a dummy project which is a subproject of the
+        later project.
     -   **status** - INT - reference to status.id: The issue status
         (Open, In Progress, Resolved, Closed) as an internal JIRA
         identifier, or NULL if this information is not provided by the
@@ -398,10 +400,40 @@ purpose.
 
 ### Relationship tables
 
+-   **component**: The components that exist in JIRA for a project.
+    Primary key is (project_id, component_id).
+    -   **project_id** - INT - reference to project.project_id:
+        Identifier of the project in which the component exists.
+    -   **component_id** - INT: Internal JIRA identifier for the
+        component.
+    -   **name** - VARCHAR(100): The (short) name of the component, as
+        shown in the issues.
+    -   **description** - VARCHAR(500): The description of the
+        component, or NULL if no description is provided to the
+        component.
+
+
+-   **issue_component**: The links from issues to components. The links
+    have temporal date ranges that indicate the largest range in which
+    the link has existed based on changelog entries. Primary key
+    consists of (issue_id, component_id).
+    -   **issue_id** - INT - reference to issue.issue_id: Identifier of
+        the issue that has a component.
+    -   **component_id** - INT - reference to component.component_id:
+        Identifier of the component in which the issue is contained.
+    -   **start_date** - TIMESTAMP - reference to issue.updated: Point
+        in time when the link was first added to the issue, or NULL if
+        the link has existed since the issue was created.
+    -   **end_date** - TIMESTAMP - reference to issue.updated: Point in
+        time when the link was last removed from the issue, or NULL if
+        the link still exists.
+
+
 -   **issuelink**: Bidirectional links that exist between pairs of
-    issues in JIRA. Only the links that exist when the data is collected
-    are stored here (no changelogs). Primary key consists of (from_key,
-    to_key, relationship_type, outward).
+    issues in JIRA. The links have temporal date ranges that indicate
+    the largest range in which the link has existed based on changelog
+    entries. Primary key consists of (from_key, to_key,
+    relationship_type, outward).
     -   **from_key** - VARCHAR(Issue key) - reference to issue.key:
         Issue involved in the link.
     -   **to_key** - VARCHAR(Issue key) - reference to issue.key:
@@ -413,7 +445,7 @@ purpose.
         *from_key* (true) or inward to it (false).
     -   **start_date** - TIMESTAMP - reference to issue.updated: Point
         in time when the link was first added to the *from_key* issue,
-        or NULL if not known.
+        or NULL if the link has existed since the issue was created.
     -   **end_date** - TIMESTAMP - reference to issue.updated: Point in
         time when the link was last removed from the *from_key* issue,
         or NULL if the link still exists.
