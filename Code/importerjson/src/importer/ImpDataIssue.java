@@ -44,6 +44,7 @@ public class ImpDataIssue extends BaseImport {
             ) {
                 private final BigDecimal max_points = BigDecimal.valueOf(999.0);
                 private final int projectID = getProjectID();
+                private final String projectName = getProjectName();
                 private final ProjectDb projectDb = new ProjectDb();
                 
                 private String getField(JSONObject jsonObject, String field) {
@@ -137,8 +138,11 @@ public class ImpDataIssue extends BaseImport {
                             // Insert a dummy project such that we can link to it.
                             // Either this project is imported later on, or
                             // the project will never get any other data and is thus
-                            // free from sprints and repositories.
-                            projectDb.insert_project(project);
+                            // free from sprints and repositories. Mark it as a
+                            // subproject of this one, which is overwritten if it
+                            // is an actual project that we import, and helps hiding
+                            // it from most purposes.
+                            projectDb.insert_project(project, projectName, null, null, null, null, null);
                             project_id = projectDb.check_project(project);
                         }
                         pstmt.setInt(15, project_id);
