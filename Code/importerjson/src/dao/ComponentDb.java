@@ -71,7 +71,7 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
     private BatchedStatement updateComponentStmt = null;
 
     public ComponentDb() {
-        String sql = "insert into gros.issue_component (issue_id,component_id,start_date,end_date) values (?,?,?,?,?,?);";
+        String sql = "insert into gros.issue_component (issue_id,component_id,start_date,end_date) values (?,?,?,?);";
         insertLinkStmt = new BatchedStatement(sql);
 
         sql = "update gros.issue_component set start_date=?, end_date=? where issue_id=? and component_id=?;";
