@@ -133,6 +133,14 @@ public class ImpDataIssue extends BaseImport {
                     }
                     else {
                         int project_id = projectDb.check_project(project);
+                        if (project_id == 0) {
+                            // Insert a dummy project such that we can link to it.
+                            // Either this project is imported later on, or
+                            // the project will never get any other data and is thus
+                            // free from sprints and repositories.
+                            projectDb.insert_project(project);
+                            project_id = projectDb.check_project(project);
+                        }
                         pstmt.setInt(15, project_id);
                     }
                     setInteger(pstmt, 16, status);
