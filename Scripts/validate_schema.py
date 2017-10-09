@@ -256,7 +256,9 @@ def main():
             else:
                 is_ok = False
 
-            if 'primary_key' in doc_field:
+            primary_ok = check_equal(field, doc_field, 'primary_key', field_text)
+            is_ok = primary_ok and is_ok
+            if 'primary_key' in doc_table:
                 if 'primary_key_combined' not in table or \
                     table['primary_key_combined'] != field_name:
                     logging.warning('Table %s does not have primary key %s',
