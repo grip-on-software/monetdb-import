@@ -209,7 +209,7 @@ purpose.
         of the application, or other kinds of environments that the team
         may define. This is NULL if the issue does not have an
         environment specified.
-    -   **external_project** - VARCHAR(20) - reference to project.key:
+    -   **external_project** - VARCHAR(20) - reference to project.name:
         The project for which this issue was created, in case the issue
         is created in a support team board. This is NULL if the external
         project is not defined.
@@ -547,7 +547,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **repo_name** - VARCHAR(1000): Readable name of the repository
         extracted from one of the data sources (GitLab, project
         definition, path name).
-    -   **project_id** - INTEGER - reference to project.project_id: The
+    -   **project_id** - INT - reference to project.project_id: The
         project to which the repository belongs to. This, alongside the
         *id*, distinguishes repositories with the same name.
     -   **type** - VARCHAR(32): The literal type of the source related
@@ -820,7 +820,7 @@ These tables include data from Gitlab/Git and Subversion.
     updated_date) should be included into the query.
     -   **repo_id** - INT - reference to repo.id: Repository for which
         this note is added.
-    -   **version_id** - VACHAR(100) - reference to commits.version_id:
+    -   **version_id** - VARCHAR(100) - reference to commits.version_id:
         Commit to which this note is added.
     -   **request_id** - INT - reference to merge_request.request_id:
         Internal identifier of the merge request to which this note is
