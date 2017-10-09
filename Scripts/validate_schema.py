@@ -16,6 +16,8 @@ def parse_args(config):
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
     parser = ArgumentParser(description=description)
+    parser.add_argument('--path', default='create-tables.sql',
+                        help='Path to read schema from')
     parser.add_argument('--url', default=config.get('schema', 'url'),
                         help='URL to retrieve documentation from')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
@@ -70,14 +72,62 @@ def test_line(line, current_tokens, data, parent_data=None):
 
     return current_tokens, parent_data
 
-def main():
+def parse(tokens, line_iterator):
     """
-    Main entry point.
+    Parse a file, iterable by lines, using line-based token patterns.
     """
 
-    config = RawConfigParser()
-    config.read("settings.cfg")
-    args = parse_args(config)
+    current_tokens = tokens
+
+    data = {}
+    parent_data = None
+
+    for line in line_iterator:
+        current_tokens, parent_data = \
+            test_line(line, current_tokens, data, parent_data)
+
+    logging.info('%r', data)
+    return data
+
+def parse_schema(path):
+    """
+    Parse an SQL table schema.
+    """
+
+    field = r'^\s*"[a-z_]+"'
+    field_type = field + r'\s+[A-Z]+(?:\([0-9]+\))?'
+    tokens = {
+        'table': {
+            'pattern': re.compile(r'^CREATE TABLE "[a-z_]+"."([a-z_]+)" \('),
+            'within': {
+                'field': {
+                    'pattern': re.compile(r'^\s*"([a-z_]+)"'),
+                    'line': {
+                        'type': {
+                            'pattern': re.compile(field + r'\s+([A-Z]+(?:\([0-9]+\))?)')
+                        },
+                        'null': {
+                            'pattern': re.compile(field_type + r'\s*NULL')
+                        },
+                        'primary_key': {
+                            'pattern': re.compile(field_type + r'.* AUTO_INCREMENT')
+                        }
+                    }
+                },
+                'primary_key_combined': {
+                    'pattern': re.compile(r'^\s*CONSTRAINT "[a-z_]+" PRIMARY KEY \("([a-z_]+)"(?:,\s*"([a-z_]+)")*\)')
+                }
+            }
+        }
+    }
+
+    with open(path, 'r') as schema_file:
+        return parse(tokens, schema_file)
+
+def parse_documentation(url):
+    """
+    Parse a documentation wiki.
+    """
 
     field = r"^\*\* '''[a-z_]+'''"
     tokens = {
@@ -110,17 +160,21 @@ def main():
             'end': re.compile(r"^$")
         }
     }
-    current_tokens = tokens
 
-    data = {}
-    parent_data = None
+    request = requests.get(url)
+    return parse(tokens, request.text.splitlines())
 
-    request = requests.get(args.url)
-    for line in request.text.splitlines():
-        current_tokens, parent_data = \
-            test_line(line, current_tokens, data, parent_data)
+def main():
+    """
+    Main entry point.
+    """
 
-    logging.info('%r', data)
+    config = RawConfigParser()
+    config.read("settings.cfg")
+    args = parse_args(config)
+
+    documentation = parse_documentation(args.url)
+    schema = parse_schema(args.path)
 
 if __name__ == "__main__":
     main()
