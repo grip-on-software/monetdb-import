@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from ConfigParser import RawConfigParser
 import logging
 import re
+import sys
 import requests
 
 def parse_args(config):
@@ -117,7 +118,8 @@ def parse_schema(path):
                 'primary_key_combined': {
                     'pattern': re.compile(r'^\s*CONSTRAINT "[a-z_]+" PRIMARY KEY \("([a-z_]+)"(?:,\s*"([a-z_]+)")*\)')
                 }
-            }
+            },
+            'end': re.compile(r"^\);")
         }
     }
 
@@ -164,6 +166,22 @@ def parse_documentation(url):
     request = requests.get(url)
     return parse(tokens, request.text.splitlines())
 
+def check_missing(one, two, key, extra=''):
+    missing = set(one[key].keys()) - set(two[key].keys())
+    superfluous = set(two[key].keys()) - set(one[key].keys())
+
+    if missing:
+        logging.warning('Missing %s%s%s: %s', key,
+                        's' if len(missing) > 1 else '', extra,
+                        ', '.join(missing))
+
+    if superfluous:
+        logging.warning('Superfluous %s%s%s: %s', key,
+                        's' if len(superfluous) > 1 else '', extra,
+                        ', '.join(superfluous))
+
+    return not missing and not superfluous
+
 def main():
     """
     Main entry point.
@@ -175,6 +193,15 @@ def main():
 
     documentation = parse_documentation(args.url)
     schema = parse_schema(args.path)
+
+    is_ok = check_missing(schema, documentation, 'table')
+
+    for table_name, table in schema['table'].items():
+        doc_table = documentation['table'][table_name]
+        is_ok = is_ok and check_missing(table, doc_table, 'field',
+                                        ' for table {}'.format(table_name))
+
+    sys.exit(0 if is_ok else 1)
 
 if __name__ == "__main__":
     main()
