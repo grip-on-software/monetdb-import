@@ -96,7 +96,7 @@ def parse_schema(path):
     """
 
     field = r'^\s*"[a-z_]+"'
-    field_type = field + r'\s+[A-Z]+(?:\([0-9]+\))?'
+    field_type = field + r'\s+[A-Z]+(?:\([0-9,]+\))?'
     tokens = {
         'table': {
             'pattern': re.compile(r'^CREATE TABLE "[a-z_]+"."([a-z_]+)" \('),
@@ -105,7 +105,7 @@ def parse_schema(path):
                     'pattern': re.compile(r'^\s*"([a-z_]+)"'),
                     'line': {
                         'type': {
-                            'pattern': re.compile(field + r'\s+([A-Z]+(?:\([0-9]+\))?)')
+                            'pattern': re.compile(field + r'\s+([A-Z]+(?:\([0-9,]+\))?)')
                         },
                         'null': {
                             'pattern': re.compile(field_type + r'\s*NULL')
@@ -137,7 +137,7 @@ def parse_documentation(url):
             'pattern': re.compile(r"^\* '''([a-z_]+)'''"),
             'line': {
                 'primary_key_combined': {
-                    'pattern': re.compile(r'Primary key is \(([a-z_]+)(?:, ([a-z_]+))*\)')
+                    'pattern': re.compile(r'.* Primary key is \(([a-z_]+)(?:, ([a-z_]+))*\)')
                 }
             },
             'within': {
@@ -145,7 +145,7 @@ def parse_documentation(url):
                     'pattern': re.compile(r"^\*\* '''([a-z_]+)'''"),
                     'line': {
                         'type': {
-                            'pattern': re.compile(field + r" - ([A-Z]+(?:\([A-Za-z0-9 ]+\))?)")
+                            'pattern': re.compile(field + r" - ([A-Z]+(?:\([A-Za-z0-9, ]+\))?)")
                         },
                         'primary_key': {
                             'pattern': re.compile(field + r" - [^:]*primary key:")
@@ -182,6 +182,19 @@ def check_missing(one, two, key, extra=''):
 
     return not missing and not superfluous
 
+def check_equal(one, two, key, extra=''):
+    if key in one:
+        if key not in two:
+            logging.warning('Missing %s%s', key, extra)
+            return False
+
+        if one[key] != two[key]:
+            logging.warning('%s%s does not match: %s vs. %s', key, extra,
+                            one[key], two[key])
+            return False
+
+    return True
+
 def main():
     """
     Main entry point.
@@ -197,9 +210,25 @@ def main():
     is_ok = check_missing(schema, documentation, 'table')
 
     for table_name, table in schema['table'].items():
+        table_text = ' for table {}'.format(table_name)
         doc_table = documentation['table'][table_name]
-        is_ok = is_ok and check_missing(table, doc_table, 'field',
-                                        ' for table {}'.format(table_name))
+        is_ok = check_equal(doc_table, table, 'primary_key_combined', table_text) and is_ok
+        is_ok = check_missing(table, doc_table, 'field', table_text) and is_ok
+
+        for field_name, field in table['field'].items():
+            field_text = ' of field {} in table {}'.format(field_name, table_name)
+            doc_field = doc_table['field'][field_name]
+            if check_equal(field, doc_field, 'null', field_text):
+                is_ok = check_equal(doc_field, field, 'null', field_text) and is_ok
+            else:
+                is_ok = False
+
+            if 'primary_key' in doc_field:
+                if 'primary_key_combined' not in table or \
+                    table['primary_key_combined'] != field_name:
+                    logging.warning('Table %s does not have primary key %s',
+                                    table_name, field_name)
+                    is_ok = False
 
     sys.exit(0 if is_ok else 1)
 
