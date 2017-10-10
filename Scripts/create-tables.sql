@@ -245,11 +245,11 @@ CREATE TABLE "gros"."commits" (
 CREATE TABLE "gros"."comment" (
 	"comment_id"     INTEGER        NOT NULL AUTO_INCREMENT,
 	"issue_id"       INTEGER        NOT NULL,
-	"message"        TEXT           NULL,
+	"message"        TEXT           NOT NULL,
 	"author"         VARCHAR(64)   NOT NULL,
-	"date"           TIMESTAMP      NULL,
+	"date"           TIMESTAMP      NOT NULL,
 	"updater"        VARCHAR(64)   NOT NULL,
-	"updated_date"   TIMESTAMP      NULL,
+	"updated_date"   TIMESTAMP      NOT NULL,
 	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
 );

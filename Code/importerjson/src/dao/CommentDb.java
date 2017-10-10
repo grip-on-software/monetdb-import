@@ -47,10 +47,9 @@ public class CommentDb extends BaseDb implements AutoCloseable {
      * @param message The current contents of the message
      * @param author The shorthand name of the original author of the comment
      * @param date The timestamp when the comment was originally written
-     * @param updater The shorthand name of the most recent editor of the comment,
-     * or null if the comment has not been edited
-     * @param updated_date The timestamp when the comment was most recently edited,
-     * or null if the comment has not been edited
+     * @param updater The shorthand name of the most recent editor of the comment
+     * @param updated_date The timestamp when the comment was most recently edited
+     * or the creation date if it has not been edited
      * @return An indicator of the state of the database regarding the given comment.
      * This is CheckResult.MISSING if the comment with the provided identifier
      * does not exist. This is CheckResult.DIFFERS if there is a row with the
@@ -93,10 +92,9 @@ public class CommentDb extends BaseDb implements AutoCloseable {
      * @param message The current contents of the message
      * @param author The shorthand name of the original author of the comment
      * @param date The timestamp when the comment was originally written
-     * @param updater The shorthand name of the most recent editor of the comment,
-     * or null if the comment has not been edited
-     * @param updated_date The timestamp when the comment was most recently edited,
-     * or null if the comment has not been edited
+     * @param updater The shorthand name of the most recent editor of the comment
+     * @param updated_date The timestamp when the comment was most recently edited
+     * or the creation date if it has not been edited
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
@@ -119,10 +117,9 @@ public class CommentDb extends BaseDb implements AutoCloseable {
      * @param message The current contents of the message
      * @param author The shorthand name of the original author of the comment
      * @param date The timestamp when the comment was originally written
-     * @param updater The shorthand name of the most recent editor of the comment,
-     * or null if the comment has not been edited
-     * @param updated_date The timestamp when the comment was most recently edited,
-     * or null if the comment has not been edited
+     * @param updater The shorthand name of the most recent editor of the comment
+     * @param updated_date The timestamp when the comment was most recently edited
+     * or the creation date if it has not been edited
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
