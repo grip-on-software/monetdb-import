@@ -287,6 +287,8 @@ purpose.
         written.
     -   **updater** - VARCHAR(JIRA developer) - reference to
         developer.name: Developer that edited the message most recently.
+        If the comment has not been updated, then this is equal to
+        *author*.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
         message was edited. This is equal to *date* if the comment has
         not been updated.
