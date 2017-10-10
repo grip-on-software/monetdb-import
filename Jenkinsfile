@@ -1,5 +1,5 @@
 pipeline {
-    agent ant
+    agent any
 
     environment {
         BUILD_TARGET = 'default'
@@ -25,7 +25,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                node {
+                node('ant') {
                     withAnt(installation: 'default') {
                         if (isUnix()) {
                             sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
