@@ -26,7 +26,7 @@ pipeline {
         stage('Build') {
             steps {
                 node('ant') {
-                    withAnt(installation: 'default') {
+                    withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
                         sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
                     }
                 }
