@@ -27,11 +27,7 @@ pipeline {
             steps {
                 node('ant') {
                     withAnt(installation: 'default') {
-                        if (isUnix()) {
-                            sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
-                        } else {
-                            bat "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
-                        }
+                        sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
                     }
                 }
             }
