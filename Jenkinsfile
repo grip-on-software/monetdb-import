@@ -4,7 +4,6 @@ pipeline {
     environment {
         BUILD_TARGET = 'default'
         BUILD_FILE = 'Code/importerjson/build.xml'
-        BUILD_PROPERTIES = credentials('monetdb-import-properties')
     }
 
     post {
@@ -26,8 +25,10 @@ pipeline {
         stage('Build') {
             steps {
                 node('ant') {
-                    withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
-                        sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
+                    withCredentials([file(credentialsId: 'monetdb-import-properties', variable: 'BUILD_PROPERTIES')]) {
+                        withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
+                            sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
+                        }
                     }
                 }
             }
