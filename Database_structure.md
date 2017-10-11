@@ -12,7 +12,7 @@ follows:
 
 Additional details about how the data is imported can be found by
 browsing the
-[Javadoc](http://www.jenkins.example:8080/job/build-importerjson/Javadoc/)
+[Javadoc](http://www.jenkins.example:8080/job/build-monetdb-import/job/master/Javadoc/)
 of the importer, especially the dao package.
 
 ## Special field types
