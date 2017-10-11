@@ -17,11 +17,10 @@ pipeline {
         success {
             archiveArtifacts artifacts: 'Code/importerjson/dist/**', excludes: 'Code/importerjson/dist/javadoc/**', onlyIfSuccessful: true
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'Code/importerjson/dist/javadoc', reportFiles: 'index.html', reportName: 'Javadoc', reportTitles: ''])
-            addGitLabMRComment()
-            updateGitlabCommitStatus name: 'build', state: 'success'
+            updateGitlabCommitStatus name: env.JOB_NAME, state: 'success'
         }
         failure {
-            updateGitlabCommitStatus name: 'build', state: 'failed'
+            updateGitlabCommitStatus name: env.JOB_NAME, state: 'failed'
         }
     }
 
