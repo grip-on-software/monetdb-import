@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'ant' }
 
     environment {
         BUILD_TARGET = 'default'
@@ -12,7 +12,6 @@ pipeline {
     triggers {
         gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All')
     }
-
 
     post {
         success {
@@ -29,11 +28,9 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                node('ant') {
-                    withCredentials([file(credentialsId: 'monetdb-import-properties', variable: 'BUILD_PROPERTIES')]) {
-                        withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
-                            sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
-                        }
+                withCredentials([file(credentialsId: 'monetdb-import-properties', variable: 'BUILD_PROPERTIES')]) {
+                    withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
+                        sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
                     }
                 }
             }
