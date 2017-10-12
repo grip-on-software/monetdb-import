@@ -585,15 +585,15 @@ These tables include data from Gitlab/Git and Subversion.
         tag references (Git).
     -   **message** - TEXT: Message that is added to the tag when it is
         created, separate from the commit message. Only available for
-        Git repositories, and optional.
+        Git repositories, and is NULL if no message was created.
     -   **tagged_date** - TIMESTAMP: Date on which the tag is created
         (Git) or most recently updated (Subversion). Note that tags
         should not be altered once they are created, so the tagged date
         should reflect the commit date for Subversion. The date may be
-        missing for incomplete Git tags.
-    -   **tagger_id** - INT - reference to vcs_developer.id: The
+        NULL for incomplete Git tags.
+    -   **tagger_id** - INT - reference to vcs_developer.alias_id: The
         developer that created the tag. If the developer cannot be
-        deduced from tag information, then this is null.
+        deduced from tag information, then this is NULL.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the tag was created, based on date intervals. If the
         tag date is not matched to a sprint, then this is 0. In the case
@@ -707,7 +707,7 @@ These tables include data from Gitlab/Git and Subversion.
     issue_id, note_id).
     -   **repo_id** - INT - reference to repo.id: Repository for which
         this note is added.
-    -   **request_id** - INT - reference to github_issue.issue_id: The
+    -   **issue_id** - INT - reference to github_issue.issue_id: The
         GitHub issue identifier of the issue to which this note is
         added.
     -   **note_id** - INT: Internal identifier of the note which is
