@@ -39,13 +39,16 @@ pipeline {
             agent {
                 docker {
                     image 'python:2.7-alpine'
-					args '-u root'
+                    args '-u root'
                 }
+            }
+            environment {
+                GIT_PYTHON_REFRESH = 'quiet'
             }
             steps {
                 sh 'pip install pylint gitpython pymonetdb requests'
                 sh 'pylint Scripts/*.py'
-                sh 'python Scripts/validate_schema.py --log WARNING'
+                sh 'cd Scripts && python validate_schema.py --log WARNING --branch $BRANCH_NAME'
             }
         }
     }

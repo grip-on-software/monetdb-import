@@ -15,8 +15,6 @@ def parse_args(config):
     Parse command line arguments.
     """
 
-    repo = git.Repo('..')
-
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
     parser = ArgumentParser(description=description)
@@ -24,7 +22,7 @@ def parse_args(config):
                         help='Path to read schema from')
     parser.add_argument('--url', default=config.get('schema', 'url'),
                         help='URL to retrieve documentation from')
-    parser.add_argument('--branch', default=repo.active_branch.name,
+    parser.add_argument('--branch', nargs='?', default=None, const='master',
                         help='Branch to retrieve unmerged documentation for')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
@@ -262,7 +260,12 @@ def main():
 
     documentation = parse_documentation(args.url.format(branch=''))
     if args.branch != 'master':
-        documentation = parse_documentation(args.url.format(branch='/' + args.branch),
+        if args.branch is None:
+            branch = git.Repo('..').active_branch.name
+        else:
+            branch = args.branch
+
+        documentation = parse_documentation(args.url.format(branch='/' + branch),
                                             documentation)
 
     schema = parse_schema(args.path)
