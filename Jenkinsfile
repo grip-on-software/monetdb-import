@@ -8,6 +8,7 @@ pipeline {
 
     options {
         gitLabConnection('gitlab')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     triggers {
         gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All')
