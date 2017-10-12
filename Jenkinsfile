@@ -28,6 +28,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                updateGitlabCommitStatus name: env.JOB_NAME, state: 'running'
                 withCredentials([file(credentialsId: 'monetdb-import-properties', variable: 'BUILD_PROPERTIES')]) {
                     withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
                         sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
