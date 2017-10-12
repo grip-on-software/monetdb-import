@@ -7,12 +7,15 @@ from ConfigParser import RawConfigParser
 import logging
 import re
 import sys
+import git
 import requests
 
 def parse_args(config):
     """
     Parse command line arguments.
     """
+
+    repo = git.Repo('..')
 
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
@@ -21,6 +24,8 @@ def parse_args(config):
                         help='Path to read schema from')
     parser.add_argument('--url', default=config.get('schema', 'url'),
                         help='URL to retrieve documentation from')
+    parser.add_argument('--branch', default=repo.active_branch.name,
+                        help='Branch to retrieve unmerged documentation for')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
 
@@ -74,14 +79,17 @@ def test_line(line, current_tokens, data, parent_data=None):
 
     return current_tokens, parent_data
 
-def parse(tokens, line_iterator):
+def parse(tokens, line_iterator, data=None):
     """
     Parse a file, iterable by lines, using line-based token patterns.
     """
 
     current_tokens = tokens
 
-    data = {}
+    if data is None:
+        # No existing data
+        data = {}
+
     parent_data = None
 
     for line in line_iterator:
@@ -96,7 +104,9 @@ def parse_schema(path):
     Parse an SQL table schema.
     """
 
-    field = r'^\s*"[a-z_]+"'
+    ident = r"[a-z_]+"
+    ident_list = r'\("(' + ident + r')"(?:,\s*"(' + ident + r')")*\)'
+    field = r'^\s*"' + ident + r'"'
     field_type = field + r'\s+[A-Z]+(?:\([0-9,]+\))?'
     tokens = {
         'table': {
@@ -117,7 +127,7 @@ def parse_schema(path):
                     }
                 },
                 'primary_key_combined': {
-                    'pattern': re.compile(r'^\s*CONSTRAINT "[a-z_]+" PRIMARY KEY \("([a-z_]+)"(?:,\s*"([a-z_]+)")*\)')
+                    'pattern': re.compile(r'^\s*CONSTRAINT "[a-z_]+" PRIMARY KEY' + ident_list)
                 }
             },
             'end': re.compile(r"^\);")
@@ -127,7 +137,7 @@ def parse_schema(path):
     with open(path, 'r') as schema_file:
         return parse(tokens, schema_file)
 
-def parse_documentation(url):
+def parse_documentation(url, data=None):
     """
     Parse a documentation wiki.
     """
@@ -152,7 +162,8 @@ def parse_documentation(url):
                             'pattern': re.compile(field + r" - [^:]*primary key:")
                         },
                         'reference': {
-                            'pattern': re.compile(field + r" - [^:]*reference to ([a-z_]+)\.([a-z_]+):")
+                            'pattern': \
+                                re.compile(field + r" - [^:]*reference to ([a-z_]+)\.([a-z_]+):")
                         },
                         'null': {
                             'pattern': re.compile(field + r"[^:]*: .+ NULL")
@@ -165,9 +176,18 @@ def parse_documentation(url):
     }
 
     request = requests.get(url)
-    return parse(tokens, request.text.splitlines())
+    if request.status_code == 404:
+        logging.warning('Documentation URL not found: %s', url)
+        return data
+
+    return parse(tokens, request.text.splitlines(), data=data)
 
 def check_missing(one, two, key, extra=''):
+    """
+    Check if two dictionaries that both have a key have subdictionaries with the
+    same subkeys stored for that key.
+    """
+
     missing = set(one[key].keys()) - set(two[key].keys())
     superfluous = set(two[key].keys()) - set(one[key].keys())
 
@@ -184,6 +204,11 @@ def check_missing(one, two, key, extra=''):
     return not missing and not superfluous
 
 def check_equal(one, two, key, extra=''):
+    """
+    Check if two dictionaries have the same value stored for a key if the first
+    dictionary has that key.
+    """
+
     if key in one:
         if key not in two:
             logging.warning('Missing %s%s', key, extra)
@@ -197,6 +222,11 @@ def check_equal(one, two, key, extra=''):
     return True
 
 def check_reference(documentation, doc_field, field_text):
+    """
+    Check whether a field reference is valid and has the same type as the
+    referent.
+    """
+
     if 'reference' in doc_field:
         ref_table_name, ref_field_name = doc_field['reference']
         if ref_table_name not in documentation['table']:
@@ -230,7 +260,11 @@ def main():
     config.read("settings.cfg")
     args = parse_args(config)
 
-    documentation = parse_documentation(args.url)
+    documentation = parse_documentation(args.url.format(branch=''))
+    if args.branch != 'master':
+        documentation = parse_documentation(args.url.format(branch='/' + args.branch),
+                                            documentation)
+
     schema = parse_schema(args.path)
 
     is_ok = check_missing(schema, documentation, 'table')
