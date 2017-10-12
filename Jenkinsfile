@@ -28,10 +28,29 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                updateGitlabCommitStatus name: env.JOB_NAME, state: 'running'
                 withCredentials([file(credentialsId: 'monetdb-import-properties', variable: 'BUILD_PROPERTIES')]) {
                     withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
                         sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
                     }
+                }
+            }
+        }
+        stage('Validate') {
+            agent {
+                docker {
+                    image 'python:2.7-alpine'
+                    args '-u root'
+                }
+            }
+            environment {
+                GIT_PYTHON_REFRESH = 'quiet'
+            }
+            steps {
+                withCredentials([file(credentialsId: 'monetdb-import-settings', variable: 'VALIDATE_SETTINGS')]) {
+                    sh 'pip install pylint gitpython pymonetdb requests'
+                    sh 'pylint Scripts/*.py'
+                    sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING --branch $BRANCH_NAME', returnStatus: true
                 }
             }
         }
