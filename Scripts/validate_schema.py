@@ -255,26 +255,10 @@ def check_reference(documentation, doc_field, field_text):
 
     return 0
 
-def main():
+def validate_schema(schema, documentation):
     """
-    Main entry point.
+    Compare the documentation against the database schema.
     """
-
-    config = RawConfigParser()
-    config.read("settings.cfg")
-    args = parse_args(config)
-
-    documentation = parse_documentation(args.url.format(branch=''))
-    if args.branch != 'master':
-        if args.branch is None:
-            branch = git.Repo('..').active_branch.name
-        else:
-            branch = args.branch
-
-        documentation = parse_documentation(args.url.format(branch='/' + branch),
-                                            documentation)
-
-    schema = parse_schema(args.path)
 
     violations = check_missing(schema, documentation, 'table')
 
@@ -309,8 +293,37 @@ def main():
 
             violations += check_reference(documentation, doc_field, field_text)
 
-    logging.info('Violations: %d', violations)
-    sys.exit(0 if violations == 0 else 1)
+    return violations
+
+def main():
+    """
+    Main entry point.
+    """
+
+    config = RawConfigParser()
+    config.read("settings.cfg")
+    args = parse_args(config)
+
+    documentation = parse_documentation(args.url.format(branch=''))
+    if args.branch != 'master':
+        if args.branch is None:
+            branch = git.Repo('..').active_branch.name
+        else:
+            branch = args.branch
+
+        documentation = parse_documentation(args.url.format(branch='/' + branch),
+                                            documentation)
+
+    schema = parse_schema(args.path)
+
+    violations = validate_schema(schema, documentation)
+
+    if violations > 0:
+        logging.warning('Schema violations: %d', violations)
+        sys.exit(1)
+    else:
+        logging.info('No schema violations detected')
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
