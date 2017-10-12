@@ -35,5 +35,18 @@ pipeline {
                 }
             }
         }
+        stage('Validate') {
+            agent {
+                docker {
+                    image 'python:2.7-alpine'
+					args '-u root'
+                }
+            }
+            steps {
+                sh 'pip install pylint gitpython pymonetdb requests'
+                sh 'pylint Scripts/*.py'
+                sh 'python Scripts/validate_schema.py --log WARNING'
+            }
+        }
     }
 }
