@@ -184,40 +184,47 @@ def check_missing(one, two, key, extra=''):
     """
     Check if two dictionaries that both have a key have subdictionaries with the
     same subkeys stored for that key.
+
+    Returns the number of violations.
     """
 
     missing = set(one[key].keys()) - set(two[key].keys())
     superfluous = set(two[key].keys()) - set(one[key].keys())
+    violations = 0
 
     if missing:
         logging.warning('Missing %s%s%s: %s', key,
                         's' if len(missing) > 1 else '', extra,
                         ', '.join(missing))
+        violations += len(missing)
 
     if superfluous:
         logging.warning('Superfluous %s%s%s: %s', key,
                         's' if len(superfluous) > 1 else '', extra,
                         ', '.join(superfluous))
+        violations += len(superfluous)
 
-    return not missing and not superfluous
+    return violations
 
 def check_equal(one, two, key, extra=''):
     """
     Check if two dictionaries have the same value stored for a key if the first
     dictionary has that key.
+
+    Returns the number of violations.
     """
 
     if key in one:
         if key not in two:
             logging.warning('Missing %s%s', key, extra)
-            return False
+            return 1
 
         if one[key] != two[key]:
             logging.warning('%s%s does not match: %s vs. %s', key, extra,
                             one[key], two[key])
-            return False
+            return 1
 
-    return True
+    return 0
 
 def check_reference(documentation, doc_field, field_text):
     """
@@ -228,16 +235,15 @@ def check_reference(documentation, doc_field, field_text):
     if 'reference' in doc_field:
         ref_table_name, ref_field_name = doc_field['reference']
         if ref_table_name not in documentation['table']:
-            logging.info('%r', documentation['table'].keys())
             logging.warning('Invalid table reference %s%s',
                             ref_table_name, field_text)
-            return False
+            return 1
 
         ref_fields = documentation['table'][ref_table_name]['field']
         if ref_field_name not in ref_fields:
             logging.warning('Invalid field reference %s.%s%s',
                             ref_table_name, ref_field_name, field_text)
-            return False
+            return 1
 
         ref_field = ref_fields[ref_field_name]
         if 'type' in doc_field and 'type' in ref_field and \
@@ -245,9 +251,9 @@ def check_reference(documentation, doc_field, field_text):
             logging.warning('Referenced field %s.%s with type %s does not match type %s%s',
                             ref_table_name, ref_field_name, ref_field['type'],
                             doc_field['type'], field_text)
-            return False
+            return 1
 
-    return True
+    return 0
 
 def main():
     """
@@ -270,7 +276,7 @@ def main():
 
     schema = parse_schema(args.path)
 
-    is_ok = check_missing(schema, documentation, 'table')
+    violations = check_missing(schema, documentation, 'table')
 
     for table_name, table in schema['table'].items():
         if table_name not in documentation['table']:
@@ -279,8 +285,8 @@ def main():
         logging.info('Checking table %s', table_name)
         table_text = ' for table {}'.format(table_name)
         doc_table = documentation['table'][table_name]
-        is_ok = check_equal(doc_table, table, 'primary_key_combined', table_text) and is_ok
-        is_ok = check_missing(table, doc_table, 'field', table_text) and is_ok
+        violations += check_equal(doc_table, table, 'primary_key_combined', table_text)
+        violations += check_missing(table, doc_table, 'field', table_text)
 
         for field_name, field in table['field'].items():
             if field_name not in doc_table['field']:
@@ -288,23 +294,23 @@ def main():
 
             field_text = ' of field {} in table {}'.format(field_name, table_name)
             doc_field = doc_table['field'][field_name]
-            if check_equal(field, doc_field, 'null', field_text):
-                is_ok = check_equal(doc_field, field, 'null', field_text) and is_ok
+            if check_equal(field, doc_field, 'null', field_text) == 0:
+                violations += check_equal(doc_field, field, 'null', field_text)
             else:
-                is_ok = False
+                violations += 1
 
-            primary_ok = check_equal(field, doc_field, 'primary_key', field_text)
-            is_ok = primary_ok and is_ok
+            violations += check_equal(field, doc_field, 'primary_key', field_text)
             if 'primary_key' in doc_table:
                 if 'primary_key_combined' not in table or \
                     table['primary_key_combined'] != field_name:
                     logging.warning('Table %s does not have primary key %s',
                                     table_name, field_name)
-                    is_ok = False
+                    violations += 1
 
-            is_ok = check_reference(documentation, doc_field, field_text) and is_ok
+            violations += check_reference(documentation, doc_field, field_text)
 
-    sys.exit(0 if is_ok else 1)
+    logging.info('Violations: %d', violations)
+    sys.exit(0 if violations == 0 else 1)
 
 if __name__ == "__main__":
     main()
