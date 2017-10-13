@@ -15,6 +15,11 @@ browsing the
 [Javadoc](http://www.jenkins.example:8080/job/build-monetdb-import/job/master/Javadoc/)
 of the importer, especially the dao package.
 
+Development of new schemas on branches of the monetdb-import repository
+may also create a development subpage for validation of the schema
+changes in comparison to the documentation. The subpage should be merged
+into this page when the branch is merged.
+
 ## Special field types
 
 The following types are aliases for an actual MonetDB type
