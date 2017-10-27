@@ -28,7 +28,7 @@ public class ImpChangePath extends BaseImport {
     @Override
     public void parser() {
         int projectID = getProjectID();
-        String sql = "insert into gros.change_path(repo_id,version_id,file,insertions,deletions,type) values (?,?,?,?,?,?);";
+        String sql = "insert into gros.change_path(repo_id,version_id,file,insertions,deletions,type,size) values (?,?,?,?,?,?,?);";
  
         try (
             RepositoryDb repoDb = new RepositoryDb();
@@ -47,6 +47,11 @@ public class ImpChangePath extends BaseImport {
                     String insertions = (String) jsonObject.get("insertions");
                     String deletions = (String) jsonObject.get("deletions");
                     String change_type = (String) jsonObject.get("change_type");
+                    String size = (String) jsonObject.get("size");
+                    int file_size = 0;
+                    if (size != null) {
+                        file_size = Integer.parseInt(size);
+                    }
 
                     pstmt.setInt(1, repo_id);
                     pstmt.setString(2, version_id);
@@ -54,6 +59,7 @@ public class ImpChangePath extends BaseImport {
                     pstmt.setInt(4, Integer.parseInt(insertions));
                     pstmt.setInt(5, Integer.parseInt(deletions));
                     pstmt.setString(6, change_type);
+                    pstmt.setInt(7, file_size);
 
                     insertStmt.batch();
                 }

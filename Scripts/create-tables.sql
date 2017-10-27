@@ -279,6 +279,7 @@ CREATE TABLE "gros"."change_path" (
 	"insertions" INTEGER NOT NULL,
 	"deletions" INTEGER NOT NULL,
 	"type" VARCHAR(1) NOT NULL default 'M',
+	"size" INTEGER NOT NULL default 0,
         CONSTRAINT "pk_change_path_id" PRIMARY KEY ("repo_id", "version_id", "file")
 );
 
