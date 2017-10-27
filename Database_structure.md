@@ -579,6 +579,9 @@ These tables include data from Gitlab/Git and Subversion.
     -   **type** - VARCHAR(1): The type of change made to the file. This
         may be 'M' (Modified), 'A' (Added), 'D' (Deleted) or 'R'
         (Replaced, Git only indicator for moved or copied files).
+    -   **size** - INT: The byte size of the file or the changes. The
+        semantic meaning differs between version control system, namely
+        whether it includes the diff or if it is the new file size.
 
 
 -   **tag**: Release tags specified in the repository.
