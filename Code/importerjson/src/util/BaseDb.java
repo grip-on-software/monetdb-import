@@ -178,7 +178,8 @@ public class BaseDb {
      */
     protected void setString(PreparedStatement pstmt, int index, String value) throws SQLException {
         if (value != null) {
-            pstmt.setString(index, value);
+            // Ensure we send it as a VARCHAR, not as CHAR.
+            pstmt.setObject(index, value, java.sql.Types.VARCHAR);
         }
         else {
             pstmt.setNull(index, java.sql.Types.VARCHAR);
