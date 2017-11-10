@@ -190,7 +190,7 @@ public class ImpDataIssue extends BaseImport {
                     setInteger(pstmt, 40, test_execution);
                     pstmt.setInt(41, Integer.parseInt(test_execution_time));
                     
-                    setString(pstmt, 42, environment != null ? environment.substring(0, 100): null);
+                    setString(pstmt, 42, environment, 100);
                     setString(pstmt, 43, external_project);
                     
                     // Encryption

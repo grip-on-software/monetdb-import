@@ -186,6 +186,26 @@ public class BaseDb {
     }
     
     /**
+     * Set a string parameter to a prepared statement. If the parameter is null,
+     * then this method performs the appropriate action to set the designated
+     * parameter to NULL. Otherwise, we ensure that the length of the string is
+     * limited to the field size.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value, possibly null
+     * @param limit The size of the field to limit the string length to
+     * @throws SQLException If a database access error occurred
+     */
+    protected void setString(PreparedStatement pstmt, int index, String value, int limit) throws SQLException {
+        if (value != null) {
+            pstmt.setString(index, value.length() > limit ? value.substring(0, limit) : value);
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.VARCHAR);
+        }
+    }
+    
+    /**
      * Set an integer parameter to a prepared statement. If the parameter is null,
      * then this method performs the appropriate action to set the designated
      * parameter to NULL.
