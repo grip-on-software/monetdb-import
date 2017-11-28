@@ -54,7 +54,7 @@ public class VcsEventDb extends BaseDb implements AutoCloseable {
         pstmt.setString(2, action);
         pstmt.setString(3, kind);
         pstmt.setString(4, commit_id);
-        pstmt.setString(5, ref);
+        setString(pstmt, 5, ref, 100);
         pstmt.setTimestamp(6, date);
         pstmt.setInt(7, developer_id);
         
@@ -85,7 +85,7 @@ public class VcsEventDb extends BaseDb implements AutoCloseable {
         checkStmt.setString(2, action);
         checkStmt.setString(3, kind);
         checkStmt.setString(4, commit_id);
-        checkStmt.setString(5, ref);
+        setString(checkStmt, 5, ref, 100);
         checkStmt.setTimestamp(6, date);
         checkStmt.setInt(7, developer_id);
         
