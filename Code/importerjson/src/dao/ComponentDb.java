@@ -69,6 +69,9 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
     private BatchedStatement insertComponentStmt = null;
     private PreparedStatement checkComponentStmt = null;
     private BatchedStatement updateComponentStmt = null;
+    
+    private final int NAME_LENGTH = 100;
+    private final int DESCRIPTION_LENGTH = 500;
 
     public ComponentDb() {
         String sql = "insert into gros.issue_component (issue_id,component_id,start_date,end_date) values (?,?,?,?);";
@@ -255,8 +258,8 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
         
         pstmt.setInt(1, project_id);
         pstmt.setInt(2, component_id);
-        pstmt.setString(3, name);
-        setString(pstmt, 4, description);
+        setString(pstmt, 3, name, NAME_LENGTH);
+        setString(pstmt, 4, description, DESCRIPTION_LENGTH);
         
         insertComponentStmt.batch();
     }
@@ -264,8 +267,8 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
     public void update_component(int project_id, int component_id, String name, String description) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateComponentStmt.getPreparedStatement();
         
-        pstmt.setString(1, name);
-        setString(pstmt, 2, description);
+        setString(pstmt, 1, name, NAME_LENGTH);
+        setString(pstmt, 2, description, DESCRIPTION_LENGTH);
         
         pstmt.setInt(3, project_id);
         pstmt.setInt(4, component_id);
