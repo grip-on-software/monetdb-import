@@ -39,7 +39,7 @@ public class Importerjson {
         
         // JIRA
         groupedTasks.put("jira", Arrays.asList(new String[]{
-            "issue", "issuetype", "status", "resolution", "relationshiptype",
+            "issue", "issuetype", "status", "status_category", "resolution", "relationshiptype",
             "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
             "sprint", "comment", "developer", "component"
         }));
@@ -95,9 +95,11 @@ public class Importerjson {
         importers.put("issue", ImpDataIssue.class);
         importers.put("fixVersion", ImpDataFixVersion.class);
         importers.put("issuelink", ImpDataIssueLink.class);
+        
+        importers.put("status", ImpJiraStatus.class);
+        importers.put("status_category", ImpJiraStatusCategory.class);
 
         importers.put("issuetype", ImportTable.class);
-        importers.put("status", ImportTable.class);
         importers.put("resolution", ImportTable.class);
         importers.put("relationshiptype", ImportTable.class);
         importers.put("priority", ImportTable.class);
@@ -140,7 +142,6 @@ public class Importerjson {
     private static HashMap<String, String[]> retrieveImporterArguments() {
         HashMap<String, String[]> importers = new HashMap<>();
         importers.put("issuetype", new String[]{"issuetype", "name", "description", "issue types"});
-        importers.put("status", new String[]{"status", "name", "description", "status types"});
         importers.put("resolution", new String[]{"resolution", "name", "description", "resolution types"});
         importers.put("relationshiptype", new String[]{"relationshiptype", "name", "relationship types"});
         importers.put("priority", new String[]{"priority", "name", "priority types"});

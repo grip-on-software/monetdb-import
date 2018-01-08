@@ -58,7 +58,16 @@ CREATE TABLE "gros"."status" (
 	"id"              INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL,
 	"description"     VARCHAR(500)   NULL,
+	"category_id"     INTEGER     NULL,
         CONSTRAINT "pk_status_id" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "gros"."status_category" (
+	"category_id"              INTEGER     NOT NULL AUTO_INCREMENT,
+	"key"            VARCHAR(32)   NOT NULL,
+	"name"           VARCHAR(100)   NOT NULL,
+	"color"          VARCHAR(32)     NULL,
+        CONSTRAINT "pk_status_category_id" PRIMARY KEY ("category_id")
 );
 
 
