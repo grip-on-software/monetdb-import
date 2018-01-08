@@ -240,15 +240,17 @@ purpose.
         is a specialized sprint.
     -   **start_date** - TIMESTAMP: Moment in time at which the sprint
         starts or is set to start. May differ from the actual start time
-        (but usually not by more than a day).
+        (but usually not by more than a day). This is NULL if the start
+        date is not yet known.
     -   **end_date** - TIMESTAMP: Moment in time at which the sprint
         ends or is set to end. May be a projected date from the start
         and thus has a time which is not always correct, but is usually
-        close to the real date.
+        close to the real date. This is NULL if the end date is not yet
+        known.
     -   **complete_date** - TIMESTAMP: Moment in time at which the tasks
-        in the sprint are completed. This may be different than the
-        latest change to an issue within the sprint, and may be not
-        provided for all sprints.
+        in the sprint are completed. This may be different from the
+        latest change to an issue within the sprint, and is NULL if it
+        is not provided for the sprint.
 
 
 -   **project**: The projects that were collected and additional
@@ -322,6 +324,7 @@ purpose.
         of the status.
     -   **category_id** - INT - reference to
         status_category.category_id: The identifier of the status
+        category. This is NULL if the status is not linked to a status
         category.
 
 
@@ -353,7 +356,8 @@ purpose.
     -   **display_name** - VARCHAR(100): Name of the JIRA developer as
         displayed in the JIRA interface.
     -   **email** - VARCHAR(100): The email address of the JIRA
-        developer.
+        developer. This is NULL if there is no email address known for
+        the developer due to missing source information.
     -   **local_domain** - BOOL: Whether the email address of the
         developer has a local domain as defined in the importer
         properties. In this case, whether the email ends with
@@ -374,9 +378,11 @@ purpose.
     -   **name** - VARCHAR(JIRA developer): Abbreviation of the JIRA
         developer.
     -   **display_name** - VARCHAR(100): Name of the JIRA developer as
-        displayed in the JIRA interface.
+        displayed in the JIRA interface. This is NULL if there is no
+        source information for the display name.
     -   **email** - VARCHAR(100): The email address of the JIRA
-        developer.
+        developer. This is NULL if there is no source information for
+        the email address.
     -   **encryption** - INT(row encryption)
 
 
@@ -390,9 +396,11 @@ purpose.
     -   **description** - VARCHAR(500): Description provided to the
         release version.
     -   **start_date** - DATE: Day on which work started on this fix
-        version according to JIRA aggregate information.
+        version according to JIRA aggregate information. This is NULL if
+        no start date is known for the fix version.
     -   **release_date** - DATE: Day on which the version is released or
-        is supposed to be released.
+        is supposed to be released. This is NULL if no release date is
+        known for the fix version.
     -   **released** - BOOL: Whether the fix version has been released
         already.
 
@@ -564,6 +572,8 @@ These tables include data from Gitlab/Git and Subversion.
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
     -   **email** - VARCHAR(100): Email address that the developer uses.
+        This is NULL if the version control system or review system does
+        not provide an email address for the user.
     -   **encryption** - INT(row encryption)
 
 
@@ -660,7 +670,8 @@ These tables include data from Gitlab/Git and Subversion.
         GitLab repo stores.
     -   **gitlab_id** - INT: internal GitLab identifier of the
         repository.
-    -   **description** - TEXT: Description of the repository.
+    -   **description** - TEXT: Human-readable description of the
+        repository. This is NULL if the repository has no description.
     -   **create_date** - TIMESTAMP: Time at which the GitLab repository
         was created.
     -   **archived** - BOOL: Whether the repository is marked as
