@@ -576,10 +576,10 @@ These tables include data from Gitlab/Git and Subversion.
         project to which the repository belongs to. This, alongside the
         *id*, distinguishes repositories with the same name.
     -   **type** - VARCHAR(32): The literal type of the source related
-        to the repository. This is null if the source information is not
+        to the repository. This is NULL if the source information is not
         available.
     -   **url** - VARCHAR(255): The URL to the source related to the
-        repository. This is null if the source information is not
+        repository. This is NULL if the source information is not
         available.
 
 
