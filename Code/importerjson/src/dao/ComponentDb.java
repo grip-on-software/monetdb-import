@@ -228,8 +228,8 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
      * project ID and component ID exist in the database, but the name and description
      * are different. This is CheckResult.State.EXISTS if there is a component in
      * the database and all properties match with the row.
-     * @throws SQLException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
     public CheckResult.State check_component(int project_id, int component_id, String name, String description) throws SQLException, PropertyVetoException {
         getCheckComponentStmt();
@@ -253,6 +253,16 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
         return state;
     }
     
+    /**
+     * Insert a new component in the database.
+     * @param project_id Identifier of the project in which the component exists.
+     * @param component_id Identifier of the component.
+     * @param name Short name of the component.
+     * @param description Longer description of the component, or null if it is
+     * not provided.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_component(int project_id, int component_id, String name, String description) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertComponentStmt.getPreparedStatement();
         
@@ -264,6 +274,16 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
         insertComponentStmt.batch();
     }
     
+    /**
+     * Update an existing component in the database.
+     * @param project_id Identifier of the project in which the component exists.
+     * @param component_id Identifier of the component.
+     * @param name Short name of the component.
+     * @param description Longer description of the component, or null if it is
+     * not provided.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void update_component(int project_id, int component_id, String name, String description) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateComponentStmt.getPreparedStatement();
         

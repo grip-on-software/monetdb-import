@@ -244,8 +244,8 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
      * Alter the source type and URL stored in the database for the repositories
      * of the given project based on the collected data sources.
      * @param project_id The project for which to update the repositories.
-     * @throws SQLException
-     * @throws PropertyVetoException 
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void update_repo_sources(int project_id) throws SQLException, PropertyVetoException {
         fillSourceCache(project_id);
