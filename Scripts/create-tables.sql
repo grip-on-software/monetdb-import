@@ -95,7 +95,7 @@ CREATE TABLE "gros"."project_developer" (
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
 	"encryption"   INTEGER   DEFAULT 0,
-	    CONSTRAINT "pk_project_developer_id" PRIMARY KEY("project_id", "developer_id")
+	    CONSTRAINT "pk_project_developer_id" PRIMARY KEY ("project_id", "developer_id")
 );
 
 CREATE TABLE "gros"."project_salt" (
@@ -350,7 +350,7 @@ CREATE TABLE "gros"."github_issue" (
 	"labels" INTEGER NULL,
 	"closed_date" TIMESTAMP NULL,
 	"closer_id" INTEGER NULL,
-		CONSTRAINT "pk_github_issue_id" PRIMARY KEY("repo_id", "issue_id")
+		CONSTRAINT "pk_github_issue_id" PRIMARY KEY ("repo_id", "issue_id")
 );
 
 CREATE TABLE "gros"."github_issue_note" (
@@ -361,7 +361,7 @@ CREATE TABLE "gros"."github_issue_note" (
 	"comment" TEXT NULL,
 	"created_date" TIMESTAMP NULL,
 	"updated_date" TIMESTAMP NULL,
-		CONSTRAINT "pk_github_issue_note_id" PRIMARY KEY("repo_id", "issue_id", "note_id")
+		CONSTRAINT "pk_github_issue_note_id" PRIMARY KEY ("repo_id", "issue_id", "note_id")
 );
 
 CREATE TABLE "gros"."merge_request" (
@@ -379,7 +379,7 @@ CREATE TABLE "gros"."merge_request" (
 	"created_date" TIMESTAMP NULL,
 	"updated_date" TIMESTAMP NULL,
 	"sprint_id" INTEGER NULL,
-		CONSTRAINT "pk_merge_request_id" PRIMARY KEY("repo_id", "request_id")
+		CONSTRAINT "pk_merge_request_id" PRIMARY KEY ("repo_id", "request_id")
 );
 
 CREATE TABLE "gros"."merge_request_review" (
@@ -387,7 +387,7 @@ CREATE TABLE "gros"."merge_request_review" (
 	"request_id" INTEGER NOT NULL,
 	"reviewer_id" INTEGER NOT NULL,
 	"vote" INTEGER NOT NULL,
-		CONSTRAINT "pk_merge_request_review_id" PRIMARY KEY("repo_id", "request_id", "reviewer_id")
+		CONSTRAINT "pk_merge_request_review_id" PRIMARY KEY ("repo_id", "request_id", "reviewer_id")
 );
 
 CREATE TABLE "gros"."merge_request_note" (
@@ -400,7 +400,7 @@ CREATE TABLE "gros"."merge_request_note" (
 	"comment" TEXT NULL,
 	"created_date" TIMESTAMP NULL,
 	"updated_date" TIMESTAMP NULL,
-		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY("repo_id", "request_id", "thread_id", "note_id")
+		CONSTRAINT "pk_merge_request_note_id" PRIMARY KEY ("repo_id", "request_id", "thread_id", "note_id")
 );
 
 CREATE TABLE "gros"."commit_comment" (
@@ -434,7 +434,7 @@ CREATE TABLE "gros"."jenkins" (
 	"jobs" INTEGER NOT NULL,
 	"views" INTEGER NOT NULL,
 	"nodes" INTEGER NOT NULL,
-		CONSTRAINT "pk_jenkins_id" PRIMARY KEY("project_id", "host")
+		CONSTRAINT "pk_jenkins_id" PRIMARY KEY ("project_id", "host")
 );
 
 CREATE TABLE "gros"."bigboat_status" (
@@ -458,7 +458,7 @@ CREATE TABLE "gros"."reservation" (
 	"close_date" TIMESTAMP NULL,
 	"sprint_id" INTEGER NULL,
 	"encryption"     INTEGER   DEFAULT 0,
-		CONSTRAINT "pk_reservation_id" PRIMARY KEY("reservation_id")
+		CONSTRAINT "pk_reservation_id" PRIMARY KEY ("reservation_id")
 );
 
 CREATE TABLE "gros"."update_tracker" (
@@ -466,5 +466,5 @@ CREATE TABLE "gros"."update_tracker" (
 	"filename" VARCHAR(255) NOT NULL,
 	"contents" TEXT NOT NULL,
 	"update_date" TIMESTAMP NULL,
-		CONSTRAINT "pk_update_tracker_id" PRIMARY KEY("project_id", "filename")
+		CONSTRAINT "pk_update_tracker_id" PRIMARY KEY ("project_id", "filename")
 );
