@@ -125,7 +125,7 @@ def parse_schema(path):
                     }
                 },
                 'primary_key_combined': {
-                    'pattern': re.compile(r'^\s*CONSTRAINT "[a-z_]+" PRIMARY KEY' + ident_list)
+                    'pattern': re.compile(r'^\s*CONSTRAINT "[a-z_]+" PRIMARY KEY ' + ident_list)
                 }
             },
             'end': re.compile(r"^\);")
