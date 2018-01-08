@@ -314,8 +314,23 @@ purpose.
     project based on Sprint board setup.
     -   **id** - INT - primary key: Internal JIRA identifier for the
         status.
-    -   **name** - VARCHAR(100)
-    -   **description** - VARCHAR(500)
+    -   **name** - VARCHAR(100): The human-readable name of the status.
+    -   **description** - VARCHAR(500): The human-readable description
+        of the status.
+    -   **category_id** - INT - reference to
+        status_category.category_id: The identifier of the status
+        category.
+
+
+-   **status_category**: The categories in which the statuses may fall,
+    such as To-Do or Done.
+    -   **category_id** - INT - primary key: Internal JIRA identifier
+        for the status category.
+    -   **key** - VARCHAR(32): Lowercase identifier of the status
+        category.
+    -   **name** - VARCHAR(100): The human-readable name of the status
+        category.
+    -   **color** - VARCHAR(32): The color name of the status category.
 
 
 -   **resolution**: Once an issue receives a status of Resolved or
