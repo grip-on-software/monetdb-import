@@ -214,10 +214,13 @@ purpose.
         of the application, or other kinds of environments that the team
         may define. This is NULL if the issue does not have an
         environment specified.
-    -   **external_project** - VARCHAR(20) - reference to project.name:
-        The project for which this issue was created, in case the issue
-        is created in a support team board. This is NULL if the external
-        project is not defined.
+    -   **external_project** - VARCHAR(20): The JIRA project key prefix
+        for which this issue was created, in case the issue is created
+        in a support team board. This is NULL if the external project is
+        not defined. This may reference another project in the *project*
+        table, although this is a weak reference and projects that have
+        no data of its own may either not exist there or have
+        *main_project* set to this issue's project.
     -   **encryption** - INT(row encryption)
 
 ### Context tables
@@ -483,13 +486,13 @@ purpose.
     :   **The following fields do not yet exist, but may be added at a
         later stage:**
 
-    -   **outward** - VARCHAR: Phrase used to describe the outward
-        relation, such as 'blocks' or 'duplicates'.
-    -   **inward** - VARCHAR: Phrase used to describe the inward
-        relation, such as 'is blocked by' or 'is duplicated by'.
+    -   outward - VARCHAR: Phrase used to describe the outward relation,
+        such as 'blocks' or 'duplicates'.
+    -   inward - VARCHAR: Phrase used to describe the inward relation,
+        such as 'is blocked by' or 'is duplicated by'.
 
 
--   **subtasks**: Links that exists between issues and their subtasks,
+-   **subtask**: Links that exists between issues and their subtasks,
     different from the issue links.
     -   **id_parent** - INT - reference to issue.issue_id: The parent
         issue.
@@ -719,7 +722,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **labels** - INT: Number of labels that are added to the issue.
     -   **closed_date** - TIMESTAMP: Time at which the issue is closed.
         This is NULL if the issue is not yet closed.
-    -   **closer**: INT - reference to vcs_developer.alias_id:
+    -   **closer_id**: INT - reference to vcs_developer.alias_id:
         Identifier of the developer that closed the issue, either by
         fixing the problem or by considering it to not be an issue that
         should be solved. This is NULL if the issue is not yet closed.
