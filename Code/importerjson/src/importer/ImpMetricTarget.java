@@ -76,7 +76,7 @@ public class ImpMetricTarget extends BaseImport {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
         ) {
-            try (FileReader fr = new FileReader(getMainImportPath())) {
+            try (FileReader fr = new FileReader(getRootPath()+"/metrics_base_names.json")) {
                 JSONParser parser = new JSONParser();
                 JSONArray a = (JSONArray) parser.parse(fr);
                 List<String> base_names = new ArrayList<>();
