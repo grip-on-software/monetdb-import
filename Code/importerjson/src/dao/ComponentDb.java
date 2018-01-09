@@ -241,7 +241,7 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
         try (ResultSet rs = checkComponentStmt.executeQuery()) {
             if (rs.next()) {
                 if (name.equals(rs.getString("name")) &&
-                    description == null ? rs.getObject("description") == null : description.equals(rs.getString("description"))) {
+                    (description == null ? rs.getObject("description") == null : description.equals(rs.getString("description")))) {
                     state = CheckResult.State.EXISTS;
                 }
                 else {
