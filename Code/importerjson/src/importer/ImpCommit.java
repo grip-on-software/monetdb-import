@@ -224,7 +224,7 @@ public class ImpCommit extends BaseImport {
     public void updateJiraID() {
         JSONParser parser = new JSONParser();
         int projectID = this.getProjectID();
-        boolean success;
+        int successes = 0;
  
         try (
             FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json");
@@ -243,8 +243,12 @@ public class ImpCommit extends BaseImport {
                 Developer dev = new Developer(name, display_name, email);
                 if (jsonObject.containsKey("id")) {
                     jira_id = Integer.parseInt((String) jsonObject.get("id"));
-                    success = devDb.link_vcs_developer(projectID, jira_id, dev);
-                    logLinkSuccess(jira_id, dev, success);
+                    if (devDb.link_vcs_developer(projectID, jira_id, dev)) {
+                        successes++;
+                    }
+                    if (devDb.link_ldap_developer(projectID, jira_id, dev)) {
+                        successes++;
+                    }
                 }
                 else if (jsonObject.containsKey("prefix")) {
                     String prefix = (String) jsonObject.get("prefix");
@@ -266,35 +270,34 @@ public class ImpCommit extends BaseImport {
                         }
                         Developer linkDev = new Developer(linkName, email);
                         jira_id = devDb.check_project_developer(projectID, linkDev, Encryption.NONE);
-                        success = devDb.link_vcs_developer(projectID, jira_id, matchDev);
-                        logLinkSuccess(jira_id, matchDev, success);
+                        if (devDb.link_vcs_developer(projectID, jira_id, matchDev)) {
+                            successes++;
+                        }
+                        if (devDb.link_ldap_developer(projectID, jira_id, dev)) {
+                            successes++;
+                        }
                     }
                 }
                 else {
                     jira_id = devDb.check_project_developer(projectID, dev, Encryption.NONE);
-                    success = devDb.link_vcs_developer(projectID, jira_id, dev);
-                    logLinkSuccess(jira_id, dev, success);
+                    if (devDb.link_vcs_developer(projectID, jira_id, dev)) {
+                        successes++;
+                    }
+                    if (devDb.link_ldap_developer(projectID, jira_id, dev)) {
+                        successes++;
+                    }
                 }
             }
+            getLogger().log(Level.INFO, "Linked {0} VCS/LDAP developers to JIRA developers", successes);
         }
         catch (FileNotFoundException ex) {
-            getLogger().log(Level.WARNING, "Cannot link VCS developers to JIRA developers: {0}", ex.getMessage());
+            getLogger().log(Level.WARNING, "Cannot link VCS/LDAP developers to JIRA developers: {0}", ex.getMessage());
         }
         catch (IOException | SQLException | PropertyVetoException | ParseException | NumberFormatException ex) {
             logException(ex);
         }
     }
-    
-    private void logLinkSuccess(int jira_id, Developer dev, boolean success) {
-        Object[] params = new Object[]{dev.getDisplayName(), dev.getEmail(), jira_id};
-        if (success) {
-            getLogger().log(Level.INFO, "Linked developer name: {0}, email: {1} to JIRA ID {2}", params);
-        }
-        else {
-            getLogger().log(Level.WARNING, "Could not link developer name: {0}, email: {1} to JIRA ID {2}", params);
-        }
-    }
-    
+        
     public void showUnknownDevs() {
         Connection con = null;
         Statement st = null;
@@ -303,9 +306,9 @@ public class ImpCommit extends BaseImport {
         try {
             con = DataSource.getInstance().getConnection();
 
-            String sql = "SELECT display_name, email FROM gros.vcs_developer WHERE jira_dev_id=0;";
+            String sql = "SELECT display_name, email FROM gros.vcs_developer WHERE jira_dev_id=0 AND encryption=0 UNION ALL SELECT DISTINCT display_name, email FROM gros.ldap_developer WHERE jira_dev_id=0 AND encryption=0;";
 
-            getLogger().info("These VCS developers should be linked in to Jira. Add them to the file data_vcsdev_to_dev.json:");
+            getLogger().info("These VCS and LDAP developers should be linked in to Jira. Add them to the file data_vcsdev_to_dev.json:");
             
             st = con.createStatement();
             rs = st.executeQuery(sql);
@@ -315,7 +318,7 @@ public class ImpCommit extends BaseImport {
                 if (email == null) {
                     email = "NULL";
                 }
-                getLogger().log(Level.INFO, "Unknown VCS Developer: display name {0}, email {1}", new Object[]{display_name, email});
+                getLogger().log(Level.INFO, "Unknown VCS/LDAP Developer: display name {0}, email {1}", new Object[]{display_name, email});
             }            
         } catch (PropertyVetoException | SQLException ex) {
             logException(ex);
@@ -339,6 +342,7 @@ public class ImpCommit extends BaseImport {
         // Primary keys of the tables to update
         HashMap<String, String[]> hashKeys  = new HashMap<>();
         hashKeys.put("vcs_developer", new String[]{"alias_id"});
+        hashKeys.put("ldap_developer", new String[]{"project_id", "name"});
         hashKeys.put("developer", new String[]{"id"});
         
         hashKeys.put("metric_version", new String[]{"project_id", "version_id"});
@@ -350,6 +354,7 @@ public class ImpCommit extends BaseImport {
         // Fields to hash
         HashMap<String, String[]> hashFields = new HashMap<>();
         hashFields.put("vcs_developer", new String[]{"display_name", "email"});
+        hashFields.put("ldap_developer", new String[]{"name", "display_name", "email"});
         hashFields.put("developer", new String[]{"name", "display_name", "email"});
         
         hashFields.put("metric_version", new String[]{"developer"});
@@ -368,7 +373,7 @@ public class ImpCommit extends BaseImport {
                 tables = new String[]{"developer", "metric_version"};
             }
             else {
-                tables = new String[]{"vcs_developer", "issue", "comment"};
+                tables = new String[]{"vcs_developer", "ldap_developer", "issue", "comment"};
             }
         }
         else {

@@ -34,7 +34,12 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkProjectDeveloperStmt = null;
     private PreparedStatement checkProjectDeveloperIdStmt = null;
     
+    private BatchedStatement insertLdapDeveloperStmt = null;
+    private PreparedStatement checkLdapDeveloperStmt = null;
+    private PreparedStatement linkLdapDeveloperStmt = null;
+    
     private HashMap<String, Integer> vcsNameCache = null;
+    private HashMap<Integer, HashMap<String, Integer>> ldapNameCache = null;
     
     public static class Developer {
         private final String name;
@@ -95,6 +100,9 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
 
         sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encryption) values (?,?,?,?,?,?);";
         insertProjectDeveloperStmt = new BatchedStatement(sql);
+        
+        sql = "insert into gros.ldap_developer (project_id, name, display_name, email, jira_dev_id) values (?,?,?,?,?);";
+        insertLdapDeveloperStmt = new BatchedStatement(sql);
 
         localDomain = getBundle().getString("email_domain");
     }
@@ -164,6 +172,18 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         if (checkProjectDeveloperIdStmt != null) {
             checkProjectDeveloperIdStmt.close();
             checkProjectDeveloperIdStmt = null;
+        }
+
+        insertLdapDeveloperStmt.execute();
+        insertLdapDeveloperStmt.close();
+        
+        if (checkLdapDeveloperStmt != null) {
+            checkLdapDeveloperStmt.close();
+            checkLdapDeveloperStmt = null;
+        }
+        if (linkLdapDeveloperStmt != null) {
+            linkLdapDeveloperStmt.close();
+            linkLdapDeveloperStmt = null;
         }
     }
     
@@ -572,5 +592,181 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         return idDeveloper;
     }
 
+    private void getCheckLdapDeveloperStmt() throws SQLException, PropertyVetoException {
+        if (checkLdapDeveloperStmt == null) {
+            Connection con = insertDeveloperStmt.getConnection();
+            String sql = "SELECT jira_dev_id FROM gros.ldap_developer WHERE ((encryption=? AND name=?) OR (encryption=? AND name=?))";
+            checkLdapDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    private void getLinkLdapDeveloperStmt() throws SQLException, PropertyVetoException {
+        if (linkLdapDeveloperStmt == null) {
+            Connection con = insertDeveloperStmt.getConnection();
+            String condition = "(encryption=? AND ((display_name IS NOT NULL AND display_name=?) OR (email IS NOT NULL AND email=?)))";
+            String sql = "UPDATE gros.ldap_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
+            linkLdapDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+
+    /**
+     * Insert a developer in the LDAP developer table of the database. In case developer
+     * id is not set, the developer id from Jira will be 0.
+     * @param project_id The project identifier of the project in which the developer
+     * has an LDAP account
+     * @param dev_id The corresponding developer id in Jira, or 0.
+     * @param dev The developer object, with at least name and display name.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_ldap_developer(int project_id, int dev_id, Developer dev) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = insertLdapDeveloperStmt.getPreparedStatement();
+        pstmt.setInt(1, project_id);
+        pstmt.setString(2, dev.getName());
+        pstmt.setString(3, dev.getDisplayName());
+        setString(pstmt, 4, dev.getEmail());
+        pstmt.setInt(5, dev_id);
+
+        insertLdapDeveloperStmt.batch();
+        
+        insertLdapNameCache(project_id, dev.getName(), dev_id);
+    }
+    
+    private void insertLdapNameCache(Integer project_id, String name, Integer jira_id) {
+        if (ldapNameCache == null) {
+            return;
+        }
+        
+        HashMap<String, Integer> projectCache = ldapNameCache.get(project_id);
+        if (projectCache == null) {
+            projectCache = new HashMap<>();
+            ldapNameCache.put(project_id, projectCache);
+        }
+        projectCache.put(name, jira_id);        
+    }
+    
+    private void fillLdapNameCache() throws SQLException, PropertyVetoException {
+        if (ldapNameCache != null) {
+            return;
+        }
+        ldapNameCache = new HashMap<>();
+        
+        Connection con = insertDeveloperStmt.getConnection();
+        String sql = "SELECT project_id, name, jira_dev_id FROM gros.ldap_developer";
+        try (
+                Statement stmt = con.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
+        ) {
+            while (rs.next()) {
+                Integer project_id = rs.getInt("project_id");
+                String name = rs.getString("name");
+                Integer id = rs.getInt("jira_dev_id");
+                insertLdapNameCache(project_id, name, id);
+            }
+        }
+    }
+    
+    /**
+     * Retrieve the JIRA developer ID of an LDAP developer.
+     * @param project_id Project identifier of the project in which the developer
+     * has an LDAP account.
+     * @param dev The developer object, with at least the name of the developer.
+     * @param encryption The encryption level of the provided developer properties.
+     * @return The Jira developer identifier: 0 if the LDAP developer exists but
+     * is not linked to a Jira developer, -1 if the LDAP developer exists but is
+     * explicitly not linked due to it being a system account, null if the LDAP
+     * developer does not exist, or any other value indicating the link from an
+     * existing LDAP developer.
+     * @throws SQLException
+     * @throws PropertyVetoException 
+     */
+    public Integer check_ldap_developer(int project_id, Developer dev, int encryption) throws SQLException, PropertyVetoException {
+        fillLdapNameCache();
+        
+        HashMap<String, Integer> projectCache = ldapNameCache.get(project_id);
+        String plain_name;
+        String encrypted_name;
+        if (encryption == SaltDb.Encryption.NONE) {
+            plain_name = dev.getName();
+            try (SaltDb saltDb = new SaltDb()) {
+                SaltDb.SaltPair pair = saltDb.get_salt(project_id);
+                encrypted_name = saltDb.hash(dev.getName(), pair);
+                encryption = SaltDb.Encryption.PROJECT;
+            }
+        }
+        else {
+            // Cannot decrypt the display name at this point
+            plain_name = dev.getName();
+            encrypted_name = dev.getName();
+        }
+        if (projectCache != null) {
+            Integer cacheId = projectCache.get(plain_name);
+            if (cacheId != null) {
+                return cacheId;
+            }
+            cacheId = projectCache.get(encrypted_name);
+            if (cacheId != null) {
+                return cacheId;
+            }
+        }
+        
+        Integer idDeveloper = null;
+        getCheckVcsDeveloperStmt();
+        
+        checkVcsDeveloperStmt.setInt(1, SaltDb.Encryption.NONE);
+        checkVcsDeveloperStmt.setString(2, plain_name);
+        checkVcsDeveloperStmt.setInt(3, encryption);
+        checkVcsDeveloperStmt.setString(4, encrypted_name);
+        
+        try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {
+            while (rs.next()) {
+                idDeveloper = rs.getInt("jira_dev_id");
+            }
+        }
+        
+        if (idDeveloper != null) {
+            insertLdapNameCache(project_id, plain_name, idDeveloper);
+            insertLdapNameCache(project_id, encrypted_name, idDeveloper);
+        }
+        
+        return idDeveloper;
+    }
+
+    /**
+     * Link an LDAP developers that have a certain display name or email with a JIRA
+     * developer based on ID linking.
+     * @param project_id The project ID in which the LDAP developer works on.
+     * @param jira_id The developer ID of the JIRA developer to link against.
+     * @param dev The developer details to use when searching for the LDAP
+     * developer to link.
+     * @return Whether the link was successful. A link is unsuccessful if the
+     * provided JIRA ID is 0 or if there was no developer with the provided
+     * display name or email (if available).
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public boolean link_ldap_developer(int project_id, int jira_id, Developer dev) throws SQLException, PropertyVetoException {
+        getLinkLdapDeveloperStmt();
+        
+        if (project_id == 0 || jira_id == 0) {
+            return false;
+        }
+        
+        linkLdapDeveloperStmt.setInt(1, jira_id);
+        
+        linkLdapDeveloperStmt.setInt(2, SaltDb.Encryption.NONE);
+        setString(linkLdapDeveloperStmt, 3, dev.getDisplayName());
+        setString(linkLdapDeveloperStmt, 4, dev.getEmail());
+
+        try (SaltDb saltDb = new SaltDb()) {
+            SaltDb.SaltPair pair = saltDb.get_salt(project_id);
+            linkLdapDeveloperStmt.setInt(5, SaltDb.Encryption.PROJECT);
+            setString(linkLdapDeveloperStmt, 6, saltDb.hash(dev.getDisplayName(), pair));
+            setString(linkLdapDeveloperStmt, 7, saltDb.hash(dev.getEmail(), pair));
+        }
+        
+        int rows = linkLdapDeveloperStmt.executeUpdate();
+        return rows > 0;
+    }
 }
     

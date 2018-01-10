@@ -67,6 +67,8 @@ public class Importerjson {
         defaultTasks.addAll(GROUPED_TASKS.get("metrics"));
         defaultTasks.addAll(GROUPED_TASKS.get("vcs"));
         
+        // LDAP
+        defaultTasks.add("ldap_developer");
         // Environments
         defaultTasks.add("environment");
         // Jenkins
@@ -129,6 +131,7 @@ public class Importerjson {
         importers.put("merge_request_note", ImpMergeRequestNote.class);
         importers.put("commit_comment", ImpCommitComment.class);
         
+        importers.put("ldap_developer", ImpLdapDeveloper.class);
         importers.put("environment", ImpEnvironment.class);
         importers.put("jenkins", ImpJenkins.class);
         importers.put("reservation", ImpReservation.class);
