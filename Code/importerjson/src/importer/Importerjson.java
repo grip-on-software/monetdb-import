@@ -39,8 +39,9 @@ public class Importerjson {
         
         // JIRA
         groupedTasks.put("jira", Arrays.asList(new String[]{
-            "issue", "issuetype", "status", "status_category", "resolution", "relationshiptype",
-            "priority", "fixVersion", "ready_status", "issuelink", "test_execution",
+            "issue", "issuetype", "status", "status_category", "resolution", 
+            "priority", "fixVersion", "ready_status", "test_execution",
+            "relationshiptype", "issuelink", "subtask",
             "sprint", "comment", "developer", "component"
         }));
 
@@ -97,6 +98,7 @@ public class Importerjson {
         importers.put("issue", ImpDataIssue.class);
         importers.put("fixVersion", ImpDataFixVersion.class);
         importers.put("issuelink", ImpDataIssueLink.class);
+        importers.put("subtask", ImpDataSubtask.class);
         
         importers.put("status", ImpJiraStatus.class);
         importers.put("status_category", ImpJiraStatusCategory.class);
