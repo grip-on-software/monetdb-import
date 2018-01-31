@@ -711,14 +711,14 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
         
         Integer idDeveloper = null;
-        getCheckVcsDeveloperStmt();
+        getCheckLdapDeveloperStmt();
         
-        checkVcsDeveloperStmt.setInt(1, SaltDb.Encryption.NONE);
-        checkVcsDeveloperStmt.setString(2, plain_name);
-        checkVcsDeveloperStmt.setInt(3, encryption);
-        checkVcsDeveloperStmt.setString(4, encrypted_name);
+        checkLdapDeveloperStmt.setInt(1, SaltDb.Encryption.NONE);
+        checkLdapDeveloperStmt.setString(2, plain_name);
+        checkLdapDeveloperStmt.setInt(3, encryption);
+        checkLdapDeveloperStmt.setString(4, encrypted_name);
         
-        try (ResultSet rs = checkVcsDeveloperStmt.executeQuery()) {
+        try (ResultSet rs = checkLdapDeveloperStmt.executeQuery()) {
             while (rs.next()) {
                 idDeveloper = rs.getInt("jira_dev_id");
             }
