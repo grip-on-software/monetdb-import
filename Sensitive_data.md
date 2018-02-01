@@ -1,7 +1,13 @@
 # Sensitive data
 
 Project sensitive data and personal data that need to be handled
-differently for this reason.
+differently for privacy, confidentiality or business reasons. Some of
+these tasks need manual operations, which are performed regularly on the
+data and additional measures are taken so that this data does not end up
+in the hands or is seen by the eyes of those that have not been
+explicitly accepted by ICTU after the usual security checks. These
+measures include storing the data only at ICTU and not displaying this
+data in non-anonymized form to any others.
 
 Legend of [DataSources](DataSources.md): JIRA = Issue tracker,
 VCS = Version control system, SSD = Self-Service Desk (reservations), \*
