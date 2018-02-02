@@ -4,6 +4,10 @@
  */
 package util;
 
+import java.util.Collection;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * Abstract base class for an importer task runner.
  * @author Enrique
@@ -11,6 +15,7 @@ package util;
 public abstract class BaseImport extends BaseDb {
     private String projectName;
     private int projectID = 0;
+    private Set<String> problematicImports = new TreeSet<>();
     
     /**
      * Retrieve the identifier of the project that the importer runs on.
@@ -73,5 +78,23 @@ public abstract class BaseImport extends BaseDb {
      */
     public String getMainImportPath() {
         return getExportPath() + "/" + getImportFiles()[0];
+    }
+    
+    /**
+     * Get a collection of problematic file names which could not be imported by
+     * this or earlier imports.
+     * @return Problematic files 
+     */
+    public Set<String> getProblematicImports() {
+        return problematicImports;
+    }
+
+    /**
+     * Set a collection of problematic file names which could not be imported by
+     * earlier imports.
+     * @param problematicImports Problematic files 
+     */
+    public void setProblematicImports(Collection<String> problematicImports) {
+        this.problematicImports.addAll(problematicImports);
     }
 }

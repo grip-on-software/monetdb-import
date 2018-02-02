@@ -23,6 +23,15 @@ public class ImpUpdateTracker extends BaseImport {
 
     @Override
     public void parser() {
+        try {
+            if (!getProblematicImports().isEmpty()) {
+                throw new RuntimeException("Cannot import update trackers: earlier imports had problems");
+            }
+        } catch (RuntimeException ex) {
+            logException(ex);
+            return;
+        }
+        
         int project_id = getProjectID();
         String[] updateNames = getImportFiles();
         try (UpdateDb updateDb = new UpdateDb()) {

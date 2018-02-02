@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.ConsoleHandler;
@@ -31,6 +32,7 @@ import util.BaseImport;
 public class Importerjson {
     private static String projectName = "";
     private static int projectID = 0;
+    private static Set<String> problematicImports = new TreeSet<>();
     
     private final static HashMap<String, List<String>> GROUPED_TASKS = retrieveGroupedTasks();
 
@@ -168,9 +170,20 @@ public class Importerjson {
 
             importer.setProjectName(projectName);
             importer.setProjectID(projectID);
+            importer.setProblematicImports(problematicImports);
             importer.parser();
-
-            showCompleteTask("Imported " + importer.getImportName(), startTime);
+            if (importer.hasExceptions()) {
+                if (problematicImports.equals(importer.getProblematicImports())) {
+                    problematicImports.addAll(Arrays.asList(importer.getImportFiles()));
+                }
+                else {
+                    problematicImports.addAll(importer.getProblematicImports());
+                }
+                showCompleteTask("Encountered problems while importing " + importer.getImportName(), startTime, Level.WARNING);
+            }
+            else {
+                showCompleteTask("Imported " + importer.getImportName(), startTime);
+            }
         }
     }
     
@@ -189,11 +202,15 @@ public class Importerjson {
         }
     }
         
-    private static void showCompleteTask(String taskName, long startTime) {
+    private static void showCompleteTask(String taskName, long startTime, Level logLevel) {
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
         
-        LOGGER.log(Level.INFO, "{0} in {1} seconds", new Object[]{taskName, elapsedTime / 1000});
+        LOGGER.log(logLevel, "{0} in {1} seconds", new Object[]{taskName, elapsedTime / 1000});
+    }
+    
+    private static void showCompleteTask(String taskName, long startTime) {
+        showCompleteTask(taskName, startTime, Level.INFO);
     }
     
     private static SortedSet<String> retrieveTasks(String[] taskList, Collection<String> validateTasks) {

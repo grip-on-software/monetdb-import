@@ -28,6 +28,7 @@ public class BaseDb {
     private final String rootPath;
     private String path;
     private static final Logger LOGGER = Logger.getLogger("importer");
+    private boolean hasExceptions = false;
     
     public BaseDb() {
         try {
@@ -63,6 +64,8 @@ public class BaseDb {
      * @param ex The exception that occurred
      */
     protected final void logException(Exception ex) {
+        hasExceptions = true;
+        
         // Get the source method
         StackTraceElement source = Thread.currentThread().getStackTrace()[2];
         LOGGER.logp(Level.SEVERE, source.getClassName(), source.getMethodName(), "Exception", ex);
@@ -76,6 +79,10 @@ public class BaseDb {
                 next = prev.getNextException();
             }
         }
+    }
+    
+    public final boolean hasExceptions() {
+        return hasExceptions;
     }
     
     /**

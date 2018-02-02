@@ -8,7 +8,9 @@ package importer;
 import dao.DeveloperDb;
 import dao.DeveloperDb.Developer;
 import dao.SaltDb;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -46,6 +48,9 @@ public class ImpLdapDeveloper extends BaseImport {
                     devDb.insert_ldap_developer(project_id, jira_id, dev);
                 }
             }                  
+        }
+        catch (FileNotFoundException ex) {
+            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
         }
         catch (Exception ex) {
             logException(ex);
