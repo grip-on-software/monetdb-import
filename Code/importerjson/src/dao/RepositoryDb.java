@@ -14,8 +14,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -67,6 +70,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkGitHubRepoStmt = null;
     private BatchedStatement updateGitHubRepoStmt = null;
     private final ProjectDb pDB;
+    private static final Set<String> VCS_SOURCES = new TreeSet<>(Arrays.asList(new String[]{"svn", "git", "github", "gitlab", "tfs"}));
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
@@ -229,7 +233,9 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
                 String name = (String) jsonObject.get("name");
                 String type = (String) jsonObject.get("type");
                 String url = (String) jsonObject.get("url");
-                insertSourceCache(project_id, name, type, url);
+                if (VCS_SOURCES.contains(type)) {
+                    insertSourceCache(project_id, name, type, url);
+                }
             }
         }
         catch (IOException ex) {
