@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
 if [ -z $1 ] || [ "$1" = "--help" ]; then
-	echo "$0 <host|--help|--dry-run> [output directory] [dumper path] [dumper config]"
+	echo "$0 <host|--help|--dry-run> [output directory] [skip pattern]"
+	echo "   [dumper path] [dumper config]"
 	exit
 fi
 
@@ -13,10 +14,13 @@ if [ ! -z "$2" ]; then
 	OUTPUT_DIRECTORY="$2"
 fi
 if [ ! -z "$3" ]; then
-	DUMPER_PATH="$3"
+	SKIP_PATTERN="$3"
 fi
 if [ ! -z "$4" ]; then
-	DUMPER_CONFIG="$4"
+	DUMPER_PATH="$4"
+fi
+if [ ! -z "$5" ]; then
+	DUMPER_CONFIG="$5"
 fi
 
 if [ -z "$OUTPUT_DIRECTORY" ]; then
@@ -52,7 +56,7 @@ else
 fi
 
 LINES=`cat "$SCRIPT_DIR/create-tables.sql" | grep '^CREATE TABLE' | \
-	sed -e 's/CREATE TABLE ".*"\."\(.*\)" (/\1/'`
+	sed -e 's/CREATE TABLE ".*"\."\(.*\)" (/\1/' | grep -Ev -- "$SKIP_PATTERN"`
 
 for line in $LINES
 do
