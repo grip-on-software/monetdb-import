@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -eo pipefail
 
 function do_help() {
 	echo "$0 <-h host|--help|--dry-run> [-o|--output directory]"
