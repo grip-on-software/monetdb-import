@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
 	key="$1"
 	case $key in
 		-h)
-			if [[ $# -lt 2 || "$2" == "-*" ]]; then
+			if [[ $# -lt 2 || "$2" == -* ]]; then
 				do_help
 			fi
 
@@ -76,7 +76,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-d|--defines)
 			shift
-			while [[ $# -gt 0 && $1 != "-*" ]]; do
+			while [[ $# -gt 0 && "$1" != -* ]]; do
 				DEFINES="$DEFINES -D$1"
 				shift
 			done
