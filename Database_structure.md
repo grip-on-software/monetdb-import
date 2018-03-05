@@ -236,8 +236,9 @@ purpose.
     -   **name** - VARCHAR(500): Human-readable name of the sprint.
         Depending on the project and the person who creates the sprints,
         this may include a sequence number (not unique), the
-        sprint/story owner (Scrum master), and/or the sprint topic if it
-        is a specialized sprint.
+        sprint/story owner (Scrum master), week/calendar date, target
+        version and/or the sprint topic/goal if it is a specialized
+        sprint.
     -   **start_date** - TIMESTAMP: Moment in time at which the sprint
         starts or is set to start. May differ from the actual start time
         (but usually not by more than a day). This is NULL if the start
@@ -251,6 +252,10 @@ purpose.
         in the sprint are completed. This may be different from the
         latest change to an issue within the sprint, and is NULL if it
         is not provided for the sprint.
+    -   **goal** - VARCHAR(500): Human-readable description of what the
+        primary goal of the sprint is. This may be related to product
+        delivery or the main task for the sprint. Previously this was
+        sometimes provided in the sprint name instead.
 
 
 -   **project**: The projects that were collected and additional
