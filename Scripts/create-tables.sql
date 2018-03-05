@@ -217,6 +217,7 @@ CREATE TABLE "gros"."sprint" (
 	"start_date"     TIMESTAMP      NULL,
 	"end_date"       TIMESTAMP      NULL,
 	"complete_date"  TIMESTAMP      NULL,
+	"goal"           VARCHAR(500)   NULL,
         CONSTRAINT "pk_sprint_id" PRIMARY KEY ("sprint_id", "project_id")
 );
 
