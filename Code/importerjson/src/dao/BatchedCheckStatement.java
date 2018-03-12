@@ -47,7 +47,7 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
      */
     protected final int[] types;
     private int batchSize;
-    private Map<List<Object>, Object> checkValues;
+    protected Map<List<Object>, Object> checkValues;
     
     private static int[] makeDefaultTypes(int length) {
         int[] types = new int[length];
@@ -124,10 +124,11 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
      * Perform the batched existence and insertion queries.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
+     * @return Whether any value was inserted
      */
-    public void execute() throws SQLException, PropertyVetoException {
+    public boolean execute() throws SQLException, PropertyVetoException {
         if (checkValues.isEmpty()) {
-            return;
+            return false;
         }
         
         String selectSql = buildQuery();
@@ -152,7 +153,7 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
                     if (!checkValues.containsKey(foundValues)) {
                         throw new SQLException("Received result key tuple that is not in the check batch: " + Arrays.toString(foundValues.toArray()));
                     }
-                    checkValues.remove(foundValues);
+                    markExisting(foundValues);
                 }
             }
         }
@@ -167,8 +168,14 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
             addToBatch(values.toArray(), data, pstmt);
         }
         
+        boolean hasInserts = !checkValues.isEmpty();
         checkValues.clear();
         insertStmt.execute();
+        return hasInserts;
+    }
+
+    protected void markExisting(List<Object> foundValues) {
+        checkValues.remove(foundValues);
     }
 
     /**

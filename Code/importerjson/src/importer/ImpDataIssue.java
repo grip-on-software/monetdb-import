@@ -5,7 +5,7 @@
  */
 package importer;
 
-import dao.BatchedCheckStatement;
+import dao.BatchedUpdateStatement;
 import dao.ProjectDb;
 import dao.SaltDb;
 import java.beans.PropertyVetoException;
@@ -26,21 +26,41 @@ import util.BufferedJSONReader;
  * @author Enrique
  */
 public class ImpDataIssue extends BaseImport {
-    private static final int NUMBER_OF_FIELDS = 44;
+    private static final String[] FIELDS = {
+        "issue_id", "changelog_id", "key", "title", "type", "priority",
+        "resolution", "fixversion", "bugfix", "watchers", "created", "updated",
+        "description", "duedate", "project_id", "status", "reporter",
+        "assignee", "attachments", "additional_information", "review_comments",
+        "story_points", "resolution_date", "sprint_id", "updated_by",
+        "rank_change", "epic", "impediment", "ready_status",
+        "ready_status_reason", "approved", "approved_by_po", "labels",
+        "version", "expected_ltcs", "expected_phtcs", "test_given", "test_when",
+        "test_then", "test_execution", "test_execution_time", "environment",
+        "external_project", "encryption"
+
+    };
     
     @Override
     public void parser() {
         PreparedStatement existsStmt = null;
         ResultSet rs = null;
-        String[] fields = new String[NUMBER_OF_FIELDS];
+        String[] fields = new String[FIELDS.length];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
+        String updateSql = "update gros.issue set ";
+        for (int i = 2; i < FIELDS.length; i++) {
+            if (i > 2) {
+                updateSql += ", ";
+            }
+            updateSql += FIELDS[i] + "=?";
+        }
+        updateSql += " where issue_id=? and changelog_id=?;";
         
         try (
             FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr);
-            BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.issue", sql,
-                    new String[]{"issue_id", "changelog_id"}
+            BatchedUpdateStatement cstmt = new BatchedUpdateStatement("gros.issue",
+                    sql, updateSql, new String[]{"issue_id", "changelog_id"}
             ) {
                 private final BigDecimal max_points = BigDecimal.valueOf(999.0);
                 private final int projectID = getProjectID();
@@ -55,9 +75,8 @@ public class ImpDataIssue extends BaseImport {
                     }
                     return value;
                 }
-
-                @Override
-                protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+                
+                private void makeBatch(Object[] values, Object data, PreparedStatement pstmt, boolean is_update) throws SQLException, PropertyVetoException {
                     int issue_id = (int)values[0];
                     int changelog_id = (int)values[1];
                     
@@ -111,26 +130,29 @@ public class ImpDataIssue extends BaseImport {
                     String external_project = (String) jsonObject.get("external_project");
                     
                     // Fill the prepared statement with the new field values.
-                    pstmt.setInt(1, issue_id);
-                    pstmt.setInt(2, changelog_id);
-                    pstmt.setString(3, key);
-                    pstmt.setString(4, title);
-                    setInteger(pstmt, 5, type);
-                    setInteger(pstmt, 6, priority);
-                    setInteger(pstmt, 7, resolution);
-                    setInteger(pstmt, 8, fixVersions);
-                    setBoolean(pstmt, 9, bugfix);
-                    pstmt.setInt(10, Integer.parseInt(watchers));
+                    int index = 1;
+                    if (!is_update) {
+                        pstmt.setInt(index++, issue_id);
+                        pstmt.setInt(index++, changelog_id);
+                    }
+                    pstmt.setString(index++, key);
+                    pstmt.setString(index++, title);
+                    setInteger(pstmt, index++, type);
+                    setInteger(pstmt, index++, priority);
+                    setInteger(pstmt, index++, resolution);
+                    setInteger(pstmt, index++, fixVersions);
+                    setBoolean(pstmt, index++, bugfix);
+                    pstmt.setInt(index++, Integer.parseInt(watchers));
 
-                    setTimestamp(pstmt, 11, created);
-                    setTimestamp(pstmt, 12, updated);
+                    setTimestamp(pstmt, index++, created);
+                    setTimestamp(pstmt, index++, updated);
 
-                    setString(pstmt, 13, description);
+                    setString(pstmt, index++, description);
 
-                    setDate(pstmt, 14, duedate);
+                    setDate(pstmt, index++, duedate);
 
                     if (project == null) {
-                        pstmt.setInt(15, projectID);
+                        pstmt.setInt(index++, projectID);
                     }
                     else {
                         int project_id = projectDb.check_project(project);
@@ -145,58 +167,73 @@ public class ImpDataIssue extends BaseImport {
                             projectDb.insert_project(project, projectName, null, null, null, null, null);
                             project_id = projectDb.check_project(project);
                         }
-                        pstmt.setInt(15, project_id);
+                        pstmt.setInt(index++, project_id);
                     }
-                    setInteger(pstmt, 16, status);
-                    setString(pstmt, 17, reporter);
-                    setString(pstmt, 18, assignee);
-                    pstmt.setInt(19, Integer.parseInt(attachment));
-                    setString(pstmt, 20, additional_information);
-                    setString(pstmt, 21, review_comments);
+                    setInteger(pstmt, index++, status);
+                    setString(pstmt, index++, reporter);
+                    setString(pstmt, index++, assignee);
+                    pstmt.setInt(index++, Integer.parseInt(attachment));
+                    setString(pstmt, index++, additional_information);
+                    setString(pstmt, index++, review_comments);
                     
                     if (storypoint != null) {
                         BigDecimal points = BigDecimal.valueOf(Double.parseDouble(storypoint));
-                        pstmt.setBigDecimal(22, points.min(max_points));
+                        pstmt.setBigDecimal(index++, points.min(max_points));
                     }
                     else {
-                        pstmt.setNull(22, java.sql.Types.NUMERIC);
+                        pstmt.setNull(index++, java.sql.Types.NUMERIC);
                     }
 
-                    setTimestamp(pstmt, 23, resolution_date);
+                    setTimestamp(pstmt, index++, resolution_date);
 
-                    setInteger(pstmt, 24, sprint);
+                    setInteger(pstmt, index++, sprint);
 
-                    setString(pstmt, 25, updated_by);
-                    setBoolean(pstmt, 26, rank_change);
+                    setString(pstmt, index++, updated_by);
+                    setBoolean(pstmt, index++, rank_change);
                     
-                    setString(pstmt, 27, epic);
+                    setString(pstmt, index++, epic);
                     
                     // Ready status
-                    pstmt.setBoolean(28, flagged.equals("1"));
-                    setInteger(pstmt, 29, ready_status);
-                    setString(pstmt, 30, ready_status_reason);
-                    setBoolean(pstmt, 31, approved);
-                    setBoolean(pstmt, 32, approved_by_po);
+                    pstmt.setBoolean(index++, flagged.equals("1"));
+                    setInteger(pstmt, index++, ready_status);
+                    setString(pstmt, index++, ready_status_reason);
+                    setBoolean(pstmt, index++, approved);
+                    setBoolean(pstmt, index++, approved_by_po);
                     
-                    pstmt.setInt(33, Integer.parseInt(labels));
-                    setInteger(pstmt, 34, affected_version);
+                    pstmt.setInt(index++, Integer.parseInt(labels));
+                    setInteger(pstmt, index++, affected_version);
                     
                     // Test cases
-                    pstmt.setInt(35, Integer.parseInt(expected_ltcs));
-                    pstmt.setInt(36, Integer.parseInt(expected_phtcs));
-                    setString(pstmt, 37, test_given);
-                    setString(pstmt, 38, test_when);
-                    setString(pstmt, 39, test_then);
-                    setInteger(pstmt, 40, test_execution);
-                    pstmt.setInt(41, Integer.parseInt(test_execution_time));
+                    pstmt.setInt(index++, Integer.parseInt(expected_ltcs));
+                    pstmt.setInt(index++, Integer.parseInt(expected_phtcs));
+                    setString(pstmt, index++, test_given);
+                    setString(pstmt, index++, test_when);
+                    setString(pstmt, index++, test_then);
+                    setInteger(pstmt, index++, test_execution);
+                    pstmt.setInt(index++, Integer.parseInt(test_execution_time));
                     
-                    setString(pstmt, 42, environment, 100);
-                    setString(pstmt, 43, external_project);
+                    setString(pstmt, index++, environment, 100);
+                    setString(pstmt, index++, external_project);
                     
                     // Encryption
-                    pstmt.setInt(44, SaltDb.Encryption.NONE);
+                    pstmt.setInt(index++, SaltDb.Encryption.NONE);
+                    
+                    if (is_update) {
+                        pstmt.setInt(index++, issue_id);
+                        pstmt.setInt(index++, changelog_id);
+                    }
+                }
 
+                @Override
+                protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+                    makeBatch(values, data, pstmt, false);
                     insertStmt.batch();
+                }
+
+                @Override
+                protected void addToUpdateBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+                    makeBatch(values, data, pstmt, true);
+                    updateStmt.batch();
                 }
             };
         ) {

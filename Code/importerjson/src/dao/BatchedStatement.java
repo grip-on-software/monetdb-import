@@ -9,6 +9,9 @@ import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * An object that represents a precompiled SQL update statement that can be
@@ -93,7 +96,8 @@ public class BatchedStatement implements AutoCloseable {
      */
     public void execute() throws SQLException {
         if (pstmt != null) {
-            pstmt.executeBatch();
+            int[] counts = pstmt.executeBatch();
+            Logger.getLogger("importer").log(Level.FINE, "Updates for {0}: {1}", new Object[]{query, Arrays.toString(counts)});
             pstmt.clearBatch();
             batchSize = 0;
         }
