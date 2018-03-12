@@ -34,7 +34,7 @@ public class ImpDataSubtask extends BaseImport {
                 @Override
                 protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
                     int id_parent = (int)values[0];
-                    int id_subtask = (int)values[0];
+                    int id_subtask = (int)values[1];
                     pstmt.setInt(1, id_parent);
                     pstmt.setInt(2, id_subtask);
 
@@ -52,6 +52,8 @@ public class ImpDataSubtask extends BaseImport {
                 Object[] values = new Object[]{Integer.parseInt(from_id), Integer.parseInt(to_id)};
                 cstmt.batch(values, o);
             }
+            
+            cstmt.execute();
         }
         catch (Exception ex) {
             logException(ex);
