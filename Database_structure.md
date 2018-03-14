@@ -186,12 +186,12 @@ purpose.
         bug of. If this is not set, then the field value is NULL.
     -   **expected_ltcs** - INT: The number of expected logical test
         cases that are needed to sufficiently test the implementation of
-        this story, use case or issue. If this is not set, then it is
-        the integer 0.
+        this story, use case or issue. If this is not set, then the
+        field value is NULL.
     -   **expected_phtcs** - INT: The number of expected physical test
         cases that are needed to sufficiently test the implementation of
-        this story, use case or issue. If this is not set, then it is
-        the integer 0.
+        this story, use case or issue. If this is not set, then the
+        field value is NULL.
     -   **test_given** - TEXT: The human-readable description of the
         Given part of a test model for a particular use case, or NULL if
         the issue does not have a test description.
@@ -207,8 +207,8 @@ purpose.
         a test model.
     -   **test_execution_time** - INT: Units of time that the test
         execution appears to take. This is often set after the use case
-        is resolved and tested. If this is not set, then it is the
-        integer 0.
+        is resolved and tested. If this is not set, then the field value
+        is NULL.
     -   **environment** - VARCHAR(100): The environment to which the
         issue applies. This can apply to a DTAP environment, a component
         of the application, or other kinds of environments that the team
