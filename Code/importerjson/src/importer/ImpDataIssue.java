@@ -204,13 +204,13 @@ public class ImpDataIssue extends BaseImport {
                     setInteger(pstmt, index++, affected_version);
                     
                     // Test cases
-                    pstmt.setInt(index++, Integer.parseInt(expected_ltcs));
-                    pstmt.setInt(index++, Integer.parseInt(expected_phtcs));
+                    setInteger(pstmt, index++, expected_ltcs);
+                    setInteger(pstmt, index++, expected_phtcs);
                     setString(pstmt, index++, test_given);
                     setString(pstmt, index++, test_when);
                     setString(pstmt, index++, test_then);
                     setInteger(pstmt, index++, test_execution);
-                    pstmt.setInt(index++, Integer.parseInt(test_execution_time));
+                    setInteger(pstmt, index++, test_execution_time);
                     
                     setString(pstmt, index++, environment, 100);
                     setString(pstmt, index++, external_project);
