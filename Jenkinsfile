@@ -19,6 +19,8 @@ pipeline {
         success {
             archiveArtifacts artifacts: 'Code/importerjson/dist/**', excludes: 'Code/importerjson/dist/javadoc/**', onlyIfSuccessful: true
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'Code/importerjson/dist/javadoc', reportFiles: 'index.html', reportName: 'Javadoc', reportTitles: ''])
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, includes: 'junit/**/*,html/**/*', keepAll: false, reportDir: 'Code/importerjson/build/test', reportFiles: 'html/htmlreport.html', reportName: 'JUnit Results', reportTitles: ''])
+            junit 'Code/importerjson/build/test/results/*.xml'
             updateGitlabCommitStatus name: env.JOB_NAME, state: 'success'
         }
         failure {
