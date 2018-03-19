@@ -134,13 +134,11 @@ public class SprintDb extends BaseDb implements AutoCloseable {
          * @return Whether the date is in the sprint's date range
          */
         public boolean contains(Timestamp date) {
-            if (this.start_date == null || date.before(this.start_date)) {
-                return false;
-            }
-            else if (this.end_date != null && date.after(this.end_date)) {
-                return false;
-            }
-            else if (this.complete_date != null && date.after(this.complete_date)) {
+            if (
+                (this.start_date == null || date.before(this.start_date)) ||
+                (this.end_date != null && date.after(this.end_date)) ||
+                (this.complete_date != null && date.after(this.complete_date))
+            ) {
                 return false;
             }
             

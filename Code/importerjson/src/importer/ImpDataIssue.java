@@ -42,8 +42,6 @@ public class ImpDataIssue extends BaseImport {
     
     @Override
     public void parser() {
-        PreparedStatement existsStmt = null;
-        ResultSet rs = null;
         String[] fields = new String[FIELDS.length];
         Arrays.fill(fields, "?");
         String sql = "insert into gros.issue values (" + String.join(",", fields) + ");";
@@ -256,11 +254,6 @@ public class ImpDataIssue extends BaseImport {
         catch (Exception ex) {
             logException(ex);
         }
-        finally {
-            if (existsStmt != null) try { existsStmt.close(); } catch (SQLException ex) {logException(ex);}
-            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
-        }
-        
     }
     
     private void setInteger(PreparedStatement pstmt, int index, String value) throws SQLException {

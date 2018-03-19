@@ -334,8 +334,6 @@ public class ImpCommit extends BaseImport {
      */
     public void hashNames() {
         Connection con = null;
-        Statement st = null;
-        ResultSet rs = null;
         SaltDb.SaltPair pair;
         int projectID = getProjectID();
         
@@ -396,12 +394,13 @@ public class ImpCommit extends BaseImport {
                 String[] keys = hashKeys.get(table);
                 String[] fields = hashFields.get(table);
                 String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + ", encryption FROM gros." + table + " WHERE encryption IN (" + String.join(", ", encryptionLevels) + ")";
-
-                st = con.createStatement();
-                rs = st.executeQuery(selectSql);
                 String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=?";
 
-                try (BatchedStatement bstmt = new BatchedStatement(updateSql)) {
+                try (
+                    Statement st = con.createStatement();
+                    ResultSet rs = st.executeQuery(selectSql);
+                    BatchedStatement bstmt = new BatchedStatement(updateSql)
+                ) {
                     PreparedStatement pstmt = bstmt.getPreparedStatement();
                     while (rs.next()) {
                         int index = 1;
@@ -439,8 +438,6 @@ public class ImpCommit extends BaseImport {
         } catch (PropertyVetoException | SQLException ex) {
             logException(ex);
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException ex) {logException(ex);}
-            if (st != null) try { st.close(); } catch (SQLException ex) {logException(ex);}
             if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
         
