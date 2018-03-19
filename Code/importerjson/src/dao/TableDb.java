@@ -63,7 +63,7 @@ public class TableDb implements AutoCloseable {
     private void getCheckIdStmt() throws SQLException, PropertyVetoException {
         if (checkIdStmt == null) {
             Connection con = insertStmt.getConnection();
-            String sql = "SELECT id FROM gros." + this.tableName + " WHERE id = ?";
+            String sql = String.format("SELECT id FROM %s WHERE id = ?", "gros." + this.tableName);
             checkIdStmt = con.prepareStatement(sql);
         }
     }
@@ -71,7 +71,7 @@ public class TableDb implements AutoCloseable {
     private void getCheckValueStmt() throws SQLException, PropertyVetoException {
         if (checkValueStmt == null) {
             Connection con = insertStmt.getConnection();
-            String sql = "SELECT id FROM gros." + this.tableName + " WHERE UPPER(" + this.fieldName + ") = ?";
+            String sql = String.format("SELECT id FROM %s WHERE UPPER(%s) = ?", "gros." + this.tableName, this.fieldName);
             checkValueStmt = con.prepareStatement(sql);
         }
     }
