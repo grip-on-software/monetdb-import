@@ -1,8 +1,8 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2017-2018 ICTU
+ * 
+ * Importer of gathered software development metrics for MonetDB
  */
-package util;
 
 import java.util.Collection;
 import java.util.Set;

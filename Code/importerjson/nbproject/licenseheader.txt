@@ -1,0 +1,9 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}Copyright 2017-2018 ICTU
+${licensePrefix}
+${licensePrefix}Importer of gathered software development metrics for MonetDB
+<#if licenseLast??>
+${licenseLast}
+</#if>
