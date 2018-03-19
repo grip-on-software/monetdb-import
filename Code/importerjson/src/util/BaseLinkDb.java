@@ -62,8 +62,18 @@ public class BaseLinkDb extends BaseDb {
     
     public static class CheckResult {
         public enum State { MISSING, DIFFERS, EXISTS };
-        public State state = State.MISSING;
-        public LinkDates dates = null;
+        public final State state;
+        public final LinkDates dates;
+        
+        public CheckResult() {
+            this.state = State.MISSING;
+            this.dates = null;
+        }
+        
+        public CheckResult(State state, LinkDates dates) {
+            this.state = state;
+            this.dates = dates;
+        }
     };
     
     protected boolean compareTimestamps(Timestamp date, Timestamp current_date, boolean allowEarlier) {
@@ -77,15 +87,14 @@ public class BaseLinkDb extends BaseDb {
     }
 
     protected CheckResult compareLinkDates(LinkDates dates, LinkDates current_dates) {
-        CheckResult result = new CheckResult();
-        result.dates = current_dates;
+        CheckResult.State state;
         if (compareTimestamps(dates.start_date, current_dates.start_date, true) &&
                 compareTimestamps(dates.end_date, current_dates.end_date, false)) {
-            result.state = CheckResult.State.EXISTS;
+            state = CheckResult.State.EXISTS;
         }
         else {
-            result.state = CheckResult.State.DIFFERS;
+            state = CheckResult.State.DIFFERS;
         }
-        return result;
+        return new CheckResult(state, current_dates);
     }
 }
