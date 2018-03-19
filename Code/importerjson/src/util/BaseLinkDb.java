@@ -21,12 +21,12 @@ public class BaseLinkDb extends BaseDb {
         /**
          * Timestamp since which the link exists, or null if the start date is unknown.
          */
-        public Timestamp start_date;
+        public final Timestamp start_date;
         /**
          * Timestamp at which the link ceases to exist due to a change in the issues,
          * or null if the link still exists.
          */
-        public Timestamp end_date;
+        public final Timestamp end_date;
         
         public LinkDates() {
             this.start_date = null;

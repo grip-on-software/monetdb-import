@@ -29,10 +29,10 @@ public class TagDb extends BaseDb implements AutoCloseable {
      * Object that holds properties of a certain tag.
      */
     private static class TagInfo {
-        public String version_id;
-        public String message;
-        public Timestamp tagged_date;
-        public Integer tagger_id;
+        public final String version_id;
+        public final String message;
+        public final Timestamp tagged_date;
+        public final Integer tagger_id;
         
         public TagInfo() {
             this.version_id = null;
@@ -105,16 +105,14 @@ public class TagDb extends BaseDb implements AutoCloseable {
         try (ResultSet rs = cacheStmt.executeQuery()) {
             while (rs.next()) {
                 String tag_name = rs.getString("tag_name");
-                TagInfo tagInfo = new TagInfo();
-                tagInfo.version_id = rs.getString("version_id");
-                tagInfo.message = rs.getString("message");
-                tagInfo.tagged_date = rs.getTimestamp("tagged_date");
-                if (rs.getObject("tagger_id") == null) {
-                    tagInfo.tagger_id = null;
+                String version_id = rs.getString("version_id");
+                String message = rs.getString("message");
+                Timestamp tagged_date = rs.getTimestamp("tagged_date");
+                Integer tagger_id = null;
+                if (rs.getObject("tagger_id") != null) {
+                    tagger_id = rs.getInt("tagger_id");
                 }
-                else {
-                    tagInfo.tagger_id = rs.getInt("tagger_id");
-                }
+                TagInfo tagInfo = new TagInfo(version_id, message, tagged_date, tagger_id);
                 cache.put(tag_name, tagInfo);
             }
         }
