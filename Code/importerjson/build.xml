@@ -7,7 +7,7 @@
 <!-- the Compile on Save feature is turned off for the project. -->
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
-<project name="importerjson" default="default" basedir=".">
+<project name="importerjson" default="default" basedir="." xmlns:jacoco="antlib:org.jacoco.ant">
     <description>Builds, tests, and runs the project importerjson.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
@@ -70,6 +70,9 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="-pre-init">
+        <property name="run.jvmargs.ide" value="-javaagent:coverage/lib/jacocoagent.jar=destfile=build/test/jacoco.exec" />
+    </target>
     <target name="-post-init">
         <condition property="importer.generate.properties">
             <and>
@@ -94,8 +97,12 @@
             <entry key="email_domain" operation="=" value="${importer.email_domain}" />
         </propertyfile>
     </target>
-    <target name="test-report">
+    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+        <classpath path="coverage/lib/jacocoant.jar"/>
+    </taskdef>
+    <target depends="init" if="have.tests" name="test-report">
         <mkdir dir="${build.dir}/test/junit" />
+        <mkdir dir="${build.dir}/test/jacoco" />
         <mkdir dir="${build.dir}/test/html" />
         <junitreport todir="${build.dir}/test/junit" tofile="junit.xml">
             <fileset dir="${build.dir}/test/results">
@@ -104,5 +111,19 @@
             <report format="frames" todir="${build.dir}/test/html" />
         </junitreport>
         <move file="${build.dir}/test/html/index.html" tofile="${build.dir}/test/html/htmlreport.html" />
+        <jacoco:report>
+            <executiondata>
+                <file file="${build.dir}/test/jacoco.exec" />
+            </executiondata>
+            <structure name="MonetDB importer">
+                <classfiles>
+                    <fileset dir="${build.classes.dir}" />
+                </classfiles>
+                <sourcefiles>
+                    <fileset dir="${src.dir}" />
+                </sourcefiles>
+            </structure>
+            <html destdir="${build.dir}/test/jacoco" />
+        </jacoco:report>
     </target>
 </project>
