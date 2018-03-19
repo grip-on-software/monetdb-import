@@ -142,22 +142,18 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         insertStmt.batch();
     }
 
-    private static String sha256(String base) {
-        try{
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(base.getBytes("UTF-8"));
-            StringBuilder hexString = new StringBuilder();
+    private static String sha256(String base) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(base.getBytes("UTF-8"));
+        StringBuilder hexString = new StringBuilder();
 
-            for (int i = 0; i < hash.length; i++) {
-                String hex = Integer.toHexString(0xff & hash[i]);
-                if(hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch(UnsupportedEncodingException | NoSuchAlgorithmException ex){
-           throw new RuntimeException(ex);
+        for (int i = 0; i < hash.length; i++) {
+            String hex = Integer.toHexString(0xff & hash[i]);
+            if(hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
         }
+
+        return hexString.toString();
     }
     
     /**
@@ -171,7 +167,13 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         if (value == null) {
             return null;
         }
-        return sha256(pair.getSalt() + value + pair.getPepper());
+        try {
+            return sha256(pair.getSalt() + value + pair.getPepper());
+        }
+        catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+            logException(ex);
+            return null;
+        }
     }
 
     @Override

@@ -200,7 +200,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private void insertSourceCache(Integer project_id, String name, String type, String url) throws Exception {
+    private void insertSourceCache(Integer project_id, String name, String type, String url) {
         if (!sourceCache.containsKey(project_id)) {
             sourceCache.put(project_id, new HashMap<String, Source>());
         }
