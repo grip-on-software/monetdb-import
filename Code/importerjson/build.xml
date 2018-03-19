@@ -94,4 +94,15 @@
             <entry key="email_domain" operation="=" value="${importer.email_domain}" />
         </propertyfile>
     </target>
+    <target name="test-report">
+        <mkdir dir="${build.dir}/test/junit" />
+        <mkdir dir="${build.dir}/test/html" />
+        <junitreport todir="${build.dir}/test/junit" tofile="junit.xml">
+            <fileset dir="${build.dir}/test/results">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${build.dir}/test/html" />
+        </junitreport>
+        <move file="${build.dir}/test/html/index.html" tofile="${build.dir}/test/html/htmlreport.html" />
+    </target>
 </project>
