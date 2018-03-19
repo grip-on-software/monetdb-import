@@ -41,105 +41,150 @@ import util.BufferedJSONReader;
  * @author Thomas, Enrique
  */
 public class ImpCommit extends BaseImport {
+    /** Primary keys of the tables to update when encrypting fields. */
+    public final static HashMap<String, String[]> HASH_KEYS = createHashKeys();
+    private static HashMap<String, String[]> createHashKeys() {
+        HashMap<String, String[]> keys = new HashMap<>();
+        keys.put("vcs_developer", new String[]{"alias_id"});
+        keys.put("ldap_developer", new String[]{"project_id", "name"});
+        keys.put("developer", new String[]{"id"});
+        
+        keys.put("metric_version", new String[]{"project_id", "version_id"});
+        keys.put("reservation", new String[]{"reservation_id"});
+        
+        keys.put("issue", new String[]{"issue_id", "changelog_id"});
+        keys.put("comment", new String[]{"comment_id"});
+        return keys;
+    }
+        
+    /** Fields to hash when encrypting fields. */
+    public final static HashMap<String, String[]> HASH_FIELDS = createHashFields();
+    private static HashMap<String, String[]> createHashFields() {
+        HashMap<String, String[]> fields = new HashMap<>();
+        fields.put("vcs_developer", new String[]{"display_name", "email"});
+        fields.put("ldap_developer", new String[]{"name", "display_name", "email"});
+        fields.put("developer", new String[]{"name", "display_name", "email"});
+        
+        fields.put("metric_version", new String[]{"developer"});
+        fields.put("reservation", new String[]{"requester"});
+        
+        fields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
+        fields.put("comment", new String[]{"author", "updater"});
+        return fields;
+    }
+    
+    /**
+     * Batched check statement for inserting new commits into the database.
+     */
+    private class BatchedCommitStatement extends BatchedCheckStatement {
+        private final int projectID = getProjectID();
+        private final static String INSERT_SQL = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id,author_date,branch) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        
+        private final DeveloperDb devDb = new DeveloperDb();
+        private final SprintDb sprintDb = new SprintDb();
+
+        public BatchedCommitStatement() {
+            super("gros.commits", INSERT_SQL, new String[]{"version_id", "repo_id"}, new int[]{java.sql.Types.VARCHAR, java.sql.Types.INTEGER});
+        }
+
+        @Override
+        protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
+            String version_id = (String)values[0];
+            int repo_id = (int)values[1];
+
+            JSONObject jsonObject = (JSONObject) data;
+            String commit_date = (String) jsonObject.get("commit_date");
+            String author_date = (String) jsonObject.get("author_date");
+            String sprint = (String) jsonObject.get("sprint_id");
+            String developer = (String) jsonObject.get("developer");
+            String developer_username = (String) jsonObject.get("developer_username");
+            String developer_email = (String) jsonObject.get("developer_email");
+            String message = (String) jsonObject.get("message");
+            String size_of_commit = (String) jsonObject.get("size");
+            String insertions = (String) jsonObject.get("insertions");
+            String deletions = (String) jsonObject.get("deletions");
+            String number_of_files = (String) jsonObject.get("number_of_files");
+            String number_of_lines = (String) jsonObject.get("number_of_lines");
+            String type = (String) jsonObject.get("type");
+            String branch = (String) jsonObject.get("branch");
+            String encrypted = (String) jsonObject.get("encrypted");
+
+            int sprint_id;
+            if ((sprint.trim()).equals("null")) { // In case not in between dates of sprint
+                sprint_id = 0;
+            }
+            else {
+                sprint_id = Integer.parseInt(sprint);
+            }
+
+            if (developer.equals("unknown")) {
+                developer = developer_email;
+            }
+            if (developer_email.equals("0")) {
+                developer_email = null;
+            }
+            int encryption = Encryption.parseInt(encrypted);
+
+            Developer dev = new Developer(developer_username, developer, developer_email);
+            int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
+
+            pstmt.setString(1, version_id);
+            pstmt.setInt(2, projectID);
+
+            Timestamp ts_created = Timestamp.valueOf(commit_date); 
+            pstmt.setTimestamp(3, ts_created);
+
+            if (sprint_id == 0) {
+                sprint_id = sprintDb.find_sprint(projectID, ts_created);
+            }
+
+            pstmt.setInt(4, sprint_id);
+
+            pstmt.setInt(5, developer_id);
+            pstmt.setString(6, message);
+            pstmt.setInt(7, Integer.parseInt(size_of_commit));
+            pstmt.setInt(8, Integer.parseInt(insertions));
+            pstmt.setInt(9, Integer.parseInt(deletions));
+            pstmt.setInt(10, Integer.parseInt(number_of_files));
+            pstmt.setInt(11, Integer.parseInt(number_of_lines));
+            pstmt.setString(12, type);
+            pstmt.setInt(13, repo_id);
+
+            if (author_date == null || author_date.equals("0")) {
+                pstmt.setNull(14, java.sql.Types.TIMESTAMP);
+            }
+            else {
+                Timestamp authored = Timestamp.valueOf(author_date);
+                pstmt.setTimestamp(14, authored);
+            }
+
+            if (branch == null || branch.equals("0")) {
+                pstmt.setNull(15, java.sql.Types.VARCHAR);
+            }
+            else {
+                pstmt.setString(15, branch);
+            }
+
+            insertStmt.batch();
+        }
+        
+        @Override
+        public void close() throws SQLException {
+            super.close();
+            devDb.close();
+            sprintDb.close();
+        }
+    }
     
     @Override
     public void parser() {
         int projectID = getProjectID();
-        String sql = "insert into gros.commits(version_id,project_id,commit_date,sprint_id,developer_id,message,size_of_commit,insertions,deletions,number_of_files,number_of_lines,type,repo_id,author_date,branch) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
  
         try (
-            DeveloperDb devDb = new DeveloperDb();
             RepositoryDb repoDb = new RepositoryDb();
-            SprintDb sprintDb = new SprintDb();
             FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr);
-            BatchedCheckStatement cstmt = new BatchedCheckStatement("gros.commits", sql,
-                    new String[]{"version_id", "repo_id"},
-                    new int[]{java.sql.Types.VARCHAR, java.sql.Types.INTEGER}
-            ) {
-                private final int projectID = getProjectID();
-                
-                @Override
-                protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
-                    String version_id = (String)values[0];
-                    int repo_id = (int)values[1];
-
-                    JSONObject jsonObject = (JSONObject) data;
-                    String commit_date = (String) jsonObject.get("commit_date");
-                    String author_date = (String) jsonObject.get("author_date");
-                    String sprint = (String) jsonObject.get("sprint_id");
-                    String developer = (String) jsonObject.get("developer");
-                    String developer_username = (String) jsonObject.get("developer_username");
-                    String developer_email = (String) jsonObject.get("developer_email");
-                    String message = (String) jsonObject.get("message");
-                    String size_of_commit = (String) jsonObject.get("size");
-                    String insertions = (String) jsonObject.get("insertions");
-                    String deletions = (String) jsonObject.get("deletions");
-                    String number_of_files = (String) jsonObject.get("number_of_files");
-                    String number_of_lines = (String) jsonObject.get("number_of_lines");
-                    String type = (String) jsonObject.get("type");
-                    String branch = (String) jsonObject.get("branch");
-                    String encrypted = (String) jsonObject.get("encrypted");
-
-                    int sprint_id;
-                    if ((sprint.trim()).equals("null")) { // In case not in between dates of sprint
-                        sprint_id = 0;
-                    }
-                    else {
-                        sprint_id = Integer.parseInt(sprint);
-                    }
-
-                    if (developer.equals("unknown")) {
-                        developer = developer_email;
-                    }
-                    if (developer_email.equals("0")) {
-                        developer_email = null;
-                    }
-                    int encryption = Encryption.parseInt(encrypted);
-
-                    Developer dev = new Developer(developer_username, developer, developer_email);
-                    int developer_id = devDb.update_vcs_developer(projectID, dev, encryption);
-
-                    pstmt.setString(1, version_id);
-                    pstmt.setInt(2, projectID);
-
-                    Timestamp ts_created = Timestamp.valueOf(commit_date); 
-                    pstmt.setTimestamp(3, ts_created);
-
-                    if (sprint_id == 0) {
-                        sprint_id = sprintDb.find_sprint(projectID, ts_created);
-                    }
-
-                    pstmt.setInt(4, sprint_id);
-
-                    pstmt.setInt(5, developer_id);
-                    pstmt.setString(6, message);
-                    pstmt.setInt(7, Integer.parseInt(size_of_commit));
-                    pstmt.setInt(8, Integer.parseInt(insertions));
-                    pstmt.setInt(9, Integer.parseInt(deletions));
-                    pstmt.setInt(10, Integer.parseInt(number_of_files));
-                    pstmt.setInt(11, Integer.parseInt(number_of_lines));
-                    pstmt.setString(12, type);
-                    pstmt.setInt(13, repo_id);
-
-                    if (author_date == null || author_date.equals("0")) {
-                        pstmt.setNull(14, java.sql.Types.TIMESTAMP);
-                    }
-                    else {
-                        Timestamp authored = Timestamp.valueOf(author_date);
-                        pstmt.setTimestamp(14, authored);
-                    }
-
-                    if (branch == null || branch.equals("0")) {
-                        pstmt.setNull(15, java.sql.Types.VARCHAR);
-                    }
-                    else {
-                        pstmt.setString(15, branch);
-                    }
-                    
-                    insertStmt.batch();
-                }
-            }
+            BatchedCheckStatement cstmt = new BatchedCommitStatement();
         ) {
             cstmt.setBatchSize(100);
             Object o;
@@ -333,34 +378,9 @@ public class ImpCommit extends BaseImport {
      * Encrypts rows in tables that include sensitive data in some fields.
      */
     public void hashNames() {
-        Connection con = null;
         SaltDb.SaltPair pair;
         int projectID = getProjectID();
-        
-        // Primary keys of the tables to update
-        HashMap<String, String[]> hashKeys  = new HashMap<>();
-        hashKeys.put("vcs_developer", new String[]{"alias_id"});
-        hashKeys.put("ldap_developer", new String[]{"project_id", "name"});
-        hashKeys.put("developer", new String[]{"id"});
-        
-        hashKeys.put("metric_version", new String[]{"project_id", "version_id"});
-        hashKeys.put("reservation", new String[]{"reservation_id"});
-        
-        hashKeys.put("issue", new String[]{"issue_id", "changelog_id"});
-        hashKeys.put("comment", new String[]{"comment_id"});
-        
-        // Fields to hash
-        HashMap<String, String[]> hashFields = new HashMap<>();
-        hashFields.put("vcs_developer", new String[]{"display_name", "email"});
-        hashFields.put("ldap_developer", new String[]{"name", "display_name", "email"});
-        hashFields.put("developer", new String[]{"name", "display_name", "email"});
-        
-        hashFields.put("metric_version", new String[]{"developer"});
-        hashFields.put("reservation", new String[]{"requester"});
-        
-        hashFields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
-        hashFields.put("comment", new String[]{"author", "updater"});
-        
+                
         String[] tables;
 
         String encryptTables = System.getProperty("importer.encrypt_tables", "").trim();
@@ -385,21 +405,19 @@ public class ImpCommit extends BaseImport {
         try (SaltDb saltDb = new SaltDb()) {
             pair = saltDb.get_salt(projectID);
             
-            con = DataSource.getInstance().getConnection();
-            
             for (String table : tables) {
-                if (!hashKeys.containsKey(table)) {
-                    throw new RuntimeException("Table " + table + " cannot be encrypted");
+                if (!HASH_KEYS.containsKey(table)) {
+                    throw new ImporterException("Table " + table + " cannot be encrypted");
                 }
-                String[] keys = hashKeys.get(table);
-                String[] fields = hashFields.get(table);
+                String[] keys = HASH_KEYS.get(table);
+                String[] fields = HASH_FIELDS.get(table);
                 String selectSql = "SELECT " + String.join(", ", keys) + ", " + String.join(", ", fields) + ", encryption FROM gros." + table + " WHERE encryption IN (" + String.join(", ", encryptionLevels) + ")";
                 String updateSql = "UPDATE gros." + table + " SET " + String.join("=?, ", fields) + "=?, encryption=? WHERE " + String.join("=? AND ", keys) + "=? AND encryption=?";
 
                 try (
-                    Statement st = con.createStatement();
+                    BatchedStatement bstmt = new BatchedStatement(updateSql);
+                    Statement st = bstmt.getConnection().createStatement();
                     ResultSet rs = st.executeQuery(selectSql);
-                    BatchedStatement bstmt = new BatchedStatement(updateSql)
                 ) {
                     PreparedStatement pstmt = bstmt.getPreparedStatement();
                     while (rs.next()) {
@@ -433,14 +451,10 @@ public class ImpCommit extends BaseImport {
                 }
                 
                 getLogger().log(Level.INFO, "Encrypted fields in {0} table", table);
-
             }
         } catch (PropertyVetoException | SQLException ex) {
             logException(ex);
-        } finally {
-            if (con != null) try { con.close(); } catch (SQLException ex) {logException(ex);}
         }
-        
     }
     
     /**

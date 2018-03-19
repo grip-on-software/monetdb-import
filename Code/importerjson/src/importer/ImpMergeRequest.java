@@ -64,7 +64,7 @@ public class ImpMergeRequest extends BaseImport {
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
                 int repo_id = repoDb.check_repo(repo_name, project_id);
                 if (repo_id == 0) {
-                    throw new Exception("Cannot determine repository: " + repo_name);
+                    throw new ImporterException("Cannot determine repository: " + repo_name);
                 }
                 int request_id = Integer.parseInt(id);
                 

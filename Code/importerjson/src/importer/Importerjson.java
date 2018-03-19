@@ -287,10 +287,10 @@ public class Importerjson {
             LOGGER.log(Level.FINE, "Set log level to {0}", level.getName());
         }
         catch (IllegalArgumentException ex) {
-            throw new RuntimeException("Illegal importer.log argument: " + ex.getMessage() + formatUsage());
+            throw new ImporterException("Illegal importer.log argument: " + ex.getMessage() + formatUsage());
         }
         if (args.length <= 0 || "--help".equals(args[0])) {
-            throw new RuntimeException(formatUsage(true));
+            throw new ImporterException(formatUsage(true));
         }
         
         // Determine a set of tasks to run. With a missing argumet, we run all
@@ -312,13 +312,15 @@ public class Importerjson {
             FileCollector performer = new FileCollector();
             projectName = "ANY";
             performTasks(tasks, performer);
-            System.out.println(String.join(" ", performer.getFiles()));
+            String files = String.join(" ", performer.getFiles());
+            // Output the file list to standard output.
+            System.out.println(files); //NOSONAR
             return;
         }
         else if ("--".equals(args[0])) {
             // Only allow special tasks that may run project-independently
             if (!SPECIAL_TASKS.containsAll(tasks)) {
-                throw new RuntimeException("Project must given for the provided tasks" + formatUsage());
+                throw new ImporterException("Project must given for the provided tasks" + formatUsage());
             }
         }
         else {
@@ -340,31 +342,29 @@ public class Importerjson {
         }
         
         for (String task : DEFAULT_TASKS) {
-            if (tasks.contains(task)) {
-                if (TASK_IMPORTERS.containsKey(task)) {
-                    Class<? extends BaseImport> importClass = TASK_IMPORTERS.get(task);
-                    BaseImport importer = null;
-                    if (IMPORTER_ARGUMENTS.containsKey(task)) {
-                        String[] arguments = IMPORTER_ARGUMENTS.get(task);
-                        try {
-                            Class<?>[] typeSpec = new Class<?>[arguments.length];
-                            Arrays.fill(typeSpec, String.class);
-                            Constructor<? extends BaseImport> constructor = importClass.getDeclaredConstructor(typeSpec);
-                            importer = constructor.newInstance((Object[]) arguments);
-                        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
-                            LOGGER.log(Level.SEVERE, "While instatiating importer for task " + task, ex);
-                        }
+            if (tasks.contains(task) && TASK_IMPORTERS.containsKey(task)) {
+                Class<? extends BaseImport> importClass = TASK_IMPORTERS.get(task);
+                BaseImport importer = null;
+                if (IMPORTER_ARGUMENTS.containsKey(task)) {
+                    String[] arguments = IMPORTER_ARGUMENTS.get(task);
+                    try {
+                        Class<?>[] typeSpec = new Class<?>[arguments.length];
+                        Arrays.fill(typeSpec, String.class);
+                        Constructor<? extends BaseImport> constructor = importClass.getDeclaredConstructor(typeSpec);
+                        importer = constructor.newInstance((Object[]) arguments);
+                    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
+                        LOGGER.log(Level.SEVERE, "While instatiating importer for task " + task, ex);
                     }
-                    else {
-                        try {
-                            importer = importClass.newInstance();
-                        } catch (InstantiationException | IllegalAccessException ex) {
-                            LOGGER.log(Level.SEVERE, "While instantiating importer for task " + task, ex);
-                        }
+                }
+                else {
+                    try {
+                        importer = importClass.newInstance();
+                    } catch (InstantiationException | IllegalAccessException ex) {
+                        LOGGER.log(Level.SEVERE, "While instantiating importer for task " + task, ex);
                     }
-                    if (importer != null) {
-                        performer.performTask(importer);
-                    }
+                }
+                if (importer != null) {
+                    performer.performTask(importer);
                 }
             }
         }

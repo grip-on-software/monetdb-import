@@ -21,6 +21,12 @@ import java.util.logging.Logger;
  * @author Leon Helwerda
  */
 public class BaseDb {
+    private class ConfigurationException extends RuntimeException {
+        public ConfigurationException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+    
     private final ResourceBundle bundle;
     private String url;
     private String user;
@@ -35,7 +41,7 @@ public class BaseDb {
             bundle = ResourceBundle.getBundle("util.import");
         }
         catch (MissingResourceException ex) {
-            throw new RuntimeException("An import.properties must have been created during compile time", ex);
+            throw new ConfigurationException("An import.properties must have been created during compile time", ex);
         }
         url = getProperty("url");
         user = getProperty("user");

@@ -62,7 +62,7 @@ public class ImpCommitComment extends BaseImport {
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
                 int repo_id = repoDb.check_repo(repo_name, project_id);
                 if (repo_id == 0) {
-                    throw new Exception("Cannot determine repository: " + repo_name);
+                    throw new ImporterException("Cannot determine repository: " + repo_name);
                 }
                 
                 Developer dev = new Developer(author_username, author, null);
@@ -80,32 +80,13 @@ public class ImpCommitComment extends BaseImport {
                 if (line == 0) {
                     line = null;
                 }
-                Integer end_line;
-                if (end_line_number == null || end_line_number.equals("0")) {
-                    end_line = null;
-                }
-                else {
-                    end_line = Integer.parseInt(end_line_number);
-                }
+                Integer end_line = parseInteger(end_line_number);
                 if (line_type.equals("0")) {
                     line_type = null;
                 }
                 
-                Timestamp created_date;
-                if (created_at == null || created_at.equals("0")) {
-                    created_date = null;
-                }
-                else {
-                    created_date = Timestamp.valueOf(created_at);
-                }
-                
-                Timestamp updated_date;
-                if (updated_at == null || updated_at.equals("0")) {
-                    updated_date = null;
-                }
-                else {
-                    updated_date = Timestamp.valueOf(updated_at);
-                }
+                Timestamp created_date = parseTimestamp(created_at);
+                Timestamp updated_date = parseTimestamp(updated_at);
                 
                 Timestamp current_date = noteDb.check_commit_note(repo_id, version_id, request_id, thread_id, note_id, parent_id, dev_id, comment, file, line, end_line, line_type, created_date);
                 if (current_date == null || (updated_date != null && !updated_date.equals(current_date))) {
@@ -120,7 +101,6 @@ public class ImpCommitComment extends BaseImport {
         catch (Exception ex) {
             logException(ex);
         }
-
     }
 
     @Override
@@ -131,6 +111,24 @@ public class ImpCommitComment extends BaseImport {
     @Override
     public String[] getImportFiles() {
         return new String[]{"data_commit_comment.json"};
+    }
+
+    private Integer parseInteger(String number) {
+        if (number == null || number.equals("0")) {
+            return null;
+        }
+        else {
+            return Integer.parseInt(number);
+        }
+    }
+
+    private Timestamp parseTimestamp(String date) {
+        if (date == null || date.equals("0")) {
+            return null;
+        }
+        else {
+            return Timestamp.valueOf(date);
+        }
     }
     
 }

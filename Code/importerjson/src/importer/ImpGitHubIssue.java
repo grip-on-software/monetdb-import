@@ -9,8 +9,10 @@ import dao.DeveloperDb;
 import dao.GitHubIssueDb;
 import dao.RepositoryDb;
 import dao.SaltDb;
+import java.beans.PropertyVetoException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
@@ -59,7 +61,7 @@ public class ImpGitHubIssue extends BaseImport {
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
                 int repo_id = repoDb.check_repo(repo_name, project_id);
                 if (repo_id == 0) {
-                    throw new Exception("Cannot determine repository: " + repo_name);
+                    throw new ImporterException("Cannot determine repository: " + repo_name);
                 }
                 int issue_id = Integer.parseInt(id);
                 Integer pull_request_id = Integer.parseInt(request_id);
@@ -76,26 +78,14 @@ public class ImpGitHubIssue extends BaseImport {
                     closed_date = Timestamp.valueOf(closed_at);
                 }
                 
-                DeveloperDb.Developer author_dev = new DeveloperDb.Developer(author, author, null);
-                int author_id = devDb.update_vcs_developer(project_id, author_dev, encryption);
+                Integer developer = parseDeveloper(author, devDb, project_id, encryption);
+                if (developer == null) {
+                    throw new ImporterException("Author ID required");
+                }
+                int author_id = developer;
                 
-                Integer assignee_id;
-                if (assignee.equals("0")) {
-                    assignee_id = null;
-                }
-                else {
-                    DeveloperDb.Developer assignee_dev = new DeveloperDb.Developer(assignee, assignee, null);
-                    assignee_id = devDb.update_vcs_developer(project_id, assignee_dev, encryption);
-                }
-
-                Integer closer_id;
-                if (closed_by.equals("0")) {
-                    closer_id = null;
-                }
-                else {
-                    DeveloperDb.Developer closer_dev = new DeveloperDb.Developer(closed_by, closed_by, null);
-                    closer_id = devDb.update_vcs_developer(project_id, closer_dev, encryption);
-                }
+                Integer assignee_id = parseDeveloper(assignee, devDb, project_id, encryption);
+                Integer closer_id = parseDeveloper(closed_by, devDb, project_id, encryption);
                 
                 GitHubIssueDb.CheckResult result = issueDb.check_issue(repo_id, issue_id, title, description, status, author_id, assignee_id, created_date, updated_date, pull_request_id, number_of_labels, closed_date, closer_id);
                 if (result == GitHubIssueDb.CheckResult.MISSING) {
@@ -104,7 +94,6 @@ public class ImpGitHubIssue extends BaseImport {
                 else if (result == GitHubIssueDb.CheckResult.DIFFERS) {
                     issueDb.update_issue(repo_id, issue_id, title, description, status, author_id, assignee_id, created_date, updated_date, pull_request_id, number_of_labels, closed_date, closer_id);
                 }
-                
             }
         }
         catch (FileNotFoundException ex) {
@@ -123,6 +112,16 @@ public class ImpGitHubIssue extends BaseImport {
     @Override
     public String[] getImportFiles() {
         return new String[]{"data_github_issue.json"};
+    }
+
+    private Integer parseDeveloper(String developer, DeveloperDb devDb, int project_id, int encryption) throws SQLException, PropertyVetoException {
+        if (developer.equals("0")) {
+            return null;
+        }
+        else {
+            DeveloperDb.Developer assignee_dev = new DeveloperDb.Developer(developer, developer, null);
+            return devDb.update_vcs_developer(project_id, assignee_dev, encryption);
+        }
     }
     
 }

@@ -8,17 +8,22 @@ package importer;
 import dao.DataSource;
 import dao.MetricDb;
 import dao.MetricDb.MetricName;
+import java.beans.PropertyVetoException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import util.BaseImport;
 
 /**
@@ -76,19 +81,7 @@ public class ImpMetricTarget extends BaseImport {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
         ) {
-            try (FileReader fr = new FileReader(getRootPath()+"/metrics_base_names.json")) {
-                JSONParser parser = new JSONParser();
-                JSONArray a = (JSONArray) parser.parse(fr);
-                List<String> base_names = new ArrayList<>();
-                for (Object name : a) {
-                    base_names.add((String)name);
-                }
-                
-                metricDb.load_metric_base_names(base_names);
-            }
-            catch (FileNotFoundException ex) {
-                getLogger().log(Level.WARNING, "Cannot load extra base names: {0}", ex.getMessage());
-            }
+            loadBaseNames(metricDb);
             while (rs.next()) {
                 int metric_id = rs.getInt("metric_id");
                 String metric_name = rs.getString("name");
@@ -106,6 +99,22 @@ public class ImpMetricTarget extends BaseImport {
         }
         catch (Exception ex) {
             logException(ex);
+        }
+    }
+
+    private void loadBaseNames(MetricDb metricDb) throws ParseException, PropertyVetoException, SQLException {
+        try (FileReader fr = new FileReader(getRootPath()+"/metrics_base_names.json")) {
+            JSONParser parser = new JSONParser();
+            JSONArray a = (JSONArray) parser.parse(fr);
+            List<String> base_names = new ArrayList<>();
+            for (Object name : a) {
+                base_names.add((String)name);
+            }
+            
+            metricDb.load_metric_base_names(base_names);
+        }
+        catch (IOException ex) {
+            getLogger().log(Level.WARNING, "Cannot load extra base names: {0}", ex.getMessage());
         }
     }
 

@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -133,7 +134,7 @@ public class ImpMetricValue extends BaseImport {
             insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), Timestamp.valueOf(since_date));
         }
 
-        public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date) throws Exception {
+        public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date) throws SQLException, PropertyVetoException {
             // Using the metric name, check if the metric was not already stored
             int metric_id = mDB.check_metric(metric_name);
 
@@ -146,7 +147,7 @@ public class ImpMetricValue extends BaseImport {
                     mDB.insert_metric(nameParts);
                     metric_id = mDB.check_metric(nameParts.getName(), true);
                     if (metric_id == 0) {
-                        throw new Exception("Could not determine ID for metric name");
+                        throw new ImporterException("Could not determine ID for metric name");
                     }
                 }
             }
@@ -167,6 +168,16 @@ public class ImpMetricValue extends BaseImport {
         }
     }
     
+    private static class MetricReadException extends Exception {
+        private MetricReadException(String message) {
+            super(message);
+        }
+        
+        private MetricReadException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+    
     private abstract static class MetricReader {
         public static final int BUFFER_SIZE = 65536;
         protected final MetricCollector collector;
@@ -177,14 +188,18 @@ public class ImpMetricValue extends BaseImport {
         }
         
         public abstract void parseFragment(String fragment);
-        public abstract void read(InputStream is) throws Exception;
+        public abstract void read(InputStream is) throws IOException, MetricReadException, SQLException, PropertyVetoException;
     }
     
     private final static class HistoryReader extends MetricReader {
         private int start_from = 0;
+        private StringReplacer replacer;
+        private JSONParser parser = new JSONParser();
 
         public HistoryReader(MetricCollector collector) {
             super(collector);
+            replacer = new StringReplacer();
+            replacer.add("(\"", "[\"").add("\")", "\"]").add(", }", "}");
         }
 
         @Override
@@ -193,12 +208,12 @@ public class ImpMetricValue extends BaseImport {
                 start_from = Integer.parseInt(fragment);
             }
             catch (NumberFormatException ex) {
+                LOGGER.logp(Level.FINE, "HistoryReader", "parseFragment", "Fragment cannot be parsed", ex);
             }
         }
         
         @Override
-        public void read(InputStream is) throws Exception {
-            JSONParser parser = new JSONParser();
+        public void read(InputStream is) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             int line_count = 0;
             Boolean success = false;
             try (
@@ -208,8 +223,6 @@ public class ImpMetricValue extends BaseImport {
             ) {
                 String line;
                 JSONObject metric_row;
-                StringReplacer replacer = new StringReplacer();
-                replacer.add("(\"", "[\"").add("\")", "\"]").add(", }", "}");
                 while ((line = br.readLine()) != null) {
                     line_count++;
                     if (line_count <= start_from) {
@@ -219,20 +232,10 @@ public class ImpMetricValue extends BaseImport {
                         continue;
                     }
                     
-                    String row = replacer.execute(line);
-                    try {
-                        metric_row = (JSONObject) parser.parse(row);
-                    }
-                    catch (ParseException e) {
-                        throw new Exception("Could not parse row:\n" + row, e);
-                    }
+                    metric_row = parseRow(line);
                     
-                    Timestamp date;
-                    try {
-                        date = Timestamp.valueOf((String) metric_row.get("date"));
-                    }
-                    catch (IllegalArgumentException ex) {
-                        LOGGER.logp(Level.SEVERE, "MetricReader", "readGzip", "Date parsing exception", ex);
+                    Timestamp date = parseDate(metric_row);
+                    if (date == null) {
                         continue;
                     }
                     
@@ -261,8 +264,8 @@ public class ImpMetricValue extends BaseImport {
                 }
                 success = true;
             }
-            catch (Exception e) {
-                throw new Exception("Problem at line " + String.valueOf(line_count), e);
+            catch (MetricReadException e) {
+                throw new MetricReadException("Problem at line " + String.valueOf(line_count), e);
             }
             finally {
                 // Write a progress file so that we can read from the correct location.
@@ -273,6 +276,26 @@ public class ImpMetricValue extends BaseImport {
                         writer.println(String.valueOf(success ? line_count : line_count-1));
                     }
                 }
+            }
+        }
+        
+        private JSONObject parseRow(String line) throws MetricReadException {
+            String row = replacer.execute(line);
+            try {
+                return (JSONObject) parser.parse(row);
+            }
+            catch (ParseException e) {
+                throw new MetricReadException("Could not parse row:\n" + row, e);
+            }
+        }
+        
+        private Timestamp parseDate(JSONObject metric_row) {
+            try {
+                return Timestamp.valueOf((String) metric_row.get("date"));
+            }
+            catch (IllegalArgumentException ex) {
+                LOGGER.logp(Level.SEVERE, "HistoryReader", "parseDate", "Date parsing exception", ex);
+                return null;
             }
         }
     }
@@ -303,14 +326,14 @@ public class ImpMetricValue extends BaseImport {
                     max_record_time = fragment;
                 }
                 catch (IllegalArgumentException ex) {
-
+                    LOGGER.logp(Level.FINE, "CompactHistoryReader", "parseFragment", "Could not parse record time from fragment");
                 }
             }
             current_record_time = max_record_time;
         }
         
         @Override
-        public void read(InputStream is) throws Exception {
+        public void read(InputStream is) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             JSONParser parser = new JSONParser();
             try (
                 GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
@@ -341,6 +364,9 @@ public class ImpMetricValue extends BaseImport {
                     }
                 }
             }
+            catch (ParseException ex) {
+                throw new MetricReadException("Cannot parse JSON object", ex);
+            }
         }
         
         private String[] parseDates(JSONArray dateArray, int length) {
@@ -351,7 +377,7 @@ public class ImpMetricValue extends BaseImport {
             return dateList.toArray(new String[length]);
         }
 
-        private boolean parseMetric(String metric_name, JSONArray data, String[] dates, int max_index) throws Exception {
+        private boolean parseMetric(String metric_name, JSONArray data, String[] dates, int max_index) throws MetricReadException, SQLException, PropertyVetoException {
             int previous_index = 0;
             for (Object record : data) {
                 JSONObject measurement = (JSONObject) record;
@@ -370,7 +396,7 @@ public class ImpMetricValue extends BaseImport {
                     metric_value = ((Double) value).floatValue();
                 }
                 else {
-                    throw new Exception("Unexpected type of value: " + value.getClass().getSimpleName());
+                    throw new MetricReadException("Unexpected type of value: " + value.getClass().getSimpleName());
                 }
 
                 Timestamp since_date = Timestamp.valueOf(start_time);
