@@ -5,6 +5,7 @@
  */
 package util;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -130,9 +131,9 @@ public class BaseDbTest {
     public void testGetRootPath() {
         System.setProperty("java.class.path", "/test/root/path/classes");
         BaseDb instance = new BaseDb();
-        String expResult = "/test/root/path/";
+        File expResult = new File("/test/root/path/");
         Path result = instance.getRootPath();
-        assertEquals(expResult, result.toString());
+        assertEquals(expResult.toPath(), result);
     }
 
     /**
@@ -143,9 +144,9 @@ public class BaseDbTest {
         System.setProperty("java.class.path", "/test/root/path/classes");
         System.setProperty("importer.relPath", "test/rel/path");
         BaseDb instance = new BaseDb();
-        String expResult = "/test/root/path/test/rel/path/";
+        File expResult = new File("/test/root/path/test/rel/path/");
         Path result = instance.getPath();
-        assertEquals(expResult, result.toString());
+        assertEquals(expResult.toPath(), result);
     }
 
     /**
@@ -154,9 +155,10 @@ public class BaseDbTest {
     @Test
     public void testSetPath() {
         String path = "/test/new/path";
+        File expResult = new File(path);
         BaseDb instance = new BaseDb();
         instance.setPath(path);
-        assertEquals(path, instance.getPath());
+        assertEquals(expResult.toPath(), instance.getPath());
     }
     
 }
