@@ -24,7 +24,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public MergeRequestDb() {
         String sql = "insert into gros.merge_request(repo_id,request_id,title,description,status,source_branch,target_branch,author_id,assignee_id,upvotes,downvotes,created_date,updated_date,sprint_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";

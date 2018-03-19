@@ -76,7 +76,7 @@ public class TagDb extends BaseDb implements AutoCloseable {
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public TagDb() {
         String sql = "insert into gros.tag(repo_id,tag_name,version_id,message,tagged_date,tagger_id,sprint_id) values (?,?,?,?,?,?,?);";

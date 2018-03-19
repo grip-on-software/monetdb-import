@@ -6,6 +6,7 @@
 package dao;
 
 import java.beans.PropertyVetoException;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -70,11 +71,11 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkGitHubRepoStmt = null;
     private BatchedStatement updateGitHubRepoStmt = null;
     private final ProjectDb pDB;
-    private static final Set<String> VCS_SOURCES = new TreeSet<>(Arrays.asList(new String[]{"svn", "git", "github", "gitlab", "tfs"}));
+    private static final Set<String> VCS_SOURCES = new TreeSet<>(Arrays.asList("svn", "git", "github", "gitlab", "tfs"));
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public RepositoryDb() {
         String sql = "insert into gros.repo (repo_name,project_id,type,url) values (?,?,?,?);";
@@ -223,7 +224,7 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         }
         
         try (
-            FileReader fr = new FileReader(getPath()+project+"/data_sources.json")
+            FileReader fr = new FileReader(new File(getProjectPath(project), "data_sources.json"))
         ) {
             JSONParser parser = new JSONParser();
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -384,7 +385,8 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         try (ResultSet rs = checkGitLabRepoStmt.executeQuery()) {
             result = CheckResult.MISSING;
             while (rs.next()) {
-                if ((description == null ? rs.getString("description") == null : description.equals(rs.getString("description"))) &&
+                String other_description = rs.getString("description");
+                if ((description == null ? other_description == null : description.equals(other_description)) &&
                         create_date.equals(rs.getTimestamp("create_date")) &&
                         archived == rs.getBoolean("archived") &&
                         has_avatar == rs.getBoolean("has_avatar") &&
@@ -503,7 +505,8 @@ public class RepositoryDb extends BaseDb implements AutoCloseable {
         try (ResultSet rs = checkGitHubRepoStmt.executeQuery()) {
             result = CheckResult.MISSING;
             while (rs.next()) {
-                if ((description == null ? rs.getString("description") == null : description.equals(rs.getString("description"))) &&
+                String other_description = rs.getString("description");
+                if ((description == null ? other_description == null : description.equals(other_description)) &&
                         create_date.equals(rs.getTimestamp("create_date")) &&
                         is_private == rs.getBoolean("private") &&
                         is_forked == rs.getBoolean("forked") &&

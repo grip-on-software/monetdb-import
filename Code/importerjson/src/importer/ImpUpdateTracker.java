@@ -48,11 +48,9 @@ public class ImpUpdateTracker extends BaseImport {
 
     private void addUpdateTracker(String updateFilename, final UpdateDb updateDb, int project_id) throws PropertyVetoException, SQLException {
         try {
-            String pathName = getExportPath() + "/" + updateFilename;
-            Path path = Paths.get(pathName);
-            File file = new File(pathName);
+            File file = new File(getExportPath(), updateFilename);
             Timestamp update_date = new Timestamp(file.lastModified());
-            String contents = new String(Files.readAllBytes(path), "UTF-8");
+            String contents = new String(Files.readAllBytes(file.toPath()), "UTF-8");
             if (!updateDb.check_file(project_id, updateFilename)) {
                 updateDb.insert_file(project_id, updateFilename, contents, update_date);
             }

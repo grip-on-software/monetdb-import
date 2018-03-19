@@ -10,6 +10,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import dao.ComponentDb;
+import java.io.File;
 import java.sql.Timestamp;
 import util.BaseImport;
 import util.BaseLinkDb.CheckResult;
@@ -25,10 +26,10 @@ public class ImpComponent extends BaseImport {
         JSONParser parser = new JSONParser();
  
         int project = getProjectID();
-        String path = getExportPath() + "/";
+        File path = getExportPath();
         try (
-            FileReader cmpFile = new FileReader(path + "data_component.json");
-            FileReader linkFile = new FileReader(path + "data_issue_component.json");
+            FileReader cmpFile = new FileReader(new File(path, "data_component.json"));
+            FileReader linkFile = new FileReader(new File(path, "data_issue_component.json"));
             ComponentDb cmpDb = new ComponentDb()
         ) {
             JSONArray a;

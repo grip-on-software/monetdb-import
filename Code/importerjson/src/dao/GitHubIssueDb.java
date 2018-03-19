@@ -24,7 +24,7 @@ public class GitHubIssueDb extends BaseDb implements AutoCloseable {
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public GitHubIssueDb() {
         String sql = "insert into gros.github_issue(repo_id,issue_id,title,description,status,author_id,assignee_id,created_date,updated_date,pull_request_id,labels,closed_date,closer_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?);";

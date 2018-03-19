@@ -4,6 +4,7 @@
  * Importer of gathered software development metrics for MonetDB
  */
 package util;
+import java.io.File;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
@@ -68,8 +69,8 @@ public abstract class BaseImport extends BaseDb {
      */
     public abstract String[] getImportFiles();
     
-    public final String getExportPath() {
-        return getPath() + getProjectName();
+    public final File getExportPath() {
+        return getProjectPath(getProjectName());
     }
 
     /**
@@ -77,7 +78,8 @@ public abstract class BaseImport extends BaseDb {
      * @return File path
      */
     public String getMainImportPath() {
-        return getExportPath() + "/" + getImportFiles()[0];
+        File path = new File(getExportPath(), getImportFiles()[0]);
+        return path.toString();
     }
     
     /**

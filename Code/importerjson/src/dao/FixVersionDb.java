@@ -24,7 +24,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
 
     public FixVersionDb() {
         String sql = "insert into gros.fixversion(id,project_id,name,description,start_date,release_date,released) values (?,?,?,?,?,?,?);";

@@ -25,7 +25,7 @@ public class NoteDb extends BaseDb implements AutoCloseable {
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public NoteDb() {
         String sql = "insert into gros.merge_request_note(repo_id,request_id,thread_id,note_id,parent_id,author_id,comment,created_date,updated_date) values (?,?,?,?,?,?,?,?,?);";

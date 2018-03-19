@@ -32,6 +32,7 @@ import org.json.simple.parser.ParseException;
 import util.BaseImport;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import util.BufferedJSONReader;
@@ -42,7 +43,7 @@ import util.BufferedJSONReader;
  */
 public class ImpCommit extends BaseImport {
     /** Primary keys of the tables to update when encrypting fields. */
-    public final static HashMap<String, String[]> HASH_KEYS = createHashKeys();
+    private final static Map<String, String[]> HASH_KEYS = createHashKeys();
     private static HashMap<String, String[]> createHashKeys() {
         HashMap<String, String[]> keys = new HashMap<>();
         keys.put("vcs_developer", new String[]{"alias_id"});
@@ -58,7 +59,7 @@ public class ImpCommit extends BaseImport {
     }
         
     /** Fields to hash when encrypting fields. */
-    public final static HashMap<String, String[]> HASH_FIELDS = createHashFields();
+    private final static Map<String, String[]> HASH_FIELDS = createHashFields();
     private static HashMap<String, String[]> createHashFields() {
         HashMap<String, String[]> fields = new HashMap<>();
         fields.put("vcs_developer", new String[]{"display_name", "email"});

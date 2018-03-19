@@ -85,7 +85,7 @@ public class TableDb implements AutoCloseable {
      */
     public void insert(int identifier, String value) throws SQLException, PropertyVetoException {
         if (numberOfFields != 2) {
-            throw new IllegalArgumentException("must provide " + String.valueOf(numberOfFields) + " arguments, not 2");
+            throw new IllegalArgumentException("must provide " + numberOfFields + " arguments, not 2");
         }
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
@@ -105,7 +105,7 @@ public class TableDb implements AutoCloseable {
      */
     public void insert(int identifier, String value, String metadata) throws SQLException, PropertyVetoException {
         if (numberOfFields != 3) {
-            throw new IllegalArgumentException("must provide " + String.valueOf(numberOfFields) + " arguments, not 3");
+            throw new IllegalArgumentException("must provide " + numberOfFields + " arguments, not 3");
         }
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         

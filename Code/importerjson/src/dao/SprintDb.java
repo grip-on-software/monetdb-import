@@ -148,7 +148,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
 
     public SprintDb() {
         String sql = "insert into gros.sprint(sprint_id,project_id,name,start_date,end_date,complete_date,goal) values (?,?,?,?,?,?,?);";

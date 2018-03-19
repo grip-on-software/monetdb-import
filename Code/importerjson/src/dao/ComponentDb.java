@@ -70,8 +70,8 @@ public class ComponentDb extends BaseLinkDb implements AutoCloseable {
     private PreparedStatement checkComponentStmt = null;
     private BatchedStatement updateComponentStmt = null;
     
-    private final int NAME_LENGTH = 100;
-    private final int DESCRIPTION_LENGTH = 500;
+    private static final int NAME_LENGTH = 100;
+    private static final int DESCRIPTION_LENGTH = 500;
 
     public ComponentDb() {
         String sql = "insert into gros.issue_component (issue_id,component_id,start_date,end_date) values (?,?,?,?);";

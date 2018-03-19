@@ -6,6 +6,7 @@
 package util;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -31,8 +32,8 @@ public class BaseDb {
     private String url;
     private String user;
     private String password;
-    private final String rootPath;
-    private String path;
+    private final Path rootPath;
+    private Path path;
     private static final Logger LOGGER = Logger.getLogger("importer");
     private boolean hasExceptions = false;
     
@@ -50,9 +51,10 @@ public class BaseDb {
         // Get system file path from Java jar location.
         File f = new File(System.getProperty("java.class.path"));
         File dir = f.getAbsoluteFile().getParentFile();
-        rootPath = dir.toString() + "/";
+        rootPath = dir.toPath();
         String relPath = getProperty("relPath");
-        path = rootPath + relPath + "/";
+        File absPath = new File(dir, relPath);
+        path = absPath.toPath();
     }
     
     /**
@@ -89,6 +91,17 @@ public class BaseDb {
     
     public final boolean hasExceptions() {
         return hasExceptions;
+    }
+
+    /**
+     * Close a prepared statement object.
+     * @param pstmt The prepared statement
+     * @throws SQLException If a database access error occurs
+     */
+    protected void closeStatement(PreparedStatement pstmt) throws SQLException {
+        if (pstmt != null) {
+            pstmt.close();
+        }
     }
     
     /**
@@ -159,7 +172,7 @@ public class BaseDb {
      * Get the root path where files with properties for the importer are found.
      * @return The root path
      */
-    public final String getRootPath() {
+    public final Path getRootPath() {
         return rootPath;
     }
 
@@ -167,8 +180,18 @@ public class BaseDb {
      * Get the path where the gathered data is stored for import.
      * @return The path where the gathered data is found
      */
-    public final String getPath() {
+    public final Path getPath() {
         return path;
+    }
+    
+    /**
+     * Get the path where the gathered data for a specific project is stored
+     * for import.
+     * @param project The project identifier
+     * @return The path where the project's gathered data is found
+     */
+    public final File getProjectPath(String project) {
+        return new File(path.toFile(), project);
     }
 
     /**
@@ -177,7 +200,8 @@ public class BaseDb {
      * @param path The path to set
      */
     public final void setPath(String path) {
-        this.path = path;
+        File dir = new File(path);
+        this.path = dir.toPath();
     }
     
     /**

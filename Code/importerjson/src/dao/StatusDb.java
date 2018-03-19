@@ -26,7 +26,7 @@ public class StatusDb extends BaseDb implements AutoCloseable {
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public StatusDb() {
         insertStatusStmt = new BatchedStatement("insert into gros.status(id,name,description,category_id) values (?,?,?,?)");

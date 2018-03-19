@@ -135,27 +135,17 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         insertDeveloperStmt.execute();
         insertDeveloperStmt.close();
         
-        if (checkDeveloperStmt != null) {
-            checkDeveloperStmt.close();
-            checkDeveloperStmt = null;
-        }
+        closeStatement(checkDeveloperStmt);
+        checkDeveloperStmt = null;
         
-        if (insertVcsDeveloperStmt != null) {
-            insertVcsDeveloperStmt.close();
-            insertVcsDeveloperStmt = null;
-        }
-        if (checkVcsDeveloperStmt != null) {
-            checkVcsDeveloperStmt.close();
-            checkVcsDeveloperStmt = null;
-        }
-        if (searchVcsDeveloperStmt != null) {
-            searchVcsDeveloperStmt.close();
-            searchVcsDeveloperStmt = null;
-        }
-        if (linkVcsDeveloperStmt != null) {
-            linkVcsDeveloperStmt.close();
-            linkVcsDeveloperStmt = null;
-        }
+        closeStatement(insertVcsDeveloperStmt);
+        insertVcsDeveloperStmt = null;
+        closeStatement(checkVcsDeveloperStmt);
+        checkVcsDeveloperStmt = null;
+        closeStatement(searchVcsDeveloperStmt);
+        searchVcsDeveloperStmt = null;
+        closeStatement(linkVcsDeveloperStmt);
+        linkVcsDeveloperStmt = null;
         
         if (vcsNameCache != null) {
             vcsNameCache.clear();
@@ -165,26 +155,18 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         insertProjectDeveloperStmt.execute();
         insertProjectDeveloperStmt.close();
         
-        if (checkProjectDeveloperStmt != null) {
-            checkProjectDeveloperStmt.close();
-            checkProjectDeveloperStmt = null;
-        }
-        if (checkProjectDeveloperIdStmt != null) {
-            checkProjectDeveloperIdStmt.close();
-            checkProjectDeveloperIdStmt = null;
-        }
+        closeStatement(checkProjectDeveloperStmt);
+        checkProjectDeveloperStmt = null;
+        closeStatement(checkProjectDeveloperIdStmt);
+        checkProjectDeveloperIdStmt = null;
 
         insertLdapDeveloperStmt.execute();
         insertLdapDeveloperStmt.close();
         
-        if (checkLdapDeveloperStmt != null) {
-            checkLdapDeveloperStmt.close();
-            checkLdapDeveloperStmt = null;
-        }
-        if (linkLdapDeveloperStmt != null) {
-            linkLdapDeveloperStmt.close();
-            linkLdapDeveloperStmt = null;
-        }
+        closeStatement(checkLdapDeveloperStmt);
+        checkLdapDeveloperStmt = null;
+        closeStatement(linkLdapDeveloperStmt);
+        linkLdapDeveloperStmt = null;
     }
     
     /**

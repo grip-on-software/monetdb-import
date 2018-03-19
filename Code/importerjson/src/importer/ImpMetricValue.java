@@ -11,6 +11,7 @@ import dao.MetricDb.MetricName;
 import dao.SprintDb;
 import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -48,17 +49,17 @@ public class ImpMetricValue extends BaseImport {
     private static class MetricCollector implements AutoCloseable {
         private MetricDb mDB = null;
         private SprintDb sprintDb = null;
-        private final String path;
+        private final File path;
         private final int projectID;
         
-        public MetricCollector(String path, int projectID) {
+        public MetricCollector(File path, int projectID) {
             this.mDB = new MetricDb();
             this.sprintDb = new SprintDb();
             this.path = path;
             this.projectID = projectID;
         }
         
-        private void readPath(String path) throws Exception {
+        private void readPath(String path) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             // Parse the path, consisting of the actual location followed by
             // a fragment identifier (#), after which we have a list of flags,
             // delimited by vertical bars (|). The first flag is always the
@@ -97,13 +98,13 @@ public class ImpMetricValue extends BaseImport {
             }
         }
         
-        private void readLocal(MetricReader reader, String path) throws Exception {
+        private void readLocal(MetricReader reader, String path) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             try (InputStream is = new FileInputStream(path)) {
                 reader.read(is);
             }
         }
 
-        private void readNetworked(MetricReader reader, URL url) throws Exception {
+        private void readNetworked(MetricReader reader, URL url) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             URLConnection con = url.openConnection();
             con.connect();
             try (InputStream is = con.getInputStream()) {
@@ -111,20 +112,25 @@ public class ImpMetricValue extends BaseImport {
             }
         }
         
-        public void readBufferedJSON(BufferedJSONReader br) throws Exception {
+        public void readBufferedJSON(BufferedJSONReader br) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             Object object;
-            while ((object = br.readObject()) != null) {
-                if (object instanceof String) {
-                    readPath((String) object);
-                    break;
+            try {
+                while ((object = br.readObject()) != null) {
+                    if (object instanceof String) {
+                        readPath((String) object);
+                        break;
+                    }
+                    else {
+                        handleObject((JSONObject) object);
+                    }
                 }
-                else {
-                    handleObject((JSONObject) object);
-                }
+            }
+            catch (ParseException ex) {
+                throw new MetricReadException("Could not read JSON", ex);
             }
         }
 
-        private void handleObject(JSONObject jsonObject) throws Exception {
+        private void handleObject(JSONObject jsonObject) throws SQLException, PropertyVetoException {
             String metric_name = (String) jsonObject.get("name");
             String value = (String) jsonObject.get("value");
             String category = (String) jsonObject.get("category");
@@ -163,7 +169,7 @@ public class ImpMetricValue extends BaseImport {
             sprintDb.close();
         }
 
-        public String getPath() {
+        public File getPath() {
             return path;
         }
     }
@@ -225,54 +231,49 @@ public class ImpMetricValue extends BaseImport {
                 JSONObject metric_row;
                 while ((line = br.readLine()) != null) {
                     line_count++;
-                    if (line_count <= start_from) {
-                        continue;
-                    }
-                    if (line.isEmpty()) {
+                    if (line_count <= start_from || line.isEmpty()) {
                         continue;
                     }
                     
                     metric_row = parseRow(line);
                     
                     Timestamp date = parseDate(metric_row);
-                    if (date == null) {
-                        continue;
-                    }
-                    
-                    for (Iterator it = metric_row.entrySet().iterator(); it.hasNext();) {
-                        Map.Entry pair = (Map.Entry)it.next();
-                        Object data = pair.getValue();
-                        if (data instanceof JSONArray) {
-                            JSONArray metric_data = (JSONArray) data;
-                            String metric_name = (String) pair.getKey();
-                            
-                            String value = (String) metric_data.get(0);
-                            String category = (String) metric_data.get(1);
-                            
-                            Timestamp since_date;
-                            if (metric_data.size() > 2) {
-                                String since_time = (String) metric_data.get(2);
-                                since_date = Timestamp.valueOf(since_time);
-                            }
-                            else {
-                                since_date = null;
-                            }
+                    if (date != null) {
+                        for (Iterator it = metric_row.entrySet().iterator(); it.hasNext();) {
+                            Map.Entry pair = (Map.Entry)it.next();
+                            Object data = pair.getValue();
+                            if (data instanceof JSONArray) {
+                                JSONArray metric_data = (JSONArray) data;
+                                String metric_name = (String) pair.getKey();
 
-                            collector.insert(metric_name, Integer.parseInt(value), category, date, since_date);
+                                String value = (String) metric_data.get(0);
+                                String category = (String) metric_data.get(1);
+
+                                Timestamp since_date;
+                                if (metric_data.size() > 2) {
+                                    String since_time = (String) metric_data.get(2);
+                                    since_date = Timestamp.valueOf(since_time);
+                                }
+                                else {
+                                    since_date = null;
+                                }
+
+                                collector.insert(metric_name, Integer.parseInt(value), category, date, since_date);
+                            }
                         }
                     }
                 }
                 success = true;
             }
             catch (MetricReadException e) {
-                throw new MetricReadException("Problem at line " + String.valueOf(line_count), e);
+                throw new MetricReadException("Problem at line " + line_count, e);
             }
             finally {
                 // Write a progress file so that we can read from the correct location.
                 // Do this upon midway failure as well, but not if we did not read further than the start line.
                 // If we failed somewhere midway, then next time start from the line we failed on.
                 if (line_count > start_from) {
-                    try (PrintWriter writer = new PrintWriter(collector.getPath()+"/history_line_count.txt")) {
+                    try (PrintWriter writer = new PrintWriter(new File(collector.getPath(), "history_line_count.txt"))) {
                         writer.println(String.valueOf(success ? line_count : line_count-1));
                     }
                 }
@@ -359,7 +360,7 @@ public class ImpMetricValue extends BaseImport {
                 // Write a progress file so that we can read new metric value
                 // additions later on. Only do this if the import succeeds.
                 if (!max_record_time.isEmpty()) {
-                    try (PrintWriter writer = new PrintWriter(collector.getPath()+"/history_record_time.txt")) {
+                    try (PrintWriter writer = new PrintWriter(new File(collector.getPath(), "history_record_time.txt"))) {
                         writer.println(String.valueOf(max_record_time));
                     }
                 }

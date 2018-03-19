@@ -24,7 +24,7 @@ public class CommentDb extends BaseDb implements AutoCloseable {
     
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
     
     public CommentDb() {
         String sql = "insert into gros.comment(comment_id,issue_id,message,author,date,updater,updated_date) values (?,?,?,?,?,?,?);";

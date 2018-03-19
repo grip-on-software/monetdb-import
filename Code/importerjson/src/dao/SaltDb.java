@@ -32,7 +32,14 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         public final static int GLOBAL = 2;
         public final static int BOTH = 3;
 
-        public static int parseInt(String encrypted) throws NumberFormatException {
+        /**
+         * Parse an encryption flag.
+         * @param encrypted The encryption flag encoded in a string.
+         * @return The encryption flag integer.
+         * @throws NumberFormatException If the string does not contain a valid
+         * encryption flag.
+         */
+        public static int parseInt(String encrypted) {
             if (encrypted == null) {
                 return NONE;
             }
@@ -42,7 +49,13 @@ public class SaltDb extends BaseDb implements AutoCloseable {
             return encryption;
         }
         
-        public static void check(int encryption) throws NumberFormatException {
+        /**
+         * Check whether an encryption flag is valid.
+         * @param encryption The encryption flag integer
+         * @throws NumberFormatException If the integer does not contain a valid
+         * encryption flag.
+         */
+        public static void check(int encryption) {
             if (encryption < NONE || encryption > BOTH) {
                 throw new NumberFormatException("Encryption level " + encryption + " is not supported");
             }
@@ -88,7 +101,7 @@ public class SaltDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private SaltPair create_pair() {
+    private SaltPair createPair() {
         Random source = new SecureRandom();
         byte[] salt = new byte[24];
         source.nextBytes(salt);
@@ -119,7 +132,7 @@ public class SaltDb extends BaseDb implements AutoCloseable {
             }
         }
 
-        SaltPair pair = create_pair();
+        SaltPair pair = createPair();
         insert_salt(project_id, pair);
         return pair;
     }

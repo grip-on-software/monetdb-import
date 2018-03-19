@@ -65,7 +65,7 @@ public class BufferedJSONReader extends LineNumberReader {
         while ((line = this.readLine()) != null) {
             if (!inArray && this.getLineNumber() == 1) {
                 if (line.startsWith("\"") && line.endsWith("\"")) {
-                    return (Object) parser.parse(line);
+                    return parser.parse(line);
                 }
                 if ("[]".equals(line)) {
                     return null;
@@ -77,25 +77,25 @@ public class BufferedJSONReader extends LineNumberReader {
             }
             if ("]".equals(line)) {
                 inArray = false;
-                continue;
             }
-            
-            if (!inArray) {
-                throw new EOFException("Expecting end of JSON stream at line " + this.getLineNumber());
-            }
-            sb.append(line.trim());
+            else {
+                if (!inArray) {
+                    throw new EOFException("Expecting end of JSON stream at line " + this.getLineNumber());
+                }
+                sb.append(line.trim());
 
-            String json = "";
-            if (sb.length() > 1 && sb.substring(sb.length()-1).equals("}")) {
-                json = sb.toString();
-            }
-            else if (sb.length() > 2 && sb.substring(sb.length()-2).equals("},")) {
-                json = sb.substring(0, sb.length()-1);
-            }
-            if (!json.isEmpty()) {
-                Object jsonObject = (Object) parser.parse(json);
-                sb.setLength(0);
-                return jsonObject;
+                String json = "";
+                if (sb.length() > 1 && sb.substring(sb.length()-1).equals("}")) {
+                    json = sb.toString();
+                }
+                else if (sb.length() > 2 && sb.substring(sb.length()-2).equals("},")) {
+                    json = sb.substring(0, sb.length()-1);
+                }
+                if (!json.isEmpty()) {
+                    Object jsonObject = parser.parse(json);
+                    sb.setLength(0);
+                    return jsonObject;
+                }
             }
         }
         if (inArray) {

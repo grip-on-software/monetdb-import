@@ -40,24 +40,24 @@ public class Importerjson {
         HashMap<String, List<String>> groupedTasks = new HashMap<>();
         
         // JIRA
-        groupedTasks.put("jira", Arrays.asList(new String[]{
+        groupedTasks.put("jira", Arrays.asList(
             "issue", "issuetype", "status", "status_category", "resolution", 
             "priority", "fixVersion", "ready_status", "test_execution",
             "relationshiptype", "issuelink", "subtask",
             "sprint", "comment", "developer", "component"
-        }));
+        ));
 
         // Quality dashboard metrics
-        groupedTasks.put("metrics", Arrays.asList(new String[]{
+        groupedTasks.put("metrics", Arrays.asList(
             "metric_target", "metric_value", "metric_version"
-        }));
+        ));
 
         // Version control systems and collaboration frontends (Git, GitHub, GitLab, TFS, SVN)
-        groupedTasks.put("vcs", Arrays.asList(new String[]{
+        groupedTasks.put("vcs", Arrays.asList(
             "commit", "change_path", "tag", "vcs_event",
             "gitlab_repo", "github_repo", "github_issue", "github_issue_note",
             "merge_request", "merge_request_review", "merge_request_note", "commit_comment"
-        }));
+        ));
         
         return groupedTasks;
     }
@@ -86,10 +86,10 @@ public class Importerjson {
         return defaultTasks;
     }
     
-    private final static List<String> SPECIAL_TASKS = Arrays.asList(new String[]{
+    private final static List<String> SPECIAL_TASKS = Arrays.asList(
         "sprintlink", "developerproject", "developerlink", "metric_domain_name",
         "repo_sources", "encrypt"
-    });
+    );
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
     
@@ -197,7 +197,7 @@ public class Importerjson {
             files.addAll(Arrays.asList(importFiles));
         }
         
-        public ArrayList<String> getFiles() {
+        public List<String> getFiles() {
             return files;
         }
     }
@@ -253,24 +253,24 @@ public class Importerjson {
     }
     
     private static String formatUsage(boolean all) {
-        String usage = "\nUsage: java [-Dimporter.log=LEVEL] -jar importerjson.jar <project> [tasks]";
+        StringBuilder usage = new StringBuilder("\nUsage: java [-Dimporter.log=LEVEL] -jar importerjson.jar <project> [tasks]");
         
         if (all) {
-            usage += "\n\nTask groups and tasks:\n\n - all: All default (non-special) tasks\n";
+            usage.append("\n\nTask groups and tasks:\n\n - all: All default (non-special) tasks\n");
             
             List<String> otherTasks = new ArrayList<>(DEFAULT_TASKS);
             for (Map.Entry<String, List<String>> group : GROUPED_TASKS.entrySet()) {
-                usage += "\n - " + group.getKey() + ": ";
-                usage += String.join(", ", group.getValue());
+                usage.append("\n - ").append(group.getKey()).append(": ");
+                usage.append(String.join(", ", group.getValue()));
                 
                 otherTasks.removeAll(group.getValue());
             }
             
-            usage += "\n\n - Other (default) tasks: " + String.join(", ", otherTasks);
-            usage += "\n - Special tasks: " + String.join(", ", SPECIAL_TASKS);
+            usage.append("\n\n - Other (default) tasks: ").append(String.join(", ", otherTasks));
+            usage.append("\n - Special tasks: ").append(String.join(", ", SPECIAL_TASKS));
         }
         
-        return usage;
+        return usage.toString();
     }
     
     public static void main(String[] args) {

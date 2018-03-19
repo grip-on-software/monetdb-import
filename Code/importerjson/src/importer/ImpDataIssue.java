@@ -47,15 +47,15 @@ public class ImpDataIssue extends BaseImport {
     }
 
     private static String getUpdateSql() {
-        String updateSql = "update gros.issue set ";
+        StringBuilder updateSql = new StringBuilder("update gros.issue set ");
         for (int i = 2; i < FIELDS.length; i++) {
             if (i > 2) {
-                updateSql += ", ";
+                updateSql.append(", ");
             }
-            updateSql += FIELDS[i] + "=?";
+            updateSql.append(FIELDS[i]).append("=?");
         }
-        updateSql += " where issue_id=? and changelog_id=?;";
-        return updateSql;
+        updateSql.append(" where issue_id=? and changelog_id=?;");
+        return updateSql.toString();
     }
 
     private class BatchedIssueStatement extends BatchedUpdateStatement {
@@ -63,8 +63,8 @@ public class ImpDataIssue extends BaseImport {
         private final String projectName = getProjectName();
         private final ProjectDb projectDb = new ProjectDb();
         
-        public BatchedIssueStatement() {
-            super("gros.issue", getInsertSql(), getUpdateSql(), new String[]{"issue_id", "changelog_id"});
+        public BatchedIssueStatement(String insertSql, String updateSql) {
+            super("gros.issue", insertSql, updateSql, new String[]{"issue_id", "changelog_id"});
         }
 
         private String getField(JSONObject jsonObject, String field) {
@@ -252,7 +252,7 @@ public class ImpDataIssue extends BaseImport {
         try (
             FileReader fr = new FileReader(getMainImportPath());
             BufferedJSONReader br = new BufferedJSONReader(fr);
-            BatchedUpdateStatement cstmt = new BatchedIssueStatement();
+            BatchedUpdateStatement cstmt = new BatchedIssueStatement(getInsertSql(), getUpdateSql());
         ) {
             Object o;
             while ((o = br.readObject()) != null) {

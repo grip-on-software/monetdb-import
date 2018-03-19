@@ -413,7 +413,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         metric_name = metric_name.replaceFirst("<[A-Za-z.]+?([^.]+)(?: object at .*)>$", "$1");
         String base_name = metric_name;
-        String domain_name = "";
+        StringBuilder domain_name = new StringBuilder();
         Pattern pattern = Pattern.compile(aggressive ? ".$" : "(?<![A-Z ])[A-Z]+[^A-Z ]*(?: .+)?$");
         while (!baseNameCache.contains(base_name)) {
             Matcher matcher = pattern.matcher(base_name);
@@ -429,14 +429,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                     return new MetricName(metric_name);
                 }
                 base_name = new_base_name;
-                domain_name = domain_part + domain_name;
+                domain_name.append(domain_name);
             }
             else {
                 // No more match, so bail out
                 return new MetricName(metric_name);
             }
         }
-        return new MetricName(metric_name, base_name, domain_name);
+        return new MetricName(metric_name, base_name, domain_name.toString());
     }
 
     private void getCheckVersionStmt() throws SQLException, PropertyVetoException {

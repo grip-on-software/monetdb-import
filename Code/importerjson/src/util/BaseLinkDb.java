@@ -61,7 +61,7 @@ public class BaseLinkDb extends BaseDb {
     }
     
     public static class CheckResult {
-        public enum State { MISSING, DIFFERS, EXISTS };
+        public enum State { MISSING, DIFFERS, EXISTS }
         public final State state;
         public final LinkDates dates;
         
@@ -74,7 +74,7 @@ public class BaseLinkDb extends BaseDb {
             this.state = state;
             this.dates = dates;
         }
-    };
+    }
     
     protected boolean compareTimestamps(Timestamp date, Timestamp current_date, boolean allowEarlier) {
         if (date == null) {

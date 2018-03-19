@@ -23,7 +23,7 @@ public class JenkinsDb extends BaseDb implements AutoCloseable {
 
     public enum CheckResult {
         MISSING, DIFFERS, EXISTS
-    };
+    }
 
     public JenkinsDb() {
         String sql = "insert into gros.jenkins(project_id,host,jobs,views,nodes) values (?,?,?,?,?);";
