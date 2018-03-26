@@ -9,6 +9,7 @@ import dao.DataSource;
 import dao.MetricDb;
 import dao.MetricDb.MetricName;
 import java.beans.PropertyVetoException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -103,7 +104,7 @@ public class ImpMetricTarget extends BaseImport {
     }
 
     private void loadBaseNames(MetricDb metricDb) throws ParseException, PropertyVetoException, SQLException {
-        try (FileReader fr = new FileReader(getRootPath()+"/metrics_base_names.json")) {
+        try (FileReader fr = new FileReader(new File(getRootPath().toFile(), "metrics_base_names.json"))) {
             JSONParser parser = new JSONParser();
             JSONArray a = (JSONArray) parser.parse(fr);
             List<String> base_names = new ArrayList<>();

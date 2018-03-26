@@ -15,6 +15,7 @@ import dao.SaltDb;
 import dao.SaltDb.Encryption;
 import dao.SprintDb;
 import java.beans.PropertyVetoException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -273,7 +274,7 @@ public class ImpCommit extends BaseImport {
         int successes = 0;
  
         try (
-            FileReader fr = new FileReader(getRootPath()+"/data_vcsdev_to_dev.json");
+            FileReader fr = new FileReader(new File(getRootPath().toFile(), "data_vcsdev_to_dev.json"));
             DeveloperDb devDb = new DeveloperDb();
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
