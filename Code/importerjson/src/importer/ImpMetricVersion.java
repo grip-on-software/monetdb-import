@@ -25,7 +25,7 @@ public class ImpMetricVersion extends BaseImport {
     public void parser() {
         JSONParser parser = new JSONParser();
         int projectId = this.getProjectID();
-        int version_id = 0;
+        String version_id = null;
  
         try (
             MetricDb metricDb = new MetricDb();
@@ -44,12 +44,11 @@ public class ImpMetricVersion extends BaseImport {
                 
                 version_id = metricDb.check_version(projectId, revision);
             
-                if (version_id == 0) {
+                if (version_id == null) {
                     Timestamp commit_date = Timestamp.valueOf(date);
                     int sprint_id = sprintDb.find_sprint(projectId, commit_date);
 
                     metricDb.insert_version(projectId, revision, developer, message, commit_date, sprint_id);
-                    
                 }
             }            
         }

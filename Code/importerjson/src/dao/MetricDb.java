@@ -451,19 +451,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * Check whether a metric version exists in the database.
      * @param projectId Identifier of the project to which the metric version change applies
      * @param version The version identifier of the change
-     * @return The revision number if the version exists, or 0 if it is not found
+     * @return The revision identifier if the version exists, or null if it is not found
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int check_version(int projectId, String version) throws SQLException, PropertyVetoException {
+    public String check_version(int projectId, String version) throws SQLException, PropertyVetoException {
         getCheckVersionStmt();
-        int idVersion = 0;
+        String idVersion = null;
         
         checkMetricVersionStmt.setInt(1, projectId);
         checkMetricVersionStmt.setString(2, version);
         try (ResultSet rs = checkMetricVersionStmt.executeQuery()) {
             while (rs.next()) {
-                idVersion = rs.getInt("version_id");
+                idVersion = rs.getString("version_id");
             }
         }
         
