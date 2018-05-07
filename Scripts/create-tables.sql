@@ -472,6 +472,14 @@ CREATE TABLE "gros"."reservation" (
 		CONSTRAINT "pk_reservation_id" PRIMARY KEY ("reservation_id")
 );
 
+CREATE TABLE "gros"."seats" (
+	"project_id" INTEGER NOT NULL,
+	"sprint_id" INTEGER NOT NULL,
+	"date" TIMESTAMP NOT NULL,
+	"seats" FLOAT NULL,
+		CONSTRAINT "pk_seat_range_id" PRIMARY KEY ("project_id", "sprint_id", "date")
+);
+
 CREATE TABLE "gros"."update_tracker" (
 	"project_id" INTEGER NOT NULL,
 	"filename" VARCHAR(255) NOT NULL,

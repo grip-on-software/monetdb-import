@@ -78,6 +78,8 @@ public class Importerjson {
         defaultTasks.add("jenkins");
         // Self-Service Desk
         defaultTasks.add("reservation");
+        // Seats
+        defaultTasks.add("seats");
         // Tracking
         defaultTasks.add("update");
         // Additional tasks
@@ -139,6 +141,7 @@ public class Importerjson {
         importers.put("environment", ImpEnvironment.class);
         importers.put("jenkins", ImpJenkins.class);
         importers.put("reservation", ImpReservation.class);
+        importers.put("seats", ImpSeats.class);
         importers.put("update", ImpUpdateTracker.class);
         
         return importers;

@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import util.BaseDb;
 import util.Bisect;
 
@@ -29,7 +31,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     private PreparedStatement cacheStmt = null;
     private final HashMap<Integer, HashMap<Integer, Sprint>> keyCache;
     private final HashMap<Integer, Sprint[]> dateCache;
-    
+
     /**
      * A sprint object. The sprint contains properties extracted from JIRA,
      * including an internal identifier, the human-readable name, and date ranges.
@@ -315,6 +317,34 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         }
         
         return sprints[index-1].getSprintId();
+    }
+    
+    /**
+     * Find sprints for the given project that have dates that overlap with the
+     * given time range.
+     * @param project_id The project identifier to use sprints from.
+     * @param start_date The lower limit date in which sprints are contained.
+     * @param end_date The upper limit date in which sprints are contained.
+     * @return The sprint IDs of the sprint that are contained within the date
+     * range, or an empty set if there are no sprints within the range.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public Set<Integer> find_sprints(int project_id, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
+        fillCache(project_id);
+        Sprint[] sprints = dateCache.get(project_id);
+        Set<Integer> rangeSprints = new TreeSet<>();
+        
+        int index = Bisect.bisectLeft(sprints, start_date);
+        if (index != 0 && sprints[index-1].contains(start_date)) {
+            index--;
+        }
+        while (index < sprints.length && sprints[index].compareTo(end_date) <= 0) {
+            rangeSprints.add(sprints[index].getSprintId());
+            index++;
+        }
+        
+        return rangeSprints;
     }
     
     @Override
