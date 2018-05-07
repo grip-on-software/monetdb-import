@@ -1070,6 +1070,17 @@ dashboard project definition.
         contains the date is used.
     -   **encryption** - INT(row encryption)
 
+## Seat counts
+
+-   **seats**: Seat count for a project team. Primary key is
+    (project_id, sprint_id, date).
+    -   **project_id** - INT - reference to project.project_id: Project
+        to which the seat count belongs.
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        in which the seat count applies, based on date intervals.
+    -   **date** - TIMESTAMP: Date in which the seat count applies.
+    -   **seats** - FLOAT: The number of seats for the given month.
+
 ## Internal trackers
 
 -   **update_tracker**: Files that keep track of where to start
