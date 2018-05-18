@@ -47,6 +47,7 @@ import util.StringReplacer;
  */
 public class ImpMetricValue extends BaseImport {
     private static class MetricCollector implements AutoCloseable {
+        public static final int BUFFER_SIZE = 65536;
         private MetricDb mDB = null;
         private SprintDb sprintDb = null;
         private final File path;
@@ -89,26 +90,36 @@ public class ImpMetricValue extends BaseImport {
             else {
                 local = flags.contains("local");
             }
+            boolean compression = flags.contains("compression=gz");
+            if (!compression && !flags.contains("compression=")) {
+                compression = location.endsWith(".gz");
+            }
             
             if (local) {
-                readLocal(reader, location);
+                readLocal(reader, location, compression);
             }
             else {
-                readNetworked(reader, new URL(location));
+                readNetworked(reader, new URL(location), compression);
             }
         }
         
-        private void readLocal(MetricReader reader, String path) throws IOException, MetricReadException, SQLException, PropertyVetoException {
-            try (InputStream is = new FileInputStream(path)) {
-                reader.read(is);
+        private void readLocal(MetricReader reader, String path, boolean compression) throws IOException, MetricReadException, SQLException, PropertyVetoException {
+            try (
+                InputStream is = new FileInputStream(path);
+                InputStream gis = compression ? new GZIPInputStream(is, BUFFER_SIZE) : is
+            ) {
+                reader.read(gis);
             }
         }
 
-        private void readNetworked(MetricReader reader, URL url) throws IOException, MetricReadException, SQLException, PropertyVetoException {
+        private void readNetworked(MetricReader reader, URL url, boolean compression) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             URLConnection con = url.openConnection();
             con.connect();
-            try (InputStream is = con.getInputStream()) {
-                reader.read(is);
+            try (
+                InputStream is = con.getInputStream();
+                InputStream gis = compression ? new GZIPInputStream(is, BUFFER_SIZE) : is
+            ) {
+                reader.read(gis);
             }
         }
         
@@ -185,7 +196,6 @@ public class ImpMetricValue extends BaseImport {
     }
     
     private abstract static class MetricReader {
-        public static final int BUFFER_SIZE = 65536;
         protected final MetricCollector collector;
         protected final static Logger LOGGER = Logger.getLogger("importer");
         
@@ -198,9 +208,10 @@ public class ImpMetricValue extends BaseImport {
     }
     
     private final static class HistoryReader extends MetricReader {
+        public static final int BUFFER_SIZE = 65536;
         private int start_from = 0;
-        private StringReplacer replacer;
-        private JSONParser parser = new JSONParser();
+        private final StringReplacer replacer;
+        private final JSONParser parser = new JSONParser();
 
         public HistoryReader(MetricCollector collector) {
             super(collector);
@@ -223,8 +234,7 @@ public class ImpMetricValue extends BaseImport {
             int line_count = 0;
             Boolean success = false;
             try (
-                GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
-                Reader reader = new InputStreamReader(gis, "UTF-8");
+                Reader reader = new InputStreamReader(is, "UTF-8");
                 BufferedReader br = new BufferedReader(reader, BUFFER_SIZE)
             ) {
                 String line;
@@ -336,10 +346,7 @@ public class ImpMetricValue extends BaseImport {
         @Override
         public void read(InputStream is) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             JSONParser parser = new JSONParser();
-            try (
-                GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
-                Reader reader = new InputStreamReader(gis, "UTF-8");
-            ) {
+            try (Reader reader = new InputStreamReader(is, "UTF-8")) {
                 JSONObject object = (JSONObject) parser.parse(reader);
                 
                 JSONArray dateArray = (JSONArray) object.get("dates");
