@@ -53,9 +53,17 @@ def parse_args(config):
     parser.add_argument('-d', '--database',
                         default=config.get('monetdb', 'database'),
                         help='database name to create into')
-    parser.add_argument('-i', '--no-table-import', dest='import_tables',
+    parser.add_argument('-f', '--force', action='store_true', default=False,
+                        help='Do not prompt for confirmation')
+    parser.add_argument('-c', '--no-schema', dest='create_schema',
                         action='store_false', default=True,
-                        help='Do not create table structures (for imports)')
+                        help='Do not create schema')
+    parser.add_argument('-t', '--table-import', dest='import_tables', nargs='?',
+                        const='create-tables.sql', default='create-tables.sql',
+                        help='Import table structure')
+    parser.add_argument('-i', '--no-table-import', dest='import_tables',
+                        action='store_false',
+                        help='Do not import table structure')
     parser.add_argument('-k', '--keep-jenkins', dest='delete_jenkins',
                         action='store_false', default=True,
                         help='Do not delete Jenkins workspace automatically')
@@ -124,7 +132,7 @@ def main():
     except socket.error as error:
         raise RuntimeError('Cannot connect, address resolution error: {}'.format(error.strerror))
 
-    if not check(args.database):
+    if not args.force and not check(args.database):
         logging.info('Canceling process due to user input.')
         return
 
@@ -153,13 +161,14 @@ def main():
                             username=args.username, password=args.password,
                             autocommit=True)
 
-    logging.info('Creating schema...')
-    connection.execute('CREATE SCHEMA "gros";')
-    connection.execute('SET SCHEMA "gros";')
+    if args.create_schema:
+        logging.info('Creating schema...')
+        connection.execute('CREATE SCHEMA "gros";')
+        connection.execute('SET SCHEMA "gros";')
 
     if args.import_tables:
         logging.info('Creating tables...')
-        with open('create-tables.sql', 'r') as table_file:
+        with open(args.import_tables, 'r') as table_file:
             command = ""
             for line in table_file:
                 if line.strip() == "":
