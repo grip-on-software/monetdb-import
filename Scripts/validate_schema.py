@@ -4,6 +4,7 @@ Script to validate a documentation page against the datbase schema.
 
 from argparse import ArgumentParser
 from ConfigParser import RawConfigParser
+import json
 import logging
 import re
 import sys
@@ -26,6 +27,8 @@ def parse_args(config):
                         help='Branch to retrieve unmerged documentation for')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
+    parser.add_argument('--export', action='store_true', default=False,
+                        help='Write JSON files of extracted schemas')
 
     args = parser.parse_args()
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
@@ -94,7 +97,6 @@ def parse(tokens, line_iterator, data=None):
         current_tokens, parent_data = \
             test_line(line, current_tokens, data, parent_data)
 
-    logging.debug('%r', data)
     return data
 
 def parse_schema(path):
@@ -315,6 +317,12 @@ def main():
                                             documentation)
 
     schema = parse_schema(args.path)
+
+    if args.export:
+        with open('tables-documentation.json', 'w') as tables_file:
+            json.dump(documentation, tables_file, indent=4)
+        with open('tables-schema.json', 'w') as tables_file:
+            json.dump(schema, tables_file, indent=4)
 
     violations = validate_schema(schema, documentation)
 
