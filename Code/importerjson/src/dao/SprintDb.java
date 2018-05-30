@@ -43,14 +43,16 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         private final Timestamp end_date;
         private final Timestamp complete_date;
         private final String goal;
+        private final Integer board_id;
         
-        public Sprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal) {
+        public Sprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) {
             this.sprint_id = sprint_id;
             this.name = name;
             this.start_date = start_date;
             this.end_date = end_date;
             this.complete_date = complete_date;
             this.goal = goal;
+            this.board_id = board_id;
         }
 
         /**
@@ -80,7 +82,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
                         (start_date == null ? otherSprint.start_date == null : start_date.equals(otherSprint.start_date)) &&
                         (end_date == null ? otherSprint.end_date == null : end_date.equals(otherSprint.end_date)) &&
                         (complete_date == null ? otherSprint.complete_date == null : complete_date.equals(otherSprint.complete_date)) &&
-                        (goal == null ? otherSprint.goal == null : goal.equals(otherSprint.goal)));
+                        (goal == null ? otherSprint.goal == null : goal.equals(otherSprint.goal)) &&
+                        Objects.equals(board_id, otherSprint.board_id));
             }
             return false;
         }
@@ -153,10 +156,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     }
 
     public SprintDb() {
-        String sql = "insert into gros.sprint(sprint_id,project_id,name,start_date,end_date,complete_date,goal) values (?,?,?,?,?,?,?);";
+        String sql = "insert into gros.sprint(sprint_id,project_id,name,start_date,end_date,complete_date,goal,board_id) values (?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
         
-        sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=?, goal=? where sprint_id=? and project_id=?;";
+        sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=?, goal=?, board_id=? where sprint_id=? and project_id=?;";
         updateStmt = new BatchedStatement(sql);
         
         keyCache = new HashMap<>();
@@ -173,6 +176,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @param end_date The date at which the sprint ends or is set to end.
      * @param complete_date The date at which the tasks in the sprint are completed.
      * @param goal The goal set for the sprint or null if the sprint has no goal
+     * @param board_id The primary board ID on which the sprint is tracked.
      * @return The check result: CheckResult.MISSING if the sprint and project ID
      * combination is not found, CheckResult.EXISTS if all properties match, or
      * CheckResult.DIFFERS if the sprint and project ID is found but the name and/or
@@ -180,7 +184,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal) throws SQLException, PropertyVetoException {
+    public CheckResult check_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) throws SQLException, PropertyVetoException {
         fillCache(project_id);
         if (!keyCache.containsKey(project_id)) {
             return CheckResult.MISSING;
@@ -188,7 +192,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         HashMap<Integer, Sprint> sprints = keyCache.get(project_id);
         Sprint currentSprint = sprints.get(sprint_id);
         if (currentSprint != null) {
-            Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date, goal);
+            Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date, goal, board_id);
             if (currentSprint.equals(sprint)) {
                 return CheckResult.EXISTS;
             }
@@ -210,10 +214,11 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @param end_date The date at which the sprint ends or is set to end.
      * @param complete_date The date at which the tasks in the sprint are completed.
      * @param goal The goal set for the sprint or null if the sprint has no goal
+     * @param board_id The primary board ID on which the sprint is tracked.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal) throws SQLException, PropertyVetoException {
+    public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         pstmt.setInt(1, sprint_id);
         pstmt.setInt(2, project_id);
@@ -222,6 +227,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         setTimestamp(pstmt, 5, end_date);
         setTimestamp(pstmt, 6, complete_date);
         setString(pstmt, 7, goal);
+        setInteger(pstmt, 8, board_id);
 
         insertStmt.batch();
     }
@@ -235,19 +241,21 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @param end_date The date at which the sprint ends or is set to end.
      * @param complete_date The date at which the tasks in the sprint are completed.
      * @param goal The goal set for the sprint or null if the sprint has no goal
+     * @param board_id The primary board ID on which the sprint is tracked.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal) throws SQLException, PropertyVetoException {
+    public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
         setTimestamp(pstmt, 2, start_date);
         setTimestamp(pstmt, 3, end_date);
         setTimestamp(pstmt, 4, complete_date);
         setString(pstmt, 5, goal);
+        setInteger(pstmt, 6, board_id);
         
-        pstmt.setInt(6, sprint_id);
-        pstmt.setInt(7, project_id);
+        pstmt.setInt(7, sprint_id);
+        pstmt.setInt(8, project_id);
         
         updateStmt.batch();
     }
@@ -259,7 +267,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         
         if (cacheStmt == null) {
             Connection con = insertStmt.getConnection();
-            String sql = "SELECT sprint_id, name, start_date, end_date, complete_date, goal FROM gros.sprint WHERE project_id = ? ORDER BY start_date";
+            String sql = "SELECT sprint_id, name, start_date, end_date, complete_date, goal, board_id FROM gros.sprint WHERE project_id = ? ORDER BY start_date";
             cacheStmt = con.prepareStatement(sql);
         }
         
@@ -274,7 +282,8 @@ public class SprintDb extends BaseDb implements AutoCloseable {
                 Timestamp end_date = rs.getTimestamp("end_date");
                 Timestamp complete_date = rs.getTimestamp("complete_date");
                 String goal = rs.getString("goal");
-                Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date, goal);
+                Integer board_id = rs.getObject("board_id") == null ? null : rs.getInt("board_id");
+                Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date, goal, board_id);
                 sprints.put(sprint_id, sprint);
                 dateSprints.add(sprint);
            }

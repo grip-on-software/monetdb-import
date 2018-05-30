@@ -33,14 +33,15 @@ public class ImpSprint extends BaseImport {
             for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String id = (String) jsonObject.get("id");
+                Object id = jsonObject.get("id");
                 String name = (String) jsonObject.get("name");
                 String start = (String) jsonObject.get("start_date");
                 String end = (String) jsonObject.get("end_date");
                 String complete = (String) jsonObject.get("complete_date");
                 String goal = (String) jsonObject.get("goal");
+                Integer board_id = (Integer) jsonObject.get("board_id");
                 
-                int sprint_id = Integer.valueOf(id);
+                int sprint_id = (id instanceof String ? Integer.valueOf((String)id) : (int)id);
                 Timestamp start_date;
                 if ((start.trim()).equals("0") || (start.trim()).equals("None")){
                     start_date = null;
@@ -65,12 +66,12 @@ public class ImpSprint extends BaseImport {
                     complete_date = Timestamp.valueOf(complete);
                 }
                                 
-                SprintDb.CheckResult result = sprintDb.check_sprint(sprint_id, project, name, start_date, end_date, complete_date, goal);
+                SprintDb.CheckResult result = sprintDb.check_sprint(sprint_id, project, name, start_date, end_date, complete_date, goal, board_id);
                 if (result == SprintDb.CheckResult.MISSING) {
-                    sprintDb.insert_sprint(sprint_id, project, name, start_date, end_date, complete_date, goal);
+                    sprintDb.insert_sprint(sprint_id, project, name, start_date, end_date, complete_date, goal, board_id);
                 }
                 else if (result == SprintDb.CheckResult.DIFFERS) {
-                    sprintDb.update_sprint(sprint_id, project, name, start_date, end_date, complete_date, goal);
+                    sprintDb.update_sprint(sprint_id, project, name, start_date, end_date, complete_date, goal, board_id);
                 }
             }
         }
