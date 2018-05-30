@@ -39,7 +39,8 @@ public class ImpSprint extends BaseImport {
                 String end = (String) jsonObject.get("end_date");
                 String complete = (String) jsonObject.get("complete_date");
                 String goal = (String) jsonObject.get("goal");
-                Integer board_id = (Integer) jsonObject.get("board_id");
+                Long board = (Long) jsonObject.get("board_id");
+                Integer board_id = board == null ? null : board.intValue();
                 
                 int sprint_id = (id instanceof String ? Integer.valueOf((String)id) : (int)id);
                 Timestamp start_date;
