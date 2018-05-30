@@ -255,7 +255,11 @@ purpose.
     -   **goal** - VARCHAR(500): Human-readable description of what the
         primary goal of the sprint is. This may be related to product
         delivery or the main task for the sprint. Previously this was
-        sometimes provided in the sprint name instead.
+        sometimes provided in the sprint name instead. This is NULL if
+        no goal is provided to the sprint
+    -   **board_id** - INT: Internal JIRA identifier of the primary
+        board to which this sprint is added. This is NULL if the
+        relation to the board is not available.
 
 
 -   **project**: The projects that were collected and additional
