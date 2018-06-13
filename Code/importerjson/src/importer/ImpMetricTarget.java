@@ -75,7 +75,7 @@ public class ImpMetricTarget extends BaseImport {
     }
     
     public void updateDomainNames() {
-        String sql = "SELECT metric_id, name FROM gros.metric WHERE base_name IS NULL AND domain_name IS NULL";
+        String sql = "SELECT metric_id, name FROM gros.metric WHERE (base_name IS NULL AND domain_name IS NULL) OR (base_name <> name AND domain_name = '')";
         try (
             MetricDb metricDb = new MetricDb();
             Connection con = DataSource.getInstance().getConnection();

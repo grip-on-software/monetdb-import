@@ -429,7 +429,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                     return new MetricName(metric_name);
                 }
                 base_name = new_base_name;
-                domain_name.append(domain_name);
+                domain_name.insert(0, domain_part);
             }
             else {
                 // No more match, so bail out
