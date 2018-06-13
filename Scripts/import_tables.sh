@@ -25,7 +25,7 @@ function import() {
 
 	if [ -f "$DIRECTORY/table.sql.gz" ]; then
 		echo "Importing $table from SQL"
-		if [ "$(gzcat "$DIRECTORY/$table.csv.gz" | mclient -d "$DATABASE" -h "$HOST" $ARGUMENTS -s "COPY INTO gros.$table FROM STDIN USING DELIMITERS ',', '\\n', '\"' NULL AS '\\007NUL\\007'" - 2>&1 | tee >(cat>&2) | grep -m 1 -E "$ERROR_TEXT")" ]; then
+		if [ "$(gzcat "$DIRECTORY/$table.sql.gz" | mclient -d "$DATABASE" -h "$HOST" $ARGUMENTS 2>&1 | tee >(cat>&2) | grep -m 1 -E "$ERROR_TEXT")" ]; then
 			exit 1
 		fi
 	elif [ -f "$DIRECTORY/$table.csv.gz" ]; then

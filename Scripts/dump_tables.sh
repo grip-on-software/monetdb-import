@@ -123,7 +123,7 @@ if [ "$HOST" = "--dry-run" ]; then
 	echo "DRY RUN"
 else
 	if [ ! -z "$DUMPER_CONFIG" ]; then
-		if [ ! $(grep databasedumper.url "$DUMPER_CONFIG" | grep -- "$HOST") ]; then
+		if [ ! $(grep "^databasedumper.url" "$DUMPER_CONFIG" | grep -- "$HOST") ]; then
 			echo "Make sure the database dumper is configured for the host."
 			exit 1
 		fi
@@ -136,16 +136,21 @@ else
 fi
 
 LINES=`cat "$SCRIPT_DIR/create-tables.sql" | grep '^CREATE TABLE' | \
-	sed -e 's/CREATE TABLE ".*"\."\(.*\)" (/\1/' | grep -Ev -- "$SKIP_PATTERN"`
+	sed -e 's/CREATE TABLE ".*"\."\(.*\)" (/\1/'`
 
 for line in $LINES
 do
-	echo "Dumping $line"
-	if [ "$HOST" != "--dry-run" ]; then
-		if is_in_list $line $large_tables; then
-			msqldump -d gros -h $HOST -t "gros.$line" | gzip -c > "$DUMP_DIRECTORY/$line.sql.gz"
-		else
-			java $DEFINES -jar $DUMPER_PATH $line "$DUMP_DIRECTORY/$line.csv.gz"
+	if [ $(echo $line | grep -E "$SKIP_PATTERN") ]; then
+		echo "Not dumping $line (skip pattern); adding an empty placeholder"
+		echo | gzip -c > "$DUMP_DIRECTORY/$line.sql.gz"
+	else
+		echo "Dumping $line"
+		if [ "$HOST" != "--dry-run" ]; then
+			if is_in_list $line $large_tables; then
+				msqldump -d gros -h $HOST -t "gros.$line" | gzip -c > "$DUMP_DIRECTORY/$line.sql.gz"
+			else
+				java $DEFINES -jar $DUMPER_PATH $line "$DUMP_DIRECTORY/$line.csv.gz"
+			fi
 		fi
 	fi
 done
