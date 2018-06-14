@@ -34,11 +34,17 @@ public class ImpEnvironment extends BaseImport {
             for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                Object environment = jsonObject.get("environment");
+                String environment = jsonObject.get("environment").toString();
                 String type = (String) jsonObject.get("type");
                 String url = (String) jsonObject.get("url");
-                if (url != null && !envDb.check_source(project, environment.toString())) {
-                    envDb.insert_source(project, type, url, environment.toString());
+                if (url != null) {
+                    EnvironmentDb.CheckResult result = envDb.check_source(project, type, url, environment);
+                    if (result == EnvironmentDb.CheckResult.MISSING) {
+                        envDb.insert_source(project, type, url, environment);
+                    }
+                    else if (result == EnvironmentDb.CheckResult.DIFFERS) {
+                        envDb.update_source(project, type, url, environment);
+                    }
                 }
             }
         }
