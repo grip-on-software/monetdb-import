@@ -27,7 +27,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
 
     public EnvironmentDb() {
         insertStmt = new BatchedStatement("insert into gros.source_environment(project_id,source_type,url,environment) values (?,?,?,?)");
-        updateStmt = new BatchedStatement("update gros.source_environment set source_type, url = ? where project_id = ? and environment = ?");
+        updateStmt = new BatchedStatement("update gros.source_environment set source_type = ?, url = ? where project_id = ? and environment = ?");
     }
 
     /**
