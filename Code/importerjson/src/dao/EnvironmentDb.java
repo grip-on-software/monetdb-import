@@ -92,8 +92,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
         getCheckStmt();
         
         checkStmt.setInt(1, project);
-        checkStmt.setString(2, type);
-        checkStmt.setString(3, environment);
+        checkStmt.setString(2, environment);
         
         try (ResultSet rs = checkStmt.executeQuery()) {
             if (rs.next()) {
