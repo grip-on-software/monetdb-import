@@ -62,10 +62,10 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
     public void update_source(int project, String type, String url, String environment) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
 
-        pstmt.setString(1, url);
+        pstmt.setString(1, type);
+        pstmt.setString(2, url);
 
-        pstmt.setInt(2, project);
-        pstmt.setString(3, type);
+        pstmt.setInt(3, project);
         pstmt.setString(4, environment);
         
         insertStmt.batch();
