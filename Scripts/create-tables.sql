@@ -437,7 +437,7 @@ CREATE TABLE "gros"."source_environment" (
 	"source_type" VARCHAR(32) NOT NULL,
 	"url" VARCHAR(255) NOT NULL,
 	"environment" VARCHAR(500) NOT NULL,
-		CONSTRAINT "pk_source_environment_id" PRIMARY KEY ("project_id", "source_type", "environment")
+		CONSTRAINT "pk_source_environment_id" PRIMARY KEY ("project_id", "environment")
 );
 
 CREATE TABLE "gros"."jenkins" (
