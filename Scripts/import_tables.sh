@@ -23,7 +23,7 @@ function import() {
 	local table=$1
 	local error_text="syntax error"
 
-	if [ -f "$DIRECTORY/table.sql.gz" ]; then
+	if [ -f "$DIRECTORY/$table.sql.gz" ]; then
 		echo "Importing $table from SQL"
 		if [ "$(gzcat "$DIRECTORY/$table.sql.gz" | mclient -d "$DATABASE" -h "$HOST" $ARGUMENTS 2>&1 | tee >(cat>&2) | grep -m 1 -E "$ERROR_TEXT")" ]; then
 			exit 1
