@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 if [ -z $1 ] || [ "$1" = "--help" ] || [ -z $2 ]; then
-	echo "$0 <host> <dump directory> [dbname] [arguments]"
+	echo "$0 <host> <dump directory> [dbname] [schema] [arguments]"
 	exit
 fi
 
@@ -14,6 +14,12 @@ if [ ! -z "$1" ]; then
 	shift
 else
 	DATABASE="gros"
+fi
+if [ ! -z "$1" ]; then
+	SCHEMA=$1
+	shift
+else
+	SCHEMA="gros"
 fi
 ARGUMENTS=$@
 
@@ -30,7 +36,7 @@ function import() {
 		fi
 	elif [ -f "$DIRECTORY/$table.csv.gz" ]; then
 		echo "Importing $table from CSV"
-		if [ "$(gzcat "$DIRECTORY/$table.csv.gz" | mclient -d "$DATABASE" -h "$HOST" $ARGUMENTS -s "COPY INTO gros.$table FROM STDIN USING DELIMITERS ',', '\n', '\"' NULL AS '\\007NUL\\007'" - 2>&1 | tee >(cat>&2) | grep -m 1 -E "$ERROR_TEXT")" ]; then
+		if [ "$(gzcat "$DIRECTORY/$table.csv.gz" | mclient -d "$DATABASE" -h "$HOST" $ARGUMENTS -s "COPY INTO $SCHEMA.$table FROM STDIN USING DELIMITERS ',', '\n', '\"' NULL AS '\\007NUL\\007'" - 2>&1 | tee >(cat>&2) | grep -m 1 -E "$ERROR_TEXT")" ]; then
 			exit 1
 		fi
 	else
@@ -44,7 +50,7 @@ if [ "$(cat "$DIRECTORY/schema.sql" | mclient -d "$DATABASE" -h "$HOST" $ARGUMEN
 	exit 1
 fi
 
-LINES=`cat "$DIRECTORY/schema.sql" | grep '^CREATE TABLE' | \
+LINES=`cat "$DIRECTORY/schema.sql" | grep "^CREATE TABLE \"$SCHEMA\"" | \
 	sed -e 's/CREATE TABLE ".*"\."\(.*\)" (/\1/'`
 
 for line in $LINES
