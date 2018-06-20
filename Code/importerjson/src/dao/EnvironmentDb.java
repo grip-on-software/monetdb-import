@@ -96,7 +96,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
         
         try (ResultSet rs = checkStmt.executeQuery()) {
             if (rs.next()) {
-                if (type.equals(rs.getString("source_type")) && url.equals("url")) {
+                if (type.equals(rs.getString("source_type")) && url.equals(rs.getString("url"))) {
                     return CheckResult.EXISTS;
                 }
                 return CheckResult.DIFFERS;
