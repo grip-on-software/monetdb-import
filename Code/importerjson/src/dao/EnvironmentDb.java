@@ -26,8 +26,8 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
     }
 
     public EnvironmentDb() {
-        insertStmt = new BatchedStatement("insert into gros.source_environment(project_id,source_type,url,environment) values (?,?,?,?)");
-        updateStmt = new BatchedStatement("update gros.source_environment set source_type = ?, url = ? where project_id = ? and environment = ?");
+        insertStmt = new BatchedStatement("insert into gros.source_environment(project_id,source_type,url,environment,version) values (?,?,?,?,?)");
+        updateStmt = new BatchedStatement("update gros.source_environment set source_type = ?, url = ?, version = ? where project_id = ? and environment = ?");
     }
 
     /**
@@ -36,16 +36,18 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
      * @param type The type of the representative source of the environment
      * @param url The URL of the environment
      * @param environment The environment descriptor, as a serialized string
+     * @param version The version of the representative source of the environment
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_source(int project, String type, String url, String environment) throws SQLException, PropertyVetoException {
+    public void insert_source(int project, String type, String url, String environment, String version) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
 
         pstmt.setInt(1, project);
         pstmt.setString(2, type);
         pstmt.setString(3, url);
         pstmt.setString(4, environment);
+        pstmt.setString(5, version);
         
         insertStmt.batch();
     }
@@ -56,17 +58,19 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
      * @param type The type of the representative source of the environment
      * @param url The new URL of the environment
      * @param environment The environment descriptor, as a serialized string
+     * @param version The version of the representative source of the environment
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void update_source(int project, String type, String url, String environment) throws SQLException, PropertyVetoException {
+    public void update_source(int project, String type, String url, String environment, String version) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
 
         pstmt.setString(1, type);
         pstmt.setString(2, url);
+        pstmt.setString(3, version);
 
-        pstmt.setInt(3, project);
-        pstmt.setString(4, environment);
+        pstmt.setInt(4, project);
+        pstmt.setString(5, environment);
         
         insertStmt.batch();
     }
@@ -74,7 +78,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
     private void getCheckStmt() throws SQLException, PropertyVetoException {
         if (checkStmt == null) {
             Connection con = insertStmt.getConnection();
-            checkStmt = con.prepareStatement("select source_type, url from gros.source_environment where project_id = ? and environment = ?");
+            checkStmt = con.prepareStatement("select source_type, url, version from gros.source_environment where project_id = ? and environment = ?");
         }
     }
 
@@ -84,11 +88,12 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
      * @param type The type of the representative source of the environment
      * @param url The URL of the environment
      * @param environment The environment descriptor, as a serialized string
+     * @param version The version of the representative source of the environment
      * @return Whether the environment exists with the same URL
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public CheckResult check_source(int project, String type, String url, String environment) throws SQLException, PropertyVetoException {
+    public CheckResult check_source(int project, String type, String url, String environment, String version) throws SQLException, PropertyVetoException {
         getCheckStmt();
         
         checkStmt.setInt(1, project);
@@ -96,7 +101,9 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
         
         try (ResultSet rs = checkStmt.executeQuery()) {
             if (rs.next()) {
-                if (type.equals(rs.getString("source_type")) && url.equals(rs.getString("url"))) {
+                if (type.equals(rs.getString("source_type")) &&
+                        url.equals(rs.getString("url")) &&
+                        (version.isEmpty() || version.equals(rs.getString("version")))) {
                     return CheckResult.EXISTS;
                 }
                 return CheckResult.DIFFERS;
