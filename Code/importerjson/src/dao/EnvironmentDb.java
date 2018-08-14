@@ -47,7 +47,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
         pstmt.setString(2, type);
         pstmt.setString(3, url);
         pstmt.setString(4, environment);
-        pstmt.setString(5, version);
+        pstmt.setString(5, version == null ? "" : version);
         
         insertStmt.batch();
     }
@@ -67,7 +67,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
 
         pstmt.setString(1, type);
         pstmt.setString(2, url);
-        pstmt.setString(3, version);
+        pstmt.setString(3, version == null ? "" : version);
 
         pstmt.setInt(4, project);
         pstmt.setString(5, environment);
@@ -103,7 +103,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
             if (rs.next()) {
                 if (type.equals(rs.getString("source_type")) &&
                         url.equals(rs.getString("url")) &&
-                        (version.isEmpty() || version.equals(rs.getString("version")))) {
+                        (version == null || version.isEmpty() || version.equals(rs.getString("version")))) {
                     return CheckResult.EXISTS;
                 }
                 return CheckResult.DIFFERS;
