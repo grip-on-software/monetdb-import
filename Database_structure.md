@@ -1030,6 +1030,9 @@ dashboard project definition.
         The environment is hashable and is unique for the project, such
         that sources that have the same environment descriptor belong to
         the same environment.
+    -   **version** - VARCHAR(32): The version of the representative
+        source in the environment. If the version is not known, then
+        this is the empty string.
 
 ## Build system tables (Jenkins)
 
