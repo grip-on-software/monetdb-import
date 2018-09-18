@@ -5,7 +5,7 @@ All data is lost if this is run!
 """
 
 from argparse import ArgumentParser
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 import logging
 import socket
 from pymonetdb.control import Control
@@ -23,7 +23,7 @@ def check(database):
 This is a destructive process!
 Are you sure you want to delete all data from the {0} database,
 and replace the {0} database with a clean state? [y/N] '''.format(database)
-    answer = raw_input(prompt)
+    answer = input(prompt)
 
     if answer.lower() != 'y':
         return False
@@ -145,7 +145,7 @@ def main():
         logging.info('Destroying database...')
         control.destroy(args.database)
     except OperationalError as error:
-        logging.warning('MonetDB error: %s', error.message)
+        logging.warning('MonetDB error: %s', str(error))
         logging.warning('Maybe the database did not exist, continuing anyway.')
 
     logging.info('Creating database...')
