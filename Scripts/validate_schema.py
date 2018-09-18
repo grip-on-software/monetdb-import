@@ -3,7 +3,7 @@ Script to validate a documentation page against the datbase schema.
 """
 
 from argparse import ArgumentParser
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 import json
 import logging
 import re

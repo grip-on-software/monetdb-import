@@ -65,7 +65,7 @@ pipeline {
         stage('Validate') {
             agent {
                 docker {
-                    image 'python:2.7-alpine'
+                    image 'python:3.7-alpine'
                     args '-u root'
                 }
             }
