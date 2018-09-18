@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
 
 if [ -z $1 ] || [ "$1" = "--help" ] || [ -z $2 ]; then
 	echo "$0 <host> <dump directory> [dbname] [schema] [arguments]"
