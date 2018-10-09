@@ -110,6 +110,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
          */
         @Override
         public int compareTo(Timestamp other) {
+            // Unknown start dates are always later than the timestamp.
+            if (start_date == null) {
+                return 1;
+            }
             return start_date.compareTo(other);
         }
         

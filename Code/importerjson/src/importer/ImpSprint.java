@@ -43,27 +43,18 @@ public class ImpSprint extends BaseImport {
                 Integer board_id = board == null ? null : board.intValue();
                 
                 int sprint_id = (id instanceof String ? Integer.valueOf((String)id) : (int)id);
-                Timestamp start_date;
-                if ((start.trim()).equals("0") || (start.trim()).equals("None")){
-                    start_date = null;
-                }
-                else {
+                Timestamp start_date = null;
+                if (start != null && !start.trim().equals("0") && !start.trim().equals("None")){
                     start_date = Timestamp.valueOf(start);
                 }
                 
-                Timestamp end_date;
-                if ((end.trim()).equals("0") || (end.trim()).equals("None")){
-                    end_date = null;
-                }
-                else {
+                Timestamp end_date = null;
+                if (end != null && !end.trim().equals("0") && !end.trim().equals("None")){
                     end_date = Timestamp.valueOf(end);
                 }
                                 
-                Timestamp complete_date;
-                if (complete == null || (complete.trim()).equals("0") || (end.trim()).equals("None")){
-                    complete_date = null;
-                }
-                else {
+                Timestamp complete_date = null;
+                if (complete != null && !complete.trim().equals("0") && !complete.trim().equals("None")){
                     complete_date = Timestamp.valueOf(complete);
                 }
                                 
