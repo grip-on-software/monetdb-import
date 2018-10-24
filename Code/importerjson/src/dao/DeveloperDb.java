@@ -37,10 +37,13 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertLdapDeveloperStmt = null;
     private PreparedStatement checkLdapDeveloperStmt = null;
     private PreparedStatement linkLdapDeveloperStmt = null;
+
+    private BatchedStatement insertTfsDeveloperStmt = null;
+    private PreparedStatement checkTfsDeveloperStmt = null;
     
     private HashMap<String, Integer> vcsNameCache = null;
     private HashMap<Integer, HashMap<String, Integer>> ldapNameCache = null;
-    
+
     public static class Developer {
         private final String name;
         private final String display_name;
@@ -103,6 +106,9 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         sql = "insert into gros.ldap_developer (project_id, name, display_name, email, jira_dev_id) values (?,?,?,?,?);";
         insertLdapDeveloperStmt = new BatchedStatement(sql);
+
+        sql = "insert into gros.tfs_developer (project_id, display_name, email, alias_id, encryption) values (?,?,?,?,?);";
+        insertTfsDeveloperStmt = new BatchedStatement(sql);
 
         localDomain = getBundle().getString("email_domain");
     }
@@ -167,6 +173,11 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         checkLdapDeveloperStmt = null;
         closeStatement(linkLdapDeveloperStmt);
         linkLdapDeveloperStmt = null;
+        
+        closeStatement(checkTfsDeveloperStmt);
+        checkTfsDeveloperStmt = null;
+        insertTfsDeveloperStmt.execute();
+        insertTfsDeveloperStmt.close();
     }
     
     /**
@@ -310,7 +321,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         insertVcsDeveloperStmt.setInt(4, encryption);
     
         // Insert immediately because we need to have the alias_id available
-        // in update_vcs_developer.
+        // in update_vcs_developer and/or check_vcs_developer.
         insertVcsDeveloperStmt.execute();
     }
    
@@ -749,6 +760,63 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         int rows = linkLdapDeveloperStmt.executeUpdate();
         return rows > 0;
+    }
+
+    private void getCheckTfsDeveloperStmt() throws SQLException, PropertyVetoException {
+        if (checkTfsDeveloperStmt == null) {
+            Connection con = insertDeveloperStmt.getConnection();
+            String sql = "SELECT alias_id FROM gros.tfs_developer WHERE encryption=? AND display_name=?";
+            checkTfsDeveloperStmt = con.prepareStatement(sql);
+        }
+    }
+
+    /**
+     * Retrieve the VCS developer ID of a TFS developer.
+     * @param project_id Project identifier of the project in which the developer
+     * has a TFS account.
+     * @param dev The developer object, with at least the name of the developer.
+     * @param encryption The encryption level of the provided developer properties.
+     * @return The VCS developer identifier: 0 if the TFS developer exists but
+     * is not linked to a VCS developer, null if the TFS developer does not exist,
+     * or any other value indicating the link from an existing TFS developer.
+     * @throws SQLException
+     * @throws PropertyVetoException 
+     */
+    public Integer check_tfs_developer(int project_id, Developer dev, int encryption) throws SQLException, PropertyVetoException {
+        Integer idDeveloper = null;
+        getCheckTfsDeveloperStmt();
+        
+        checkTfsDeveloperStmt.setInt(1, encryption);
+        setString(checkTfsDeveloperStmt, 2, dev.getDisplayName(), 100);
+        
+        try (ResultSet rs = checkTfsDeveloperStmt.executeQuery()) {
+            while (rs.next()) {
+                idDeveloper = rs.getInt("alias_id");
+            }
+        }
+        return idDeveloper;
+    }
+
+    /**
+     * Insert a developer in the TFS developer table of the database. In case developer
+     * id is not set, the developer id from VCS will be 0.
+     * @param project_id The project identifier of the project in which the developer
+     * has a TFS account
+     * @param alias_id The corresponding developer id in VCS, or 0.
+     * @param dev The developer object, with at least display name and email.
+     * @param encryption The encryption level of the propvided developer properties.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_tfs_developer(int project_id, int alias_id, Developer dev, int encryption) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = insertTfsDeveloperStmt.getPreparedStatement();
+        pstmt.setInt(1, project_id);
+        setString(pstmt, 2, dev.getDisplayName(), 100);
+        setString(pstmt, 3, dev.getEmail());
+        pstmt.setInt(4, alias_id);
+        pstmt.setInt(5, encryption);
+
+        insertTfsDeveloperStmt.batch();
     }
 }
     

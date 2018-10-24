@@ -52,10 +52,12 @@ public class Importerjson {
             "metric_target", "metric_value", "metric_version"
         ));
 
-        // Version control systems and collaboration frontends (Git, GitHub, GitLab, TFS, SVN)
+        // Version control systems and review systems (Git, GitHub, GitLab, TFS, SVN)
         groupedTasks.put("vcs", Arrays.asList(
             "commit", "change_path", "tag", "vcs_event",
             "gitlab_repo", "github_repo", "github_issue", "github_issue_note",
+            "tfs_team", "tfs_team_member", "tfs_developer", "tfs_sprint",
+            "tfs_work_item",
             "merge_request", "merge_request_review", "merge_request_note", "commit_comment"
         ));
         
@@ -82,6 +84,7 @@ public class Importerjson {
         defaultTasks.add("seats");
         // Tracking
         defaultTasks.add("update");
+        
         // Additional tasks
         defaultTasks.add("developerlink");
         
@@ -99,6 +102,8 @@ public class Importerjson {
 
     private static HashMap<String, Class<? extends BaseImport>> retrieveImporters() {
         HashMap<String, Class<? extends BaseImport>> importers = new HashMap<>();
+        
+        // JIRA
         importers.put("issue", ImpDataIssue.class);
         importers.put("fixVersion", ImpDataFixVersion.class);
         importers.put("issuelink", ImpDataIssueLink.class);
@@ -119,24 +124,35 @@ public class Importerjson {
         importers.put("developer", ImpDeveloper.class);
         importers.put("component", ImpComponent.class);
         
+        // Quality dashboard metrics
         importers.put("metric_value", ImpMetricValue.class);
         importers.put("metric_version", ImpMetricVersion.class);
         importers.put("metric_target", ImpMetricTarget.class);
         
+        // Version control systems and review systems
         importers.put("commit", ImpCommit.class);
         importers.put("change_path", ImpChangePath.class);
         importers.put("tag", ImpTag.class);
         importers.put("vcs_event", ImpVcsEvent.class);
         
         importers.put("gitlab_repo", ImpGitLabRepo.class);
+        
         importers.put("github_repo", ImpGitHubRepo.class);
         importers.put("github_issue", ImpGitHubIssue.class);
         importers.put("github_issue_note", ImpGitHubIssueNote.class);
+        
+        importers.put("tfs_team", ImpTfsTeam.class);
+        importers.put("tfs_team_member", ImpTfsTeamMember.class);
+        importers.put("tfs_developer", ImpTfsDeveloper.class);
+        importers.put("tfs_sprint", ImpTfsSprint.class);
+        importers.put("tfs_work_item", ImpTfsWorkItem.class);
+        
         importers.put("merge_request", ImpMergeRequest.class);
         importers.put("merge_request_review", ImpMergeRequestReview.class);
         importers.put("merge_request_note", ImpMergeRequestNote.class);
         importers.put("commit_comment", ImpCommitComment.class);
         
+        // Other import tasks
         importers.put("ldap_developer", ImpLdapDeveloper.class);
         importers.put("environment", ImpEnvironment.class);
         importers.put("jenkins", ImpJenkins.class);

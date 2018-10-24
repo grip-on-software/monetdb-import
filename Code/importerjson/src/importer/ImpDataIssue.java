@@ -160,15 +160,6 @@ public class ImpDataIssue extends BaseImport {
             }
         }
 
-        private void setInteger(PreparedStatement pstmt, int index, String value) throws SQLException {
-            if (value != null) {
-                int number = Integer.parseInt(value);
-                pstmt.setInt(index, number);
-            } else{
-                pstmt.setNull(index, java.sql.Types.INTEGER);
-            }
-        }
-
         private void setDouble(PreparedStatement pstmt, int index, String value, BigDecimal maximum) throws SQLException {
             if (value != null) {
                 BigDecimal points = BigDecimal.valueOf(Double.parseDouble(value));
@@ -189,24 +180,6 @@ public class ImpDataIssue extends BaseImport {
             }
         }
 
-        private void setTimestamp(PreparedStatement pstmt, int index, String value) throws SQLException {
-            if (value != null){
-                Timestamp date = Timestamp.valueOf(value);
-                pstmt.setTimestamp(index, date);
-            } else{
-                pstmt.setNull(index, java.sql.Types.TIMESTAMP);
-            }
-        }
-
-        private void setDate(PreparedStatement pstmt, int index, String value) throws SQLException {
-            if (value != null){
-                Date date = Date.valueOf(value);
-                pstmt.setDate(index, date);
-            } else{
-                pstmt.setNull(index, java.sql.Types.DATE);
-            }
-        }
-        
         @Override
         protected void addToBatch(Object[] values, Object data, PreparedStatement pstmt) throws SQLException, PropertyVetoException {
             makeBatch(values, data, pstmt, false);

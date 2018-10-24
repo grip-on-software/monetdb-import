@@ -21,40 +21,37 @@ import util.BaseDb;
 import util.Bisect;
 
 /**
- * Database access magement for sprint properties.
+ * Database access magement for Jira and TFS sprint properties.
  * @author Leon Helwerda
  */
 public class SprintDb extends BaseDb implements AutoCloseable {
-    private BatchedStatement insertStmt = null;
-    private PreparedStatement checkStmt = null;
-    private BatchedStatement updateStmt = null;
-    private PreparedStatement cacheStmt = null;
-    private final HashMap<Integer, HashMap<Integer, Sprint>> keyCache;
-    private final HashMap<Integer, Sprint[]> dateCache;
+    private BatchedStatement insertJiraStmt = null;
+    private BatchedStatement updateJiraStmt = null;
+    private PreparedStatement cacheJiraStmt = null;
+
+    private BatchedStatement insertTfsStmt = null;
+    private PreparedStatement checkTfsStmt = null;
+   
+    private final HashMap<Integer, HashMap<Integer, JiraSprint>> keyCache;
+    private final HashMap<Integer, JiraSprint[]> dateCache;
 
     /**
      * A sprint object. The sprint contains properties extracted from JIRA,
      * including an internal identifier, the human-readable name, and date ranges.
      */
     private static class Sprint implements Comparable<Timestamp> {
-        private final int sprint_id;
-        private final String name;
-        private final Timestamp start_date;
-        private final Timestamp end_date;
-        private final Timestamp complete_date;
-        private final String goal;
-        private final Integer board_id;
+        protected final int sprint_id;
+        protected final String name;
+        protected final Timestamp start_date;
+        protected final Timestamp end_date;
         
-        public Sprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) {
+        public Sprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date) {
             this.sprint_id = sprint_id;
             this.name = name;
             this.start_date = start_date;
-            this.end_date = end_date;
-            this.complete_date = complete_date;
-            this.goal = goal;
-            this.board_id = board_id;
+            this.end_date = end_date;            
         }
-
+        
         /**
          * Retrieve the identifier of this sprint. This identifier is unique
          * within the project the sprint is in.
@@ -80,10 +77,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
                 return (sprint_id == otherSprint.sprint_id &&
                         name.equals(otherSprint.name) &&
                         (start_date == null ? otherSprint.start_date == null : start_date.equals(otherSprint.start_date)) &&
-                        (end_date == null ? otherSprint.end_date == null : end_date.equals(otherSprint.end_date)) &&
-                        (complete_date == null ? otherSprint.complete_date == null : complete_date.equals(otherSprint.complete_date)) &&
-                        (goal == null ? otherSprint.goal == null : goal.equals(otherSprint.goal)) &&
-                        Objects.equals(board_id, otherSprint.board_id));
+                        (end_date == null ? otherSprint.end_date == null : end_date.equals(otherSprint.end_date)));
             }
             return false;
         }
@@ -91,14 +85,13 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 29 * hash + this.sprint_id;
-            hash = 29 * hash + Objects.hashCode(this.start_date);
-            hash = 29 * hash + Objects.hashCode(this.end_date);
-            hash = 29 * hash + Objects.hashCode(this.complete_date);
-            hash = 29 * hash + Objects.hashCode(this.goal);
+            hash = 79 * hash + this.sprint_id;
+            hash = 79 * hash + Objects.hashCode(this.name);
+            hash = 79 * hash + Objects.hashCode(this.start_date);
+            hash = 79 * hash + Objects.hashCode(this.end_date);
             return hash;
         }
-        
+
         /**
          * Compare the start date of the sprint to another timestamp.
          * This can be used for sorting multiple sprints on their start date, or
@@ -143,15 +136,81 @@ public class SprintDb extends BaseDb implements AutoCloseable {
          * @return Whether the date is in the sprint's date range
          */
         public boolean contains(Timestamp date) {
-            if (
-                (this.start_date == null || date.before(this.start_date)) ||
-                (this.end_date != null && date.after(this.end_date)) ||
-                (this.complete_date != null && date.after(this.complete_date))
-            ) {
-                return false;
+            return (
+                (this.start_date != null && date.after(this.start_date)) &&
+                (this.end_date == null || date.before(this.end_date))
+            );
+        }
+    }
+    
+    private final static class JiraSprint extends Sprint {
+        private final Timestamp complete_date;
+        private final String goal;
+        private final Integer board_id;
+        
+        public JiraSprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) {
+            super(sprint_id, name, start_date, end_date);
+            this.complete_date = complete_date;
+            this.goal = goal;
+            this.board_id = board_id;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            boolean equal = super.equals(other);
+            if (equal && other instanceof JiraSprint) {
+                JiraSprint otherSprint = (JiraSprint)other;
+                return ((complete_date == null ? otherSprint.complete_date == null : complete_date.equals(otherSprint.complete_date)) &&
+                        (goal == null ? otherSprint.goal == null : goal.equals(otherSprint.goal)) &&
+                        Objects.equals(board_id, otherSprint.board_id));
+
             }
-            
-            return true;
+            return equal;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = super.hashCode();
+            hash = 79 * hash + Objects.hashCode(this.complete_date);
+            hash = 79 * hash + Objects.hashCode(this.goal);
+            hash = 79 * hash + Objects.hashCode(this.board_id);
+            return hash;
+        }
+        
+        @Override
+        public boolean contains(Timestamp date) {
+            return super.contains(date) &&
+                (this.complete_date == null || date.before(this.complete_date));
+        }        
+    }
+    
+    private final static class TfsSprint extends Sprint {
+        private final Integer repo_id;
+        private final Integer team_id;
+        
+        public TfsSprint(int sprint_id, String name, Timestamp start_date, Timestamp end_date, Integer repo_id, Integer team_id) {
+            super(sprint_id, name, start_date, end_date);
+            this.repo_id = repo_id;
+            this.team_id = team_id;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            boolean equal = super.equals(other);
+            if (equal && other instanceof TfsSprint) {
+                TfsSprint otherSprint = (TfsSprint)other;
+                return ((repo_id == null ? otherSprint.repo_id == null : repo_id.equals(otherSprint.repo_id)) &&
+                        (team_id == null ? otherSprint.team_id == null : team_id.equals(otherSprint.team_id)));
+            }
+            return equal;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = super.hashCode();
+            hash = 79 * hash + Objects.hashCode(this.repo_id);
+            hash = 79 * hash + Objects.hashCode(this.team_id);
+            return hash;
         }
     }
 
@@ -161,10 +220,13 @@ public class SprintDb extends BaseDb implements AutoCloseable {
 
     public SprintDb() {
         String sql = "insert into gros.sprint(sprint_id,project_id,name,start_date,end_date,complete_date,goal,board_id) values (?,?,?,?,?,?,?,?);";
-        insertStmt = new BatchedStatement(sql);
+        insertJiraStmt = new BatchedStatement(sql);
         
         sql = "update gros.sprint set name=?, start_date=?, end_date=?, complete_date=?, goal=?, board_id=? where sprint_id=? and project_id=?;";
-        updateStmt = new BatchedStatement(sql);
+        updateJiraStmt = new BatchedStatement(sql);
+        
+        sql = "insert into gros.tfs_sprint(project_id,name,start_date,end_date,repo_id,team_id) values (?,?,?,?,?,?);";
+        insertTfsStmt = new BatchedStatement(sql);
         
         keyCache = new HashMap<>();
         dateCache = new HashMap<>();
@@ -193,10 +255,10 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         if (!keyCache.containsKey(project_id)) {
             return CheckResult.MISSING;
         }
-        HashMap<Integer, Sprint> sprints = keyCache.get(project_id);
-        Sprint currentSprint = sprints.get(sprint_id);
+        HashMap<Integer, JiraSprint> sprints = keyCache.get(project_id);
+        JiraSprint currentSprint = sprints.get(sprint_id);
         if (currentSprint != null) {
-            Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date, goal, board_id);
+            JiraSprint sprint = new JiraSprint(sprint_id, name, start_date, end_date, complete_date, goal, board_id);
             if (currentSprint.equals(sprint)) {
                 return CheckResult.EXISTS;
             }
@@ -223,7 +285,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void insert_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) throws SQLException, PropertyVetoException {
-        PreparedStatement pstmt = insertStmt.getPreparedStatement();
+        PreparedStatement pstmt = insertJiraStmt.getPreparedStatement();
         pstmt.setInt(1, sprint_id);
         pstmt.setInt(2, project_id);
         pstmt.setString(3, name);
@@ -233,7 +295,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         setString(pstmt, 7, goal);
         setInteger(pstmt, 8, board_id);
 
-        insertStmt.batch();
+        insertJiraStmt.batch();
     }
     
     /**
@@ -250,7 +312,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void update_sprint(int sprint_id, int project_id, String name, Timestamp start_date, Timestamp end_date, Timestamp complete_date, String goal, Integer board_id) throws SQLException, PropertyVetoException {
-        PreparedStatement pstmt = updateStmt.getPreparedStatement();
+        PreparedStatement pstmt = updateJiraStmt.getPreparedStatement();
         pstmt.setString(1, name);
         setTimestamp(pstmt, 2, start_date);
         setTimestamp(pstmt, 3, end_date);
@@ -261,7 +323,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(7, sprint_id);
         pstmt.setInt(8, project_id);
         
-        updateStmt.batch();
+        updateJiraStmt.batch();
     }
     
     private void fillCache(int project_id) throws SQLException, PropertyVetoException {
@@ -269,16 +331,16 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             return;
         }
         
-        if (cacheStmt == null) {
-            Connection con = insertStmt.getConnection();
+        if (cacheJiraStmt == null) {
+            Connection con = insertJiraStmt.getConnection();
             String sql = "SELECT sprint_id, name, start_date, end_date, complete_date, goal, board_id FROM gros.sprint WHERE project_id = ? ORDER BY start_date";
-            cacheStmt = con.prepareStatement(sql);
+            cacheJiraStmt = con.prepareStatement(sql);
         }
         
-        HashMap<Integer, Sprint> sprints = new HashMap<>();
-        ArrayList<Sprint> dateSprints = new ArrayList<>();
-        cacheStmt.setInt(1, project_id);
-        try (ResultSet rs = cacheStmt.executeQuery()) {
+        HashMap<Integer, JiraSprint> sprints = new HashMap<>();
+        ArrayList<JiraSprint> dateSprints = new ArrayList<>();
+        cacheJiraStmt.setInt(1, project_id);
+        try (ResultSet rs = cacheJiraStmt.executeQuery()) {
             while (rs.next()) {
                 int sprint_id = rs.getInt("sprint_id");
                 String name = rs.getString("name");
@@ -287,13 +349,13 @@ public class SprintDb extends BaseDb implements AutoCloseable {
                 Timestamp complete_date = rs.getTimestamp("complete_date");
                 String goal = rs.getString("goal");
                 Integer board_id = rs.getObject("board_id") == null ? null : rs.getInt("board_id");
-                Sprint sprint = new Sprint(sprint_id, name, start_date, end_date, complete_date, goal, board_id);
+                JiraSprint sprint = new JiraSprint(sprint_id, name, start_date, end_date, complete_date, goal, board_id);
                 sprints.put(sprint_id, sprint);
                 dateSprints.add(sprint);
            }
         }
         keyCache.put(project_id, sprints);
-        dateCache.put(project_id, dateSprints.toArray(new Sprint[dateSprints.size()]));
+        dateCache.put(project_id, dateSprints.toArray(new JiraSprint[dateSprints.size()]));
         
     }
     
@@ -313,7 +375,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
         }
         
         fillCache(project_id);
-        Sprint[] sprints = dateCache.get(project_id);
+        JiraSprint[] sprints = dateCache.get(project_id);
         
         int index = Bisect.bisectRight(sprints, date);
         if (index == 0) {
@@ -345,7 +407,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      */
     public Set<Integer> find_sprints(int project_id, Timestamp start_date, Timestamp end_date) throws SQLException, PropertyVetoException {
         fillCache(project_id);
-        Sprint[] sprints = dateCache.get(project_id);
+        JiraSprint[] sprints = dateCache.get(project_id);
         Set<Integer> rangeSprints = new TreeSet<>();
         
         int index = Bisect.bisectLeft(sprints, start_date);
@@ -362,22 +424,77 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     
     @Override
     public void close() throws SQLException {
-        insertStmt.execute();
-        insertStmt.close();
+        insertJiraStmt.execute();
+        insertJiraStmt.close();
         
-        updateStmt.execute();
-        updateStmt.close();
+        updateJiraStmt.execute();
+        updateJiraStmt.close();
         
-        if (checkStmt != null) {
-            checkStmt.close();
-            checkStmt = null;
+        if (checkTfsStmt != null) {
+            checkTfsStmt.close();
+            checkTfsStmt = null;
         }
 
-        for (HashMap<Integer, Sprint> cache : keyCache.values()) {
+        for (HashMap<Integer, JiraSprint> cache : keyCache.values()) {
             cache.clear();
         }
         keyCache.clear();
         dateCache.clear();
     }
     
+    private void getCheckTfsStmt() throws SQLException, PropertyVetoException {
+        if (checkTfsStmt == null) {
+            Connection con = insertTfsStmt.getConnection();
+            String sql = "SELECT sprint_id FROM gros.tfs_sprint WHERE project_id=? AND name=?";
+            checkTfsStmt = con.prepareStatement(sql);
+        }
+    }
+
+    /**
+     * Check whether a certain sprint exists in the the database and has the same
+     * properties as the provided parameters.
+     * @param project_id The project identifier.
+     * @param name The human-readable name of the sprint as provided in TFS.
+     * @return The sprint ID: null if the sprint name and project ID
+     * combination is not found, or the sprint ID if a match is found.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public Integer check_tfs_sprint(int project_id, String name) throws SQLException, PropertyVetoException {
+        getCheckTfsStmt();
+        
+        checkTfsStmt.setInt(1, project_id);
+        checkTfsStmt.setString(2, name);
+        
+        Integer sprintId = null;
+        try (ResultSet rs = checkTfsStmt.executeQuery()) {
+            while (rs.next()) {
+                sprintId = rs.getInt("sprint_id");
+            }
+        }
+        return sprintId;
+    }
+    
+    /**
+     * Insert a new TFS sprint in the database.
+     * @param project_id The project identifier.
+     * @param name The human-readable name of the sprint as provided in JIRA.
+     * @param start_date The date at which the sprint starts or is set to start.
+     * @param end_date The date at which the sprint ends or is set to end.
+     * @param repo_id The internal identifier of the TFS repository.
+     * @param team_id The internal identifier of the TFS team in the repository.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_tfs_sprint(int project_id, String name, Timestamp start_date, Timestamp end_date, Integer repo_id, Integer team_id) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = insertTfsStmt.getPreparedStatement();
+        pstmt.setInt(1, project_id);
+        pstmt.setString(2, name);
+        setTimestamp(pstmt, 3, start_date);
+        setTimestamp(pstmt, 4, end_date);
+        setInteger(pstmt, 5, repo_id);
+        setInteger(pstmt, 6, team_id);
+
+        insertTfsStmt.batch();
+    }
 }
