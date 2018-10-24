@@ -4,6 +4,7 @@ pipeline {
     environment {
         BUILD_TARGET = 'default'
         BUILD_FILE = 'Code/importerjson/build.xml'
+        GITLAB_TOKEN = credentials('monetdb-import-gitlab-token')
         SCANNER_HOME = tool name: 'SonarQube Scanner 3', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
@@ -12,7 +13,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     triggers {
-        gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All')
+        gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All', secretToken: env.GITLAB_TOKEN)
         cron('H H * * 5')
     }
 
