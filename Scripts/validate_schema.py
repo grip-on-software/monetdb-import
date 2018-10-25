@@ -20,7 +20,7 @@ def parse_args(config):
 
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-    verify = config.get('sonar', 'verify')
+    verify = config.get('schema', 'verify')
     if verify in ('false', 'no', 'off', '-', '0', '', None):
         verify = False
     elif not os.path.exists(verify):
