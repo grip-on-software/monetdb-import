@@ -10,3 +10,8 @@ job = $JENKINS_JOB
 username = $JENKINS_USERNAME
 token = $JENKINS_TOKEN
 crumb = yes
+[schema]
+url = $SCHEMA_URL
+verify = $SCHEMA_VERIFY
+username = $SCHEMA_USERNAME
+password = $SCHEMA_PASSWORD

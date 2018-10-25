@@ -75,7 +75,8 @@ pipeline {
             }
             steps {
                 withCredentials([file(credentialsId: 'monetdb-import-settings', variable: 'VALIDATE_SETTINGS')]) {
-                    sh 'pip install pylint gitpython pymonetdb requests'
+                    sh 'pip install -r Scripts/requirements.txt'
+                    sh 'pip install pylint'
                     sh 'pylint Scripts/*.py'
                     sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING --branch $BRANCH_NAME', returnStatus: true
                 }

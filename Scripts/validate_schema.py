@@ -6,10 +6,12 @@ from argparse import ArgumentParser
 from configparser import RawConfigParser
 import json
 import logging
+import os.path
 import re
 import sys
 import git
-import requests
+from requests import Session
+from requests.auth import HTTPBasicAuth
 
 def parse_args(config):
     """
@@ -18,11 +20,25 @@ def parse_args(config):
 
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+    verify = config.get('sonar', 'verify')
+    if verify in ('false', 'no', 'off', '-', '0', '', None):
+        verify = False
+    elif not os.path.exists(verify):
+        verify = True
+
     parser = ArgumentParser(description=description)
     parser.add_argument('--path', default='create-tables.sql',
                         help='Path to read schema from')
     parser.add_argument('--url', default=config.get('schema', 'url'),
                         help='URL to retrieve documentation from')
+    parser.add_argument('--verify', nargs='?', const=True, default=verify,
+                        help='Enable SSL certificate verification')
+    parser.add_argument('--no-verify', action='store_false', dest='verify',
+                        help='Disable SSL certificate verification')
+    parser.add_argument('--username', help='Username for documentation URL',
+                        default=config.get('schema', 'username'))
+    parser.add_argument('--password', help='Password for documentation URL',
+                        default=config.get('schema', 'password'))
     parser.add_argument('--branch', nargs='?', default=None, const='master',
                         help='Branch to retrieve unmerged documentation for')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
@@ -137,7 +153,7 @@ def parse_schema(path):
     with open(path, 'r') as schema_file:
         return parse(tokens, schema_file)
 
-def parse_documentation(url, data=None):
+def parse_documentation(session, url, data=None):
     """
     Parse a documentation wiki.
     """
@@ -175,10 +191,18 @@ def parse_documentation(url, data=None):
         }
     }
 
-    request = requests.get(url)
+    request = session.get(url)
     if request.status_code == 404:
         logging.warning('Documentation URL not found: %s', url)
         return data
+
+    request.raise_for_status()
+    if request.headers['Content-Type'] == 'application/json':
+        if data is not None:
+            logging.warning('Cannot append JSON to existing data')
+            return data
+
+        return request.json()
 
     return parse(tokens, request.text.splitlines(), data=data)
 
@@ -306,15 +330,25 @@ def main():
     config.read("settings.cfg")
     args = parse_args(config)
 
-    documentation = parse_documentation(args.url.format(branch=''))
+    if args.username is not None:
+        auth = HTTPBasicAuth(args.username, args.password)
+    else:
+        auth = None
+
+    session = Session()
+    session.verify = args.verify
+    session.auth = auth
+
+    documentation = parse_documentation(session, args.url.format(branch=''))
     if args.branch != 'master':
         if args.branch is None:
             branch = git.Repo('..').active_branch.name
         else:
             branch = args.branch
 
-        documentation = parse_documentation(args.url.format(branch='/' + branch),
-                                            documentation)
+        branch_url = args.url.format(branch='/' + branch)
+        documentation = parse_documentation(session, branch_url,
+                                            data=documentation)
 
     schema = parse_schema(args.path)
 
