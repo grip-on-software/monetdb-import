@@ -678,7 +678,7 @@ These tables include data from Gitlab/Git and Subversion.
         the case of overlapping sprints, the latest sprint that still
         contains the date is used.
 
-### Review system tables (GitHub, GitLab, TFS)
+### Review system tables (GitHub, GitLab, TFS/Azure DevOps)
 
 -   **vcs_event**: An event from an activity timeline of a repository.
     The events include pushes of commits or tags, or possibly also other
@@ -968,6 +968,142 @@ These tables include data from Gitlab/Git and Subversion.
     -   **updated_date** - TIMESTAMP: Time at which the comment is most
         recently edited. This is NULL if this information was not
         available from the API.
+
+
+-   **tfs_developer**: User names from TFS/Azure work items. Primary key
+    is (project_id, display_name).
+    -   **project_id** - INT - reference to project.project_id: Project
+        in which the developer is working.
+    -   **display_name** - VARCHAR(100): The name of the developer as
+        displayed in TFS.
+    -   **email** - VARCHAR(100): The email address of the developer.
+        This may be a domain account name or an internal identifier of
+        the account instead of an email address. This is NULL if the
+        email address could not be obtained.
+    -   **alias_id** - INT - reference to vcs_developer.alias_id: The
+        VCS developer associated with the TFS developer. The matching is
+        based on the TFS and VCS developer's display name. If no
+        matching VCS developer is found or created, then this is NULL.
+    -   **encryption** - INT(row encryption)
+
+
+-   **tfs_sprint**: Data regarding a sprint registered in TFS/Azure,
+    including the start and end dates.
+    -   **sprint_id** - INT - primary key: Auto-incrementing identifier.
+    -   **project_id** - INT - reference to project.project_id: Project
+        in which the sprint occurs.
+    -   **repo_id** - INT - reference to repo.id: Repository in which
+        the sprint occurs.
+    -   **team_id** - INT - reference to tfs_team.team_id: Team which is
+        working on the sprint.
+    -   **name** - VARCHAR(100): Human-readable name of the sprint.
+        Depending on the project, team and the person who creates the
+        sprints, this may include a sequence number (not unique), the
+        sprint/story owner (Scrum master), week/calendar date, target
+        version and/or the sprint topic/goal if it is a specialized
+        sprint.
+    -   **start_date** - TIMESTAMP: Moment in time at which the sprint
+        starts or is set to start. May differ from the actual start time
+        (but usually not by more than a day). This is NULL if the start
+        date is not yet known.
+    -   **end_date** - TIMESTAMP: Moment in time at which the sprint
+        ends or is set to end. May be a projected date from the start
+        and thus has a time which is not always correct, but is usually
+        close to the real date. This is NULL if the end date is not yet
+        known.
+
+
+-   **tfs_team**: A team working in a TFS/Azure repository.
+    -   **team_id** - INT - primary key: Auto-incrementing identifier.
+    -   **project_id** - INT - reference to project.project_id: Project
+        in which the team exists.
+    -   **repo_id** - INT - reference to repo.id: Repository in which
+        the team is working.
+    -   **name** - VARCHAR(100): Human-readable name of the team.
+    -   **description** - VARCHAR(500): Description of the team. This is
+        the empty string if no description is provided or NULL if the
+        description could not be retrieved.
+
+
+-   **tfs_team_member**: A team member working in a TFS/Azure team.
+    Primary key is (team_id, name).
+    -   **team_id** - INT - reference to tfs_team.team_id: Team in which
+        the team member is working.
+    -   **repo_id** - INT - reference to repo.id: Repository in which
+        the team member is working.
+    -   **alias_id** - INT - reference to vcs_developer.alias_id: The
+        VCS developer associated with the TFS developer. The matching is
+        based on the TFS team member's and VCS developer's display name.
+        If no matching VCS developer is found or created, then this is
+        NULL.
+    -   **name** - VARCHAR(100): The internal name of the TFS team
+        member.
+    -   **display_name** - VARCHAR(100): The name of the team member as
+        displayed in TFS.
+    -   **encryption** - INT(row encryption)
+
+
+-   **tfs_work_item**: A work item issue in a TFS/Azure repository.
+    Primary key is (issue_id, changelog_id).
+    -   **issue_id** - INT: TFS identifier of the work item. **There may
+        be multiple rows with the same issue_id.**
+    -   **changelog_id** - INT: Version number deduced from the
+        changelog. The earliest version is has a changelog id of 0.
+    -   **title** - VARCHAR(250): The human-readable title of the work
+        item. This reflects the title at the moment the work item
+        version existed, based on the changelog.
+    -   **type** - VARCHAR(64): The work item type (Task, Bug, UseCase),
+        or NULL if this information is not provided by the API.
+    -   **priority** - INT: The work item priority (0-99), or NULL if
+        this information is not provided by the API.
+    -   **created** - TIMESTAMP: The time at which the work item was
+        created, equal to updated_at of the first version. Provided as a
+        convenience on all versions. This is NULL if the information is
+        not provided by the API.
+    -   **updated** - TIMESTAMP: The time at which the change in this
+        version of the work item was made. Equal to *created* for the
+        first version. This is NULL if the information is not provided
+        by the API.
+    -   **description** - TEXT: The human-readable description that is
+        shown at the top of the work item by default. Can be updated in
+        changes. This is NULL if not provided.
+    -   **duedate** - DATE: The due date of this work item, or NULL if
+        not provided. Some projects use due dates for milestones and
+        prioritization, in addition to sprint constraints.
+    -   **project_id** - INT - reference to project.project_id: The
+        project in which this issue is contained.
+    -   **status** - VARCHAR(64): The work item status (New, To Do,
+        Open, In progress, Closed), or NULL if this information is not
+        provided by the API.
+    -   **reporter** - VARCHAR(100) - reference to
+        tfs_developer.display_name: The reporter of the work item
+        according to the work item data. Usually, this is the same
+        developer as *updated_by* on the first version, but this may be
+        different due to cloned issues or intermediate changes. This is
+        NULL if this information is not provided by the API.
+    -   **assignee** - VARCHAR(100) - reference to
+        tfs_developer.display_name: The developer that should resolve
+        the work item, or NULL if none is assigned thus far.
+    -   **attachments** - INT: The number of attachments in the work
+        item. This tracks updates in the changelog.
+    -   **additional_information** - TEXT: Human-readable text that is
+        shown within a tab beside the description, or NULL if it is not
+        filled in. Often used for extra implementation/functional
+        details.
+    -   **sprint_id** - INT - reference to tfs_sprint.sprint_id: The
+        sprint that this work item is pulled into. The sprint can differ
+        by version. If the work item is not yet explicitly added into a
+        sprint, then this is NULL.
+    -   **team_id** - INT - reference to tfs_team.team_id: The team that
+        is working on this work item. This is NULL if no team could be
+        obtained for this work item version.
+    -   **updated_by** - VARCHAR(100) - reference to
+        tfs_developer.display_name: The developer that made a change in
+        this version of the work item. This is NULL if this information
+        is not provided by the API.
+    -   **labels** - INT: The number of labels that the work item
+        currently has. This is NULL if the number of labels could not be
+        obtained for this work item.
 
 ## Metrics tables (Quality dashboard history)
 
