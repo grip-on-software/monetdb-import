@@ -6,9 +6,24 @@ follows:
 
 -   **Table**: Description
     -   **Attribute** - TYPE - (pseudo)reference: Description
-    -   **Attribute** - TYPE: Description
+    -   **Attribute** - TYPE: Description with mention of NULL if the
+        field is nullable in some conditions
     -   **Attribute** - TYPE(Special field type)
     -   **Attribute** - TYPE
+
+The schema documentation on this page is parsed by
+[validate_schema.py](http://git.liacs.nl/gros/monetdb-import/blob/master/Scripts/validate_schema.py)
+to compare against the schema definition
+[create-tables.sql](http://git.liacs.nl/gros/monetdb-import/blob/master/Scripts/create-tables.sql).
+Therefore, all table structures adhere to this format.
+
+Some attributes may mention their fields as being nullable by indicating
+the term `NULL` in their description. In some cases the NULL values are
+actually not in use because the data gatherer and importer do not
+provide such values to the database. However, in the future, the NULL
+values could be in use for the condition as is reserved on this page.
+Also note the (current) use of other types of values to indicate missing
+relations or unobtainable data, such as zeroes or empty strings.
 
 Additional details about how the data is imported can be found by
 browsing the
@@ -17,8 +32,12 @@ of the importer, especially the dao package.
 
 Development of new schemas on branches of the monetdb-import repository
 may also create a development subpage for validation of the schema
-changes in comparison to the documentation. The subpage should be merged
-into this page when the branch is merged.
+changes in the build in comparison to the documentation on this page as
+well as its overrides in the subpage. Additionally, an upgrade path is
+provided through new files in the
+[update](http://git.liacs.nl/gros/monetdb-import/tree/master/Scripts/update)
+tree on the branch. When the branch is merged, the subpage should be
+merged into this page and deleted.
 
 ## Special field types
 
@@ -319,8 +338,12 @@ purpose.
     e.g., Bug, Task, Story or Epic.
     -   **id** - INT - primary key: Internal JIRA identifier for the
         issue type.
-    -   **name** - VARCHAR(100)
-    -   **description** - VARCHAR(500)
+    -   **name** - VARCHAR(100): The human-readable name of the issue
+        type.
+    -   **description** - VARCHAR(500): The human-readable description
+        of the issue type. This is the empty string if the issue type
+        has no description or NULL if the description could not be
+        obtained.
 
 
 -   **status**: The statuses that issues can have, such as Closed,
@@ -330,7 +353,8 @@ purpose.
         status.
     -   **name** - VARCHAR(100): The human-readable name of the status.
     -   **description** - VARCHAR(500): The human-readable description
-        of the status.
+        of the status. This is the empty string if the status has no
+        description or NULL if the description could not be obtained.
     -   **category_id** - INT - reference to
         status_category.category_id: The identifier of the status
         category. This is NULL if the status is not linked to a status
@@ -346,6 +370,7 @@ purpose.
     -   **name** - VARCHAR(100): The human-readable name of the status
         category.
     -   **color** - VARCHAR(32): The color name of the status category.
+        This is NULL if the color was not obtained.
 
 
 -   **resolution**: Once an issue receives a status of Resolved or
@@ -353,8 +378,12 @@ purpose.
     or Works as designed).
     -   **id** - INT - primary key: Internal JIRA identifier for the
         resolution.
-    -   **name** - VARCHAR(100)
-    -   **description** - VARCHAR(500)
+    -   **name** - VARCHAR(100): The human-readable name of the
+        resolution.
+    -   **description** - VARCHAR(500): The human-readable description
+        of the resolution. This is the empty string if the resolution
+        has no description or NULL if the description could not be
+        obtained.
 
 
 -   **developer**: Names of JIRA users that performed some action in an
@@ -363,7 +392,8 @@ purpose.
     -   **name** - VARCHAR(JIRA developer): Abbreviation of the JIRA
         developer.
     -   **display_name** - VARCHAR(100): Name of the JIRA developer as
-        displayed in the JIRA interface.
+        displayed in the JIRA interface. This is NULL if there is no
+        display name known for the developer.
     -   **email** - VARCHAR(100): The email address of the JIRA
         developer. This is NULL if there is no email address known for
         the developer due to missing source information.
@@ -402,8 +432,10 @@ purpose.
         project this version belongs to.
     -   **name** - VARCHAR(100): The name (version numbering scheme) of
         the release version.
-    -   **description** - VARCHAR(500): Description provided to the
-        release version.
+    -   **description** - VARCHAR(500): The human-readable description
+        provided to the release version. This is the empty string if no
+        description has been provided to the fix version, or NULL if the
+        description could not be obtained.
     -   **start_date** - DATE: Day on which work started on this fix
         version according to JIRA aggregate information. This is NULL if
         no start date is known for the fix version.
@@ -573,10 +605,11 @@ These tables include data from Gitlab/Git and Subversion.
     configuration.
     -   **alias_id** - INT - primary key: Sequential number assigned to
         the developer.
-    -   **jira_dev_id** - INT - reference to developer.id. The matching
-        is based on the VCS developer's display name and email, and the
-        JIRA developer display name, short name or email. The matching
-        is also manually tweaked using the file data_vcsdev_to_dev.json
+    -   **jira_dev_id** - INT - reference to developer.id: The JIRA
+        developer/ associated with the developer. The matching is based
+        on the VCS developer's display name and email, and the JIRA
+        developer display name, short name or email. The matching is
+        also manually tweaked using the file data_vcsdev_to_dev.json
         (which is retrieved from ownCloud).
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
@@ -699,7 +732,8 @@ These tables include data from Gitlab/Git and Subversion.
         GitHub repo stores.
     -   **github_id** - INT: internal GitHub identifier of the
         repository.
-    -   **description** - TEXT: Description of the repository.
+    -   **description** - TEXT: Description of the repository. This is
+        NULL if no description is provided.
     -   **create_date** - TIMESTAMP: Time at which the GitHub repository
         was created.
     -   **private** - BOOL: Whether the repository is private such that
@@ -722,24 +756,32 @@ These tables include data from Gitlab/Git and Subversion.
     -   **issue_id** - INT: GitHub identifier of the issue which is
         unique for the repository.
     -   **title** - TEXT: The short header message describing what the
-        issue is about, e.g., what problems are encountered.
-    -   **description** - TEXT: The contents of the issue message.
+        issue is about, e.g., what problems are encountered. This is
+        NULL if no title is provided.
+    -   **description** - TEXT: The contents of the issue message. This
+        is the empty string if the issue message is empty or NULL if it
+        could not be obtained.
     -   **status** - VARCHAR(100): The open/close state of the issue.
-        This can be a word like 'open' or 'closed'.
+        This can be a word like 'open' or 'closed'. This is NULL if the
+        status of the issue could not be obtained.
     -   **author_id** - INT - reference to vcs_developer.alias_id:
         Identifier of the developer that started the issue.
     -   **assignee_id** - INT - reference to vcs_developer.alias_id:
         Identifier of the developer that should address the issue. This
-        is NULL if nobody is assigned.
+        is NULL if nobody is assigned to the issue.
     -   **created_date** - TIMESTAMP: Time at which the issue is
-        created.
+        created. This is NULL if the creation time of the issue could
+        not be obtained.
     -   **updated_date** - TIMESTAMP: Time at which the issue received
-        an update.
+        an update. This is NULL if the update time of the issue could
+        not be obtained.
     -   **pull_request_id** - INT - reference to
         merge_request.request_id: The GitHub pull request identifier for
         a related pull request in the same repository. This is NULL if
-        no such link has been created yet.
+        no such link has been created yet for the issue.
     -   **labels** - INT: Number of labels that are added to the issue.
+        This is NULL if the number of labels for the issue could not be
+        obtained.
     -   **closed_date** - TIMESTAMP: Time at which the issue is closed.
         This is NULL if the issue is not yet closed.
     -   **closer_id**: INT - reference to vcs_developer.alias_id:
@@ -760,11 +802,14 @@ These tables include data from Gitlab/Git and Subversion.
         unique for the GitHub instance.
     -   **author_id** - INT - reference to vcs_developer.alias_id:
         Identifier of the developer that wrote the comment.
-    -   **comment** - TEXT: Plain text comment message of the note.
+    -   **comment** - TEXT: Plain text comment message of the note. This
+        is NULL if the message could not be obtained.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
-        to the issue.
+        to the issue. This is NULL if the creation date of the note
+        could not be obtained.
     -   **updated_date** - TIMESTAMP: Time at which the comment is most
-        recently edited.
+        recently edited. This is NULL if the update date of the note
+        could not be obtained.
 
 
 -   **merge_request**: A request within the development team's review
@@ -776,13 +821,17 @@ These tables include data from Gitlab/Git and Subversion.
         of the merge request which is unique for the instance.
     -   **title** - TEXT: The short header message describing what the
         merge request is about, e.g., what branches/commits it merges.
+        This is NULL if the title of the request could not be obtained.
     -   **description** - TEXT: The contents of the request message.
+        This is NULL if the description of the request could not be
+        obtained.
     -   **status** - VARCHAR(100): The open/close state of the request.
         This can be a word like 'opened', 'merged' or 'closed' for
         GitLab, 'open', 'merged' or 'close' for GitHub, or 'active',
         'completed' or 'abandoned' for TFS. Note that merge procedures
         may differ by team, and as such a closed/abandoned pull request
-        may have been manually merged.
+        may have been manually merged. This is NULL if the status of the
+        request could not be obtained.
     -   **source_branch** - VARCHAR(Git branch): The (feature) branch
         from which commits should be merged.
     -   **target_branch** - VARCHAR(Git branch): The (main) branch at
@@ -794,19 +843,25 @@ These tables include data from Gitlab/Git and Subversion.
         is NULL if nobody is assigned, which is the case for TFS pull
         requests.
     -   **upvotes** - INT: Number of votes from the development team in
-        support of the merge request.
+        support of the merge request. This is NULL if the review system
+        does not support votes or they could not be obtained for the
+        request.
     -   **downvotes** - INT: Number of votes from the development team
-        against the merge request.
+        against the merge request. This is NULL if the review system
+        does not support votes or they could not be obtained for the
+        request.
     -   **created_date** - TIMESTAMP: Time at which the merge request is
-        created.
+        created. This is NULL if the creation time of the request could
+        not be obtained.
     -   **updated_date** - TIMESTAMP: Time at which the merge request
         received an update (a merge request note or update to the
-        request details).
+        request details). This is NULL if the update time of the request
+        could not be obtained.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the merge request was made, based on date intervals. If
-        the created date is not matched to a sprint, then this is 0. In
-        the case of overlapping sprints, the latest sprint that still
-        contains the date is used.
+        the created date is not matched to a sprint, then this is 0 or
+        NULL. In the case of overlapping sprints, the latest sprint that
+        still contains the date is used.
 
 
 -   **merge_request_review**: A vote given by a reviewer to a pull
@@ -842,7 +897,7 @@ These tables include data from Gitlab/Git and Subversion.
         The note to which this comment is a reply. The parent note has
         the same repository, request and thread identifiers as this
         note. If threading is not supported by the review system or the
-        information is not provided by the API, then this is 0.
+        information is not provided by the API, then this is 0 or NULL.
     -   **author_id** - INT - reference to vcs_developer.alias_id:
         Identifier of the developer that wrote the comment or on whose
         regard the automated comment is added.
@@ -852,9 +907,11 @@ These tables include data from Gitlab/Git and Subversion.
         with the remaining lines either empty or starting with
         star-bullets. Automated TFS notes have been filtered out, and
         GitHub notes from the system are not included (bot comments are
-        included though).
+        included though). This is NULL if the comment could not be
+        obtained for the note.
     -   **created_date** - TIMESTAMP: Time at which the comment is added
-        to the merge request.
+        to the merge request. This is NULL if the creation date could
+        not be obtained for the note.
     -   **updated_date** - TIMESTAMP: Time at which the comment is most
         recently edited. This is NULL if this information was not
         available from the API source.
@@ -885,10 +942,12 @@ These tables include data from Gitlab/Git and Subversion.
         note to which this comment is a reply. The parent note has the
         same repository, request and thread identifiers as this note. If
         threading is not supported by the review system or the
-        information is not provided by the API, then this is 0.
+        information is not provided by the API, then this is 0 or NULL.
     -   **author_id** - INT - reference to vcs_developer.alias_id:
         Identifier of the developer who wrote the commit comment.
-    -   **comment** - TEXT: Plain text comment message of the note.
+    -   **comment** - TEXT: Plain text comment message of the note. This
+        is NULL if the message could not be obtained for the commit
+        comment.
     -   **file** - VARCHAR(1000): Path to a file in the repository that
         is changed in the commit and is discussed by the comment. If
         this is NULL, then the comment belongs to the entire version.
@@ -946,13 +1005,15 @@ dashboard project definition.
         improved), grey (disabled), missing (internal problem),
         missing_source (external problem).
     -   **date** - TIMESTAMP: Time at which the measurement took place.
+        This is NULL if the date could not be obtained.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the metric was measured, based on date intervals. If
-        the measurement date is not matched to a sprint, then this is 0.
-        In the case of overlapping sprints, the latest sprint that still
-        contains the date is used.
+        the measurement date is not matched to a sprint, then this is 0
+        or NULL. In the case of overlapping sprints, the latest sprint
+        that still contains the date is used.
     -   **since_date** - TIMESTAMP - reference to metric_value.date:
-        Time since which the metric has the same value.
+        Time since which the metric has the same value. This is NULL if
+        the date could not be obtained.
     -   **project_id** - INT - reference to project.project_id: The
         project for which the measurement was made
 
@@ -965,14 +1026,16 @@ dashboard project definition.
     -   **version_id** - INT: Subversion revision number.
     -   **developer** - VARCHAR(64): Developer or quality lead that made
         the change.
-    -   **message** - TEXT: Commit message describing the change.
+    -   **message** - TEXT: Commit message describing the change. This
+        is the empty string if the message is not provided or NULL if it
+        could not be obtained.
     -   **commit_date** - TIMESTAMP: Time at which the target change
         took place.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the target norms were changed, based on date intervals.
-        If the commit date is not matched to a sprint, then this is 0.
-        In the case of overlapping sprints, the latest sprint that still
-        contains the commit is used.
+        If the commit date is not matched to a sprint, then this is 0 or
+        NULL. In the case of overlapping sprints, the latest sprint that
+        still contains the commit is used.
     -   **encryption** - INT(row encryption)
 
 
@@ -991,7 +1054,9 @@ dashboard project definition.
     -   **low_target** - INT: Norm value at which the category changes
         from yellow to red.
     -   **comment** - TEXT: Comment for technical debt targets
-        describing the reason of the norm change.
+        describing the reason of the norm change. This is the empty
+        string if no comment is provided or NULL if it could not be
+        obtained.
 
 ## Docker dashboard tables (BigBoat)
 
@@ -1058,26 +1123,48 @@ dashboard project definition.
     -   **requester** - VARCHAR(500): Name of the person who requests
         the reservation.
     -   **number_of_people** - INT: Number of people that the
-        reservation encompasses. This may be 0 if not filled in, and
-        other values may not be exact or meaningful either.
+        reservation encompasses. This may be 0 or NULL if not filled in,
+        and other values may not be exact or meaningful either.
     -   **description** - TEXT: The text accompanying the reservation,
         usually a description of what type of meeting it is and possibly
-        who is involved.
+        who is involved. This is NULL if the description could not be
+        obtained for the reservation.
     -   **start_date** - TIMESTAMP: Time (up to minute) at which the
         reservation starts.
     -   **end_date** - TIMESTAMP: Time (up to minute) at which the
         reservation ends.
     -   **prepare_date** - TIMESTAMP: Time (up to minute) at which the
         reservation is booked to perform setup in the room. If no
-        preparation is needed, then this is the same as start_date.
+        preparation is needed, then this is the same as start_date. This
+        is NULL if the preparation time is not known.
     -   **close_date** - TIMESTAMP: Time (up to minute) until which the
         reservation is booked to break down any setup in the room. If no
-        dismantling is needed, then this is the same as end_date.
+        dismantling is needed, then this is the same as end_date. This
+        is NULL if the closing time is not known.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the reservation took place, based on date intervals. If
-        the reservation date is not matched to a sprint, then this is 0.
-        In the case of overlapping sprints, the latest sprint that still
-        contains the date is used.
+        the reservation date is not matched to a sprint, then this is 0
+        or NULL. In the case of overlapping sprints, the latest sprint
+        that still contains the date is used.
+    -   **encryption** - INT(row encryption)
+
+## User administration (LDAP)
+
+-   **ldap_developer**: User names from an LDAP database.
+    -   **project_id** - INT - reference to project.project_id: Project
+        to which the developer has (administrative) access to by being a
+        part of a group specifically created for the project.
+    -   **name** - VARCHAR(64): The account (login) name of the
+        developer in the LDAP database.
+    -   **display_name** - VARCHAR(100): The common name of the
+        developer in the LDAP database.
+    -   **email** - VARCHAR(100): The email address of the developer in
+        the LDAP database. This is NULL if the email address could not
+        be obtained.
+    -   **jira_dev_id** - INT - reference to developer.id: The JIRA
+        developer associated with the LDAP developer. The matching is
+        based on the VCS developer's display name and email, and the
+        JIRA developer display name, short name or email.
     -   **encryption** - INT(row encryption)
 
 ## Seat counts
@@ -1088,8 +1175,10 @@ dashboard project definition.
         to which the seat count belongs.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the seat count applies, based on date intervals.
-    -   **date** - TIMESTAMP: Date in which the seat count applies.
-    -   **seats** - FLOAT: The number of seats for the given month.
+    -   **date** - TIMESTAMP: Date (up to months) in which the seat
+        count applies.
+    -   **seats** - FLOAT: The number of seats for the given month. This
+        is NULL if the seat count is not known for the given month.
 
 ## Internal trackers
 
@@ -1103,7 +1192,8 @@ dashboard project definition.
     -   **contents** - TEXT: The textual (JSON or otherwise readable)
         contents of the file that tracks the update state.
     -   **update_date** - TIMESTAMP: The latest modification date of the
-        file.
+        file. This is NULL if the modification time could not be
+        obtained.
 
 
 -   **project_salt**: Project-specific hash pairs that are used for
