@@ -261,6 +261,24 @@ public class BaseDb {
     }
     
     /**
+     * Set an integer parameter to a prepared statement parsed from a string.
+     * If the parameter is null, then this method performs the appropriate
+     * action to set the designated parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value to parse, possibly null
+     * @throws SQLException If a database access error occurred
+     */
+    protected void setInteger(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null) {
+            int number = Integer.parseInt(value);
+            pstmt.setInt(index, number);
+        } else {
+            pstmt.setNull(index, java.sql.Types.INTEGER);
+        }
+    }
+    
+    /**
      * Set a boolean parameter to a prepared statement. If the parameter is null,
      * then this method performs the appropriate action to set the designated
      * parameter to NULL.
@@ -297,6 +315,24 @@ public class BaseDb {
     }
     
     /**
+     * Set a timestamp parameter to a prepared statement parsed from a string.
+     * If the parameter is null, then this method performs the appropriate
+     * action to set the designated parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value to parse, possibly null
+     * @throws SQLException If a database access error occurred
+     */
+    protected void setTimestamp(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null){
+            Timestamp date = Timestamp.valueOf(value);
+            pstmt.setTimestamp(index, date);
+        } else{
+            pstmt.setNull(index, java.sql.Types.TIMESTAMP);
+        }
+    }
+
+    /**
      * Set a date parameter to a prepared statement. If the parameter is null,
      * then this method performs the appropriate action to set the designated
      * parameter to NULL.
@@ -314,4 +350,22 @@ public class BaseDb {
         }
     }
     
+    /**
+     * Set a date parameter to a prepared statement parsed from a string.
+     * If the parameter is null, then this method performs the appropriate
+     * action to set the designated parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value to parse, possibly null
+     * @throws SQLException If a database access error occurred
+     */
+    protected void setDate(PreparedStatement pstmt, int index, String value) throws SQLException {
+        if (value != null){
+            Date date = Date.valueOf(value);
+            pstmt.setDate(index, date);
+        } else{
+            pstmt.setNull(index, java.sql.Types.DATE);
+        }
+    }
+
 }

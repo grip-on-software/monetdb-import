@@ -6,7 +6,6 @@
 package importer;
 
 import dao.DeveloperDb;
-import dao.DeveloperDb.Developer;
 import dao.SaltDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,13 +16,12 @@ import org.json.simple.parser.JSONParser;
 import util.BaseImport;
 
 /**
- * Importer for LDAP developers.
- * @author Thomas, Enrique, Leon
+ * Importer for TFS developers extracted from work items.
+ * @author Thomas, Enrique, Leon Helwerda
  */
-public class ImpLdapDeveloper extends BaseImport {
-    
+public class ImpTfsDeveloper extends BaseImport {
     @Override
-    public void parser(){
+    public void parser() {
         JSONParser parser = new JSONParser();
         int project_id = this.getProjectID();
  
@@ -37,15 +35,16 @@ public class ImpLdapDeveloper extends BaseImport {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String display_name = (String) jsonObject.get("display_name");
-                String name = (String) jsonObject.get("name");
                 String email = (String) jsonObject.get("email");
+                String encrypted = (String) jsonObject.get("encrypted");
+                int encryption = SaltDb.Encryption.parseInt(encrypted);
                 
-                Developer dev = new Developer(name, display_name, email);
-                Integer jira_id = devDb.check_ldap_developer(project_id, dev, SaltDb.Encryption.NONE);
+                DeveloperDb.Developer dev = new DeveloperDb.Developer(null, display_name, email);
+                Integer alias_id = devDb.check_tfs_developer(project_id, dev, encryption);
                 // check whether the developer does not already exist
-                if (jira_id == null) {
-                    jira_id = devDb.check_developer(dev);
-                    devDb.insert_ldap_developer(project_id, jira_id, dev);
+                if (alias_id == null) {
+                    alias_id = devDb.update_vcs_developer(project_id, dev, encryption);
+                    devDb.insert_tfs_developer(project_id, alias_id, dev, encryption);
                 }
             }                  
         }
@@ -60,12 +59,12 @@ public class ImpLdapDeveloper extends BaseImport {
 
     @Override
     public String getImportName() {
-        return "LDAP developers";
+        return "TFS work item developers";
     }
 
     @Override
     public String[] getImportFiles() {
-        return new String[]{"data_ldap.json"};
+        return new String[]{"data_tfs_developer.json"};
     }
-
+    
 }
