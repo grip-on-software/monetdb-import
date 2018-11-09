@@ -674,9 +674,9 @@ These tables include data from Gitlab/Git and Subversion.
         deduced from tag information, then this is NULL.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
         in which the tag was created, based on date intervals. If the
-        tag date is not matched to a sprint, then this is 0. In the case
-        of overlapping sprints, the latest sprint that still contains
-        the date is used.
+        tag date is not matched to a sprint, then this is 0 or NULL. In
+        the case of overlapping sprints, the latest sprint that still
+        contains the date is used.
 
 ### Review system tables (GitHub, GitLab, TFS)
 
@@ -1164,7 +1164,8 @@ dashboard project definition.
     -   **jira_dev_id** - INT - reference to developer.id: The JIRA
         developer associated with the LDAP developer. The matching is
         based on the VCS developer's display name and email, and the
-        JIRA developer display name, short name or email.
+        JIRA developer display name, short name or email. This is 0 or
+        NULL if no matching JIRA developer was found.
     -   **encryption** - INT(row encryption)
 
 ## Seat counts
