@@ -8,7 +8,9 @@ package importer;
 import dao.RepositoryDb;
 import dao.TeamDb;
 import dao.TeamDb.Team;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -56,6 +58,9 @@ public class ImpTfsTeam extends BaseImport {
                     }
                 }
             }
+        }
+        catch (FileNotFoundException ex) {
+            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
         }
         catch (Exception ex) {
             logException(ex);

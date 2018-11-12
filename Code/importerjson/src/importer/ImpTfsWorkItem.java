@@ -9,10 +9,12 @@ import dao.BatchedUpdateStatement;
 import dao.SprintDb;
 import dao.TeamDb;
 import java.beans.PropertyVetoException;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.logging.Level;
 import org.json.simple.JSONObject;
 import util.BaseImport;
 import util.BufferedJSONReader;
@@ -150,6 +152,9 @@ public class ImpTfsWorkItem extends BaseImport {
             }
             
             cstmt.execute();
+        }
+        catch (FileNotFoundException ex) {
+            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
         }
         catch (Exception ex) {
             logException(ex);

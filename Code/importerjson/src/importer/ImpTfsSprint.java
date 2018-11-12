@@ -8,8 +8,10 @@ package importer;
 import dao.RepositoryDb;
 import dao.SprintDb;
 import dao.TeamDb;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.Timestamp;
+import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -68,6 +70,9 @@ public class ImpTfsSprint extends BaseImport {
                     sprintDb.insert_tfs_sprint(project, name, start_date, end_date, repo_id, team.getTeamId());
                 }
             }
+        }
+        catch (FileNotFoundException ex) {
+            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
         }
         catch (Exception ex) {
             logException(ex);
