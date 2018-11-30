@@ -72,7 +72,7 @@ public class EnvironmentDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(4, project);
         pstmt.setString(5, environment);
         
-        insertStmt.batch();
+        updateStmt.batch();
     }
     
     private void getCheckStmt() throws SQLException, PropertyVetoException {

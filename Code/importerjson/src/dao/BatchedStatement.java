@@ -78,6 +78,7 @@ public class BatchedStatement implements AutoCloseable {
     public void batch() throws SQLException {
         if (pstmt != null) {
             pstmt.addBatch();
+            pstmt.clearParameters();
             batchSize++;
             if (batchSize >= MAX_BATCH_SIZE) {
                 execute();
