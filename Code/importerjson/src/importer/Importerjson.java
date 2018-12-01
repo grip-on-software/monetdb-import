@@ -74,8 +74,10 @@ public class Importerjson {
         
         // LDAP
         defaultTasks.add("ldap_developer");
-        // Environments
+        // Source environments
         defaultTasks.add("environment");
+        // Source identifiers
+        defaultTasks.add("source_id");
         // Jenkins
         defaultTasks.add("jenkins");
         // Self-Service Desk
@@ -155,6 +157,7 @@ public class Importerjson {
         // Other import tasks
         importers.put("ldap_developer", ImpLdapDeveloper.class);
         importers.put("environment", ImpEnvironment.class);
+        importers.put("source_id", ImpSourceId.class);
         importers.put("jenkins", ImpJenkins.class);
         importers.put("reservation", ImpReservation.class);
         importers.put("seats", ImpSeats.class);

@@ -34,6 +34,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private PreparedStatement checkMetricVersionStmt = null;
     private BatchedStatement insertMetricVersionStmt = null;
     private BatchedStatement insertMetricTargetStmt = null;
+    private PreparedStatement checkSourceIdStmt = null;
+    private BatchedStatement insertSourceIdStmt = null;
     private HashMap<String, Integer> nameCache = null;
     private HashSet<String> baseNameCache = null;
     
@@ -94,6 +96,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricVersionStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
+        sql = "insert into gros.metric_source_id(project_id,domain_name,url,source_id) values (?,?,?,?);";
+        insertSourceIdStmt = new BatchedStatement(sql);
     }
     
     private void getInsertMetricStmt() throws SQLException, PropertyVetoException {
@@ -520,6 +524,42 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricTargetStmt.batch();
     }
         
+    private void getCheckSourceIdStmt() throws SQLException, PropertyVetoException {
+        if (checkSourceIdStmt == null) {
+            Connection con = insertSourceIdStmt.getConnection();
+            String sql = "SELECT source_id FROM gros.metric_version WHERE project_id = ? AND domain_name = ? AND url = ?";
+            checkSourceIdStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    public boolean check_source_id(int projectId, String domain_name, String url, String source_id) throws SQLException, PropertyVetoException {
+        getCheckSourceIdStmt();
+        
+        checkSourceIdStmt.setInt(1, projectId);
+        checkSourceIdStmt.setString(2, domain_name);
+        checkSourceIdStmt.setString(3, url);
+        
+        try (ResultSet rs = checkSourceIdStmt.executeQuery()) {
+            while (rs.next()) {
+                if (source_id.equals(rs.getString("source_id"))) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    public void insert_source_id(int projectId, String domain_name, String url, String source_id) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = insertSourceIdStmt.getPreparedStatement();
+        
+        pstmt.setInt(1, projectId);
+        pstmt.setString(2, domain_name);
+        pstmt.setString(3, url);
+        pstmt.setString(4, source_id);
+        
+        insertSourceIdStmt.batch();
+    }
 
 }
     
