@@ -217,6 +217,9 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         insertMetricTargetStmt.execute();
         insertMetricTargetStmt.close();
+        
+        insertSourceIdStmt.execute();
+        insertSourceIdStmt.close();
 
         clearCaches();
     }
