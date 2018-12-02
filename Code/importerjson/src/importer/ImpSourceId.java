@@ -60,7 +60,7 @@ public class ImpSourceId extends BaseImport {
 
     @Override
     public String[] getImportFiles() {
-        return new String[]{"data_source_id.json"};
+        return new String[]{"data_source_ids.json"};
     }
     
 }

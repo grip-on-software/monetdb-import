@@ -96,7 +96,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricVersionStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_source_id(project_id,domain_name,url,source_id) values (?,?,?,?);";
+        sql = "insert into gros.source_id(project_id,domain_name,url,source_id) values (?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
     }
     
@@ -530,7 +530,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private void getCheckSourceIdStmt() throws SQLException, PropertyVetoException {
         if (checkSourceIdStmt == null) {
             Connection con = insertSourceIdStmt.getConnection();
-            String sql = "SELECT source_id FROM gros.metric_version WHERE project_id = ? AND domain_name = ? AND url = ?";
+            String sql = "SELECT source_id FROM gros.source_id WHERE project_id = ? AND domain_name = ? AND url = ?";
             checkSourceIdStmt = con.prepareStatement(sql);
         }
     }
