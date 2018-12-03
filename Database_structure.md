@@ -1235,6 +1235,20 @@ dashboard project definition.
         source in the environment. If the version is not known, then
         this is the empty string.
 
+
+-   **source_id**: Identifiers used within certain sources that have
+    domain names, such as analyzed applications/product components.
+    Primary key is (project_id, domain_name, url).
+    -   **project_id** - INT - reference to project.project_id: The
+        project in which the source is used.
+    -   **domain_name** - VARCHAR(100): Domain name that is measured by
+        a metric that uses the source ID to locate the domain object,
+        which could be an application, product, or component.
+    -   **url** - VARCHAR(255): Base URL to the source that provides the
+        domain object's metric data trough the source ID.
+    -   **source_id** - VARCHAR(100): Identifier used by the source to
+        provide access to the domain object's metric data.
+
 ## Build system tables (Jenkins)
 
 -   **jenkins**: Generic usage statistics retrieved from Jenkins.
