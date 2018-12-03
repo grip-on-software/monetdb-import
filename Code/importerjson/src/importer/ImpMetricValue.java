@@ -153,25 +153,29 @@ public class ImpMetricValue extends BaseImport {
 
         public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date) throws SQLException, PropertyVetoException {
             // Using the metric name, check if the metric was not already stored
-            int metric_id = mDB.check_metric(metric_name);
+            MetricName metricName = mDB.check_metric(metric_name);
 
-            if (metric_id == 0) {
+            if (metricName == null) {
                 MetricName nameParts = mDB.split_metric_name(metric_name, false);
                 // Check the metric name after splitting because the original name
                 // may have been altered.
-                metric_id = mDB.check_metric(nameParts.getName());
-                if (metric_id == 0) {
+                metricName = mDB.check_metric(nameParts.getName());
+                if (metricName == null) {
                     mDB.insert_metric(nameParts);
-                    metric_id = mDB.check_metric(nameParts.getName(), true);
-                    if (metric_id == 0) {
+                    metricName = mDB.check_metric(nameParts.getName(), true);
+                    if (metricName == null) {
                         throw new ImporterException("Could not determine ID for metric name");
                     }
                 }
             }
+            else if (!metric_name.equals(metricName.getName())) {
+                MetricName nameParts = mDB.split_metric_name(metric_name, false);
+                mDB.update_metric(metricName.getId(), metricName.getName(), nameParts);
+            }
             
             int sprint_id = sprintDb.find_sprint(projectID, date);
 
-            mDB.insert_metricValue(metric_id, value, category, date, sprint_id, since_date, projectID);
+            mDB.insert_metricValue(metricName.getId(), value, category, date, sprint_id, since_date, projectID);
         }
         
         @Override

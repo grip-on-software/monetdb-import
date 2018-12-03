@@ -36,7 +36,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertMetricTargetStmt = null;
     private PreparedStatement checkSourceIdStmt = null;
     private BatchedStatement insertSourceIdStmt = null;
-    private HashMap<String, Integer> nameCache = null;
+    private HashMap<String, MetricName> nameCache = null;
     private HashSet<String> baseNameCache = null;
     
     /**
@@ -46,6 +46,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         private final String name;
         private final String base_name;
         private final String domain_name;
+        private final Integer id;
         
         /**
          * Create a metric name.
@@ -53,7 +54,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
          * domain names.
          */
         public MetricName(String name) {
-            this(name, null, null);
+            this(name, null, null, null);
+        }
+        
+        /**
+         * Create a metric name which has been split out into base name and domain name.
+         * @param name The name of the metric, possibly including project-specific
+         * domain names.
+         * @param base_name The base name of the metric, shared with other projects.
+         * @param domain_name The domain name of the metric, such as a project name,
+         * team name, or product name.
+         */
+        public MetricName(String name, String base_name, String domain_name) {
+            this(name, base_name, domain_name, null);
         }
         
         /**
@@ -63,11 +76,13 @@ public class MetricDb extends BaseDb implements AutoCloseable {
          * @param base_name The base name of the metric, shared with other projects.
          * @param domain_name The domain name of the metric, such as a project name,
          * team name, or product name.
+         * @param id The identifier of the metric name in the database.
          */
-        public MetricName(String name, String base_name, String domain_name) {
+        public MetricName(String name, String base_name, String domain_name, Integer id) {
             this.name = name;
             this.base_name = base_name;
             this.domain_name = domain_name;
+            this.id = id;
         }
         
         public String getName() {
@@ -80,6 +95,10 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         public String getDomainName() {
             return this.domain_name;
+        }
+        
+        public Integer getId() {
+            return this.id;
         }
     }
     
@@ -227,7 +246,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private void getCheckMetricStmt() throws SQLException, PropertyVetoException {
         if (checkMetricStmt == null) {
             Connection con = insertMetricValueStmt.getConnection();
-            String sql = "SELECT metric_id FROM gros.metric WHERE UPPER(name) = ?";
+            String sql = "SELECT metric_id, name, base_name, domain_name FROM gros.metric WHERE UPPER(name) = ?";
             checkMetricStmt = con.prepareStatement(sql);
         }
     }
@@ -255,17 +274,18 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         baseNameCache = new HashSet<>();
         
         Connection con = insertMetricValueStmt.getConnection();
-        String sql = "SELECT UPPER(name) AS key, base_name, metric_id FROM gros.metric";
+        String sql = "SELECT name, base_name, domain_name, metric_id FROM gros.metric";
         
         try (
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql)
         ) {
             while(rs.next()) {
-                String key = rs.getString("key");
+                String name = rs.getString("name");
                 String base_name = rs.getString("base_name");
+                String domain_name = rs.getString("domain_name");
                 Integer id = Integer.parseInt(rs.getString("metric_id"));
-                nameCache.put(key, id);
+                nameCache.put(caseFold(name), new MetricName(name, base_name, domain_name, id));
                 if (base_name != null) {
                     baseNameCache.add(base_name);
                 }
@@ -289,68 +309,63 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     }
     
     /**
-     * Check whether a metric name exists in the cache and return its identifier.
+     * Check whether a metric name exists in the cache and return its data.
      * This method does not check the database except for initial population of
      * the cache, thus the cache may grow stale if new metrics are added within
      * the process.
      * @param name Name of the metric
-     * @return Identifier of the metric, or 0 if it is not found
+     * @return The metric name with identifier, or null if it is not found
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int check_metric(String name) throws SQLException, PropertyVetoException {
+    public MetricName check_metric(String name) throws SQLException, PropertyVetoException {
         return check_metric(name, false);
     }
     
     /**
      * Check whether a metric name exists in the cache or database and return
-     * its identifier.
+     * its data.
      * @param name Name of the metric
      * @param recache Whether to retrieve from the database. If true, then the
      * cache is checked first for the case-folded metric name, or if not found,
      * the case-folded metric name is searched in the database and the cache is
      * updated with a found metric ID. If false, only the cache is checked for
      * the case-folded metric name.
-     * @return Identifier of the metric, or 0 if it is not found
+     * @return The metric name with identifier, or null if it is not found
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public int check_metric(String name, boolean recache) throws SQLException, PropertyVetoException {
+    public MetricName check_metric(String name, boolean recache) throws SQLException, PropertyVetoException {
         fillNameCache();
         
         String key = caseFold(name);
-        Integer cacheId = nameCache.get(key);
-        if (cacheId != null) {
-            return cacheId;
+        MetricName found = nameCache.get(key);
+        if (found != null) {
+            return found;
         }
 
-        Integer idMetric = null;
         if (recache) {
             getCheckMetricStmt();
 
             checkMetricStmt.setString(1, key);
             try (ResultSet rs = checkMetricStmt.executeQuery()) {
-                while (rs.next()) {
-                    idMetric = rs.getInt("metric_id");
+                if (rs.next()) {
+                    found = new MetricName(rs.getString("name"), rs.getString("base_name"), rs.getString("domain_name"), rs.getInt("metric_id"));
                 }
             }
 
-            nameCache.put(key, idMetric);
+            nameCache.put(key, found);
         }
         
-        if (idMetric == null) {
-            return 0;
-        }
-        
-        return idMetric;
+        return found;
     }
     
     /**
      * Update a metric to refer to a different name.
-     * @param metric_id The internal identifier of the metric.
+     * @param metric_id The internal identifier of the metric to update.
      * @param old_name The old name of the metric
      * @param name Object describing the new name of the metric, and possibly the
-     * components in the name.
+     * components in the name. The metric ID in the object is ignored.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
@@ -358,13 +373,13 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         if (nameCache != null) {
             // Safety check based on cache
             String key = caseFold(old_name);
-            Integer cacheId = nameCache.get(key);
-            if (cacheId != null && cacheId != metric_id) {
+            MetricName cacheName = nameCache.get(key);
+            if (cacheName != null && cacheName.getId() != metric_id) {
                 throw new IllegalArgumentException("Incorrect metric ID provided");
             }
             // Update the name cache to use the new name to refer to the metric ID
-            nameCache.put(key, 0);
-            nameCache.put(caseFold(name.getName()), metric_id);
+            nameCache.put(key, null);
+            nameCache.put(caseFold(name.getName()), new MetricName(name.getName(), name.getBaseName(), name.getDomainName(), metric_id));
         }
         
         PreparedStatement pstmt = updateMetricStmt.getPreparedStatement();
@@ -390,8 +405,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         if (nameCache != null) {
             // Mark the name as removed in the cache, but only if it refers to this metric ID
             String key = caseFold(old_name);
-            if (!nameCache.containsKey(key) || nameCache.get(key) == metric_id) {
-                nameCache.put(key, 0);
+            if (!nameCache.containsKey(key) || nameCache.get(key).getId() == metric_id) {
+                nameCache.put(key, null);
             }
         }
         

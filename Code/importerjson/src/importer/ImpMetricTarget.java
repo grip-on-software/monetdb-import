@@ -20,7 +20,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -36,7 +35,6 @@ public class ImpMetricTarget extends BaseImport {
     public void parser() {
         JSONParser parser = new JSONParser();
         int projectId = this.getProjectID();
-        int metric_id = 0;
  
         try (
             MetricDb metricDb = new MetricDb();
@@ -56,13 +54,13 @@ public class ImpMetricTarget extends BaseImport {
                 String base_name = (String) jsonObject.get("base_name");
                 String domain_name = (String) jsonObject.get("domain_name");
                 
-                metric_id = metricDb.check_metric(name);
-                if (metric_id == 0) {
+                MetricName metricName = metricDb.check_metric(name);
+                if (metricName == null) {
                     metricDb.insert_metric(new MetricName(name, base_name, domain_name));
-                    metric_id = metricDb.check_metric(name, true);
+                    metricName = metricDb.check_metric(name, true);
                 }
                 
-                metricDb.insert_target(projectId, revision, metric_id, type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
+                metricDb.insert_target(projectId, revision, metricName.getId(), type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
             }            
         }
         catch (FileNotFoundException ex) {
@@ -88,9 +86,9 @@ public class ImpMetricTarget extends BaseImport {
                 String metric_name = rs.getString("name");
                 MetricName nameParts = metricDb.split_metric_name(metric_name, true);
                 if (nameParts.getBaseName() != null && nameParts.getDomainName() != null) {
-                    int other_metric_id = metricDb.check_metric(nameParts.getName());
-                    if (other_metric_id != 0 && other_metric_id != metric_id) {
-                        metricDb.delete_metric(metric_id, metric_name, other_metric_id);
+                    MetricName other_metric = metricDb.check_metric(nameParts.getName());
+                    if (other_metric != null && other_metric.getId() != metric_id) {
+                        metricDb.delete_metric(metric_id, metric_name, other_metric.getId());
                     }
                     else {
                         metricDb.update_metric(metric_id, metric_name, nameParts);
