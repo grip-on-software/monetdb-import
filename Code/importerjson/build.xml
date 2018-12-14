@@ -110,7 +110,7 @@
             </fileset>
             <report format="frames" todir="${build.dir}/test/html" />
         </junitreport>
-        <move file="${build.dir}/test/html/index.html" tofile="${build.dir}/test/html/htmlreport.html" />
+        <move file="${build.dir}/test/html/index.html" tofile="${build.dir}/test/html/htmlReport.html" />
         <jacoco:report>
             <executiondata>
                 <file file="${build.dir}/test/jacoco.exec" />
