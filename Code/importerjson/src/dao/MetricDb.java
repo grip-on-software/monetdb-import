@@ -36,6 +36,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertMetricTargetStmt = null;
     private PreparedStatement checkSourceIdStmt = null;
     private BatchedStatement insertSourceIdStmt = null;
+    private PreparedStatement checkDefaultTargetStmt = null;
+    private BatchedStatement insertDefaultTargetStmt = null;
     private HashMap<String, MetricName> nameCache = null;
     private HashSet<String> baseNameCache = null;
     
@@ -117,6 +119,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricTargetStmt = new BatchedStatement(sql);
         sql = "insert into gros.source_id(project_id,domain_name,url,source_id) values (?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
+        sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target) values (?,?,?,?,?,?,?);";
+        insertDefaultTargetStmt = new BatchedStatement(sql);
     }
     
     private void getInsertMetricStmt() throws SQLException, PropertyVetoException {
@@ -239,6 +243,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         insertSourceIdStmt.execute();
         insertSourceIdStmt.close();
+        
+        if (checkDefaultTargetStmt != null) {
+            checkDefaultTargetStmt.close();
+            checkDefaultTargetStmt = null;
+        }
+        
+        insertDefaultTargetStmt.execute();
+        insertDefaultTargetStmt.close();
 
         clearCaches();
     }
@@ -550,6 +562,18 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         }
     }
     
+    /**
+     * Check whether the given domain name in the project's metric source has
+     * the given source ID in the database.
+     * @param projectId Identifier of the project in which the domain name exists.
+     * @param domain_name The name of the object that is being measured.
+     * @param url The URL of the source at which the source ID may be used to
+     * identify the domain object.
+     * @param source_id The identifier of the domain object at the source.
+     * @return Whether the source ID is registered for the domain name.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public boolean check_source_id(int projectId, String domain_name, String url, String source_id) throws SQLException, PropertyVetoException {
         getCheckSourceIdStmt();
         
@@ -568,6 +592,16 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         return false;
     }
     
+    /**
+     * Insert a source ID for the given domain name for the project's metric source.
+     * @param projectId Identifier of the project in which the domain name exists.
+     * @param domain_name The name of the object that is being measured.
+     * @param url The URL of the source at which the source ID may be used to
+     * identify the domain object.
+     * @param source_id The identifier of the domain object at the source.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
     public void insert_source_id(int projectId, String domain_name, String url, String source_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertSourceIdStmt.getPreparedStatement();
         
@@ -577,6 +611,64 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.setString(4, source_id);
         
         insertSourceIdStmt.batch();
+    }
+
+    private void getCheckDefaultTargetStmt() throws SQLException, PropertyVetoException {
+        if (checkDefaultTargetStmt == null) {
+            Connection con = insertDefaultTargetStmt.getConnection();
+            String sql = "SELECT base_name FROM gros.metric_default WHERE base_name = ? AND version_id = ?";
+            checkDefaultTargetStmt = con.prepareStatement(sql);
+        }
+    }
+    
+    /**
+     * Check whether the given metric base name has a default target value for the revision.
+     * @param base_name The base name of the metric that has a default target value.
+     * @param version The revision in which the default target value applies to the metric.
+     * @return Whether the metric name has a default target value at the revision.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public boolean check_default_target(String base_name, String version) throws SQLException, PropertyVetoException {
+        getCheckDefaultTargetStmt();
+        
+        checkDefaultTargetStmt.setString(1, base_name);
+        checkDefaultTargetStmt.setString(2, version);
+        
+        try (ResultSet rs = checkDefaultTargetStmt.executeQuery()) {
+            if (rs.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Insert default target values at a revision for the given metric base name.
+     * @param base_name The base name of the metric that has a default target value.
+     * @param version The revision in which the default target value applies to the metric.
+     * @param commit_date The commit date of the revision.
+     * @param direction Whether the metric improves if the metric value increases.
+     * This is true if a higher value is better, false if a lower value is better,
+     * or null if it is not known or not applicable for this metric.
+     * @param perfect The perfect value of the metric, or null if it is not known.
+     * @param target The target value of the metric, or null if it is not known.
+     * @param low_target The low target value of the metric, or null if it is not known.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_default_target(String base_name, String version, Timestamp commit_date, Boolean direction, Float perfect, Float target, Float low_target) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = insertDefaultTargetStmt.getPreparedStatement();
+        
+        pstmt.setString(1, base_name);
+        pstmt.setString(2, version);
+        pstmt.setTimestamp(3, commit_date);
+        setBoolean(pstmt, 4, direction);
+        setFloat(pstmt, 5, perfect);
+        setFloat(pstmt, 6, target);
+        setFloat(pstmt, 7, low_target);
+        
+        insertDefaultTargetStmt.batch();
     }
 
 }

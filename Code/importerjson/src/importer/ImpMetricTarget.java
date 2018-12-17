@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -115,6 +116,61 @@ public class ImpMetricTarget extends BaseImport {
         catch (IOException ex) {
             getLogger().log(Level.WARNING, "Cannot load extra base names: {0}", ex.getMessage());
         }
+    }
+    
+    public void updateDefaultTargets() {
+        JSONParser parser = new JSONParser();
+ 
+        try (
+            MetricDb metricDb = new MetricDb();
+            FileReader fr = new FileReader(new File(getRootPath().toFile(), "data_hqlib.json"))
+        ) {
+            JSONArray a = (JSONArray) parser.parse(fr);
+            
+            for (Object o : a) {
+                JSONObject jsonObject = (JSONObject) o;
+                
+                String base_name = (String) jsonObject.get("class_name");
+                String revision = (String) jsonObject.get("version_id");
+                String commit_date = (String) jsonObject.get("commit_date");
+                String direction = (String) jsonObject.get("direction");
+                String perfect = (String) jsonObject.get("perfect_value");
+                String target = (String) jsonObject.get("target_value");
+                String low_target = (String) jsonObject.get("low_target_value");
+                
+                Timestamp date = Timestamp.valueOf(commit_date);
+                Boolean higherIsBetter = null;
+                if ("1".equals(direction)) {
+                    higherIsBetter = true;
+                }
+                else if ("-1".equals(direction)) {
+                    higherIsBetter = false;
+                }
+
+                if (!metricDb.check_default_target(base_name, revision)) {
+                    metricDb.insert_default_target(base_name, revision, date, higherIsBetter, parseTarget(perfect), parseTarget(target), parseTarget(low_target));
+                }
+            }            
+        }
+        catch (FileNotFoundException ex) {
+            getLogger().log(Level.WARNING, "Cannot import metric default targets: {0}", ex.getMessage());
+        }
+        catch (Exception ex) {
+            logException(ex);
+        }        
+    }
+
+    protected Float parseTarget(String value) {
+        Float target = null;
+        if (value != null) {
+            try {
+                target = Float.parseFloat(value);
+            }
+            catch (NumberFormatException ex) {
+                getLogger().log(Level.WARNING, "Invalid value for target", ex);
+            }
+        }
+        return target;
     }
 
     @Override

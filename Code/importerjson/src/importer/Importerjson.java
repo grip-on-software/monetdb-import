@@ -94,8 +94,10 @@ public class Importerjson {
     }
     
     private final static List<String> SPECIAL_TASKS = Arrays.asList(
-        "sprintlink", "developerproject", "developerlink", "metric_domain_name",
-        "repo_sources", "encrypt"
+        "sprintlink", "developerproject", "developerlink",
+        "metric_domain_name", "metric_default_target",
+        "repo_sources",
+        "encrypt"
     );
         
     private final static HashMap<String, Class<? extends BaseImport>> TASK_IMPORTERS = retrieveImporters();
@@ -396,6 +398,7 @@ public class Importerjson {
         ImpCommit impCommit = new ImpCommit();
         impCommit.setProjectName(projectName);
         impCommit.setProjectID(projectID);
+        ImpMetricTarget impMetric = new ImpMetricTarget();
         if (tasks.contains("sprintlink")) {
             long startTime = System.currentTimeMillis();
             
@@ -422,13 +425,19 @@ public class Importerjson {
         }
         
         if (tasks.contains("metric_domain_name")) {
-            ImpMetricTarget impMetric = new ImpMetricTarget();
-            
             long startTime = System.currentTimeMillis();
             
             impMetric.updateDomainNames();
                         
-            showCompleteTask("Updated metric domain names", startTime);            
+            showCompleteTask("Updated metric domain names", startTime);
+        }
+        
+        if (tasks.contains("metric_default_target")) {
+            long startTime = System.currentTimeMillis();
+            
+            impMetric.updateDefaultTargets();
+                        
+            showCompleteTask("Updated metric default targets", startTime);
         }
         
         if (tasks.contains("repo_source")) {
