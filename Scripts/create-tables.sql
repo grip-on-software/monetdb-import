@@ -7,7 +7,7 @@ CREATE TABLE "gros"."issue" (
 	"priority"       INTEGER    NULL,
 	"resolution"     INTEGER    NULL,
 	"fixversion"     INTEGER    NULL,
-	"bugfix"         BOOL    NULL,
+	"bugfix"         BOOLEAN    NULL,
 	"watchers"       INTEGER    NOT NULL,
 	"created"     TIMESTAMP  NULL,
 	"updated"     TIMESTAMP  NULL,
@@ -24,13 +24,13 @@ CREATE TABLE "gros"."issue" (
 	"resolution_date"        TIMESTAMP    NULL,
 	"sprint_id"      INTEGER    NULL,
 	"updated_by"     VARCHAR(64)    NULL,
-	"rank_change"    BOOL    NULL,
+	"rank_change"    BOOLEAN    NULL,
 	"epic"           VARCHAR(20)    NULL,
-	"impediment"     BOOL     NOT NULL,
+	"impediment"     BOOLEAN     NOT NULL,
 	"ready_status"   INTEGER    NULL,
 	"ready_status_reason" TEXT  NULL,
-	"approved"       BOOL    NULL,
-	"approved_by_po" BOOL    NULL,
+	"approved"       BOOLEAN    NULL,
+	"approved_by_po" BOOLEAN    NULL,
 	"labels"         INTEGER    NOT NULL,
 	"version"        INTEGER    NULL,
 	"expected_ltcs"  INTEGER    NULL,
@@ -112,7 +112,7 @@ CREATE TABLE "gros"."fixversion" (
 	"description"     VARCHAR(500)   NULL,
 	"start_date"      DATE  NULL,
 	"release_date"    DATE  NULL,
-	"released"        BOOL  NOT NULL,
+	"released"        BOOLEAN  NOT NULL,
         CONSTRAINT "pk_fixversion_id" PRIMARY KEY ("id")
 );
 
@@ -148,7 +148,7 @@ CREATE TABLE "gros"."issuelink" (
 	"from_key"        VARCHAR(20) NOT NULL,
 	"to_key"          VARCHAR(20) NOT NULL,
 	"relationship_type"     INTEGER NOT NULL,
-	"outward"         BOOL    NOT NULL,
+	"outward"         BOOLEAN    NOT NULL,
 	"start_date"      TIMESTAMP   NULL,
 	"end_date"        TIMESTAMP   NULL,
         CONSTRAINT "pk_issuelink_id" PRIMARY KEY ("from_key","to_key","relationship_type","outward")
@@ -214,7 +214,7 @@ CREATE TABLE "gros"."metric_default" (
 	"base_name"      VARCHAR(100) NOT NULL,
 	"version_id"     VARCHAR(100) NOT NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
-	"direction"      BOOL      NULL,
+	"direction"      BOOLEAN      NULL,
 	"perfect"        FLOAT     NULL,
 	"target"         FLOAT     NULL,
 	"low_target"     FLOAT     NULL,
@@ -403,8 +403,8 @@ CREATE TABLE "gros"."gitlab_repo" (
 	"gitlab_id" INTEGER NOT NULL,
 	"description" TEXT NULL,
 	"create_date" TIMESTAMP NOT NULL,
-	"archived" BOOL NOT NULL,
-	"has_avatar" BOOL NOT NULL,
+	"archived" BOOLEAN NOT NULL,
+	"has_avatar" BOOLEAN NOT NULL,
 	"star_count" INTEGER NOT NULL,
 		CONSTRAINT "pk_gitlab_repo_id" PRIMARY KEY ("repo_id", "gitlab_id")
 );
@@ -414,8 +414,8 @@ CREATE TABLE "gros"."github_repo" (
 	"github_id" INTEGER NOT NULL,
 	"description" TEXT NULL,
 	"create_date" TIMESTAMP NOT NULL,
-	"private" BOOL NOT NULL,
-	"forked" BOOL NOT NULL,
+	"private" BOOLEAN NOT NULL,
+	"forked" BOOLEAN NOT NULL,
 	"star_count" INTEGER NOT NULL,
 	"watch_count" INTEGER NOT NULL,
         CONSTRAINT "pk_github_repo_id" PRIMARY KEY ("repo_id", "github_id")
@@ -535,7 +535,7 @@ CREATE TABLE "gros"."bigboat_status" (
 	"project_id" INTEGER NOT NULL,
 	"name" VARCHAR(100) NOT NULL,
 	"checked_date" TIMESTAMP NOT NULL,
-	"ok" BOOL NOT NULL,
+	"ok" BOOLEAN NOT NULL,
 	"value" FLOAT NULL,
 	"max" FLOAT NULL
 );
