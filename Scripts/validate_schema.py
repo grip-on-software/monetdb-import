@@ -179,6 +179,17 @@ def parse_documentation(session, url, data=None):
 
     field = r"^\*\* '''[a-z_]+'''"
     tokens = {
+        'special_type': {
+            'pattern': re.compile(r"^\* '''([A-Z]+\([A-Za-z0-9, ]+\))"),
+            'line': {
+                'type': {
+                    'pattern': re.compile(r"^\* '''([A-Z]+)\([A-Za-z0-9, ]+\)")
+                },
+                'limit': {
+                    'pattern': re.compile(r".* maximum length limitation is (\d+)")
+                }
+            }
+        },
         'table': {
             'pattern': re.compile(r"^\* '''([a-z_]+)'''"),
             'line': {
@@ -225,7 +236,7 @@ def parse_documentation(session, url, data=None):
 
     return parse(tokens, request.text.splitlines(), data=data)
 
-def check_missing(one, two, key, extra=''):
+def check_existing(one, two, key, extra=''):
     """
     Check if two dictionaries that both have a key have subdictionaries with the
     same subkeys stored for that key.
@@ -251,7 +262,7 @@ def check_missing(one, two, key, extra=''):
 
     return violations
 
-def check_equal(one, two, key, extra=''):
+def check_equal(one, two, key, extra='', special_type=None):
     """
     Check if two dictionaries have the same value stored for a key if the first
     dictionary has that key.
@@ -264,9 +275,16 @@ def check_equal(one, two, key, extra=''):
             logging.warning('Missing %s%s', key, extra)
             return 1
 
-        if one[key] != two[key]:
+        value = one[key]
+        while special_type is not None and value in special_type:
+            if "limit" in special_type[value]:
+                value = "{type}({limit})".format(**special_type[value])
+            else:
+                value = special_type[value]["type"]
+
+        if value != two[key]:
             logging.warning('%s%s does not match: %s vs. %s', key, extra,
-                            one[key], two[key])
+                            value, two[key])
             return 1
 
     return 0
@@ -305,7 +323,17 @@ def validate_schema(schema, documentation):
     Compare the documentation against the database schema.
     """
 
-    violations = check_missing(schema, documentation, 'table')
+    violations = check_existing(schema, documentation, 'table')
+
+    # Aliases
+    documentation['special_type'].update({
+        'INT': {
+            'type': 'INTEGER'
+        },
+        'BOOL': {
+            'type': 'BOOLEAN'
+        }
+    })
 
     for table_name, table in schema['table'].items():
         if table_name not in documentation['table']:
@@ -314,21 +342,27 @@ def validate_schema(schema, documentation):
         logging.info('Checking table %s', table_name)
         table_text = ' for table {}'.format(table_name)
         doc_table = documentation['table'][table_name]
-        violations += check_equal(doc_table, table, 'primary_key_combined', table_text)
-        violations += check_missing(table, doc_table, 'field', table_text)
+        violations += check_equal(doc_table, table, 'primary_key_combined',
+                                  table_text)
+        violations += check_existing(table, doc_table, 'field', table_text)
 
         for field_name, field in table['field'].items():
             if field_name not in doc_table['field']:
                 continue
 
-            field_text = ' of field {} in table {}'.format(field_name, table_name)
+            field_text = ' of field {} in table {}'.format(field_name,
+                                                           table_name)
             doc_field = doc_table['field'][field_name]
+
+            violations += check_equal(doc_field, field, 'type', field_text,
+                                      documentation['special_type'])
             if check_equal(field, doc_field, 'null', field_text) == 0:
                 violations += check_equal(doc_field, field, 'null', field_text)
             else:
                 violations += 1
 
-            violations += check_equal(field, doc_field, 'primary_key', field_text)
+            violations += check_equal(field, doc_field, 'primary_key',
+                                      field_text)
             if 'primary_key' in doc_table:
                 if 'primary_key_combined' not in table or \
                     table['primary_key_combined'] != field_name:
