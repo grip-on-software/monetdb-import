@@ -101,7 +101,7 @@ CREATE TABLE "gros"."project_developer" (
 CREATE TABLE "gros"."project_salt" (
 	"project_id"      INTEGER   NOT NULL,
 	"salt"       VARCHAR(32)    NOT NULL,
-	"pepper"     vARCHAR(32)    NOT NULL,
+	"pepper"     VARCHAR(32)    NOT NULL,
 		CONSTRAINT "pk_project_salt_id" PRIMARY KEY ("project_id")
 );
 
