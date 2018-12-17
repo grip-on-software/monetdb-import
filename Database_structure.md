@@ -1137,9 +1137,13 @@ dashboard project definition.
         missing_source). Prior to the introduction of compact history
         (September 2017), all values are integers.
     -   **category** - VARCHAR(100): 'red' (below low target), 'yellow'
-        (below target), green (at or above target), perfect (cannot be
-        improved), grey (disabled), missing (internal problem),
-        missing_source (external problem).
+        (below target), 'green' (at or above target), 'perfect' (cannot
+        be improved), 'grey' (disabled), 'missing' (internal problem),
+        'missing_source' (external problem). The 'perfect' category is
+        indicated by a light green color, while the 'missing' and
+        'missing_source' are indicated by a grey color. The other
+        categories use their category name as color in the quality
+        report.
     -   **date** - TIMESTAMP: Time at which the measurement took place.
         This is NULL if the date could not be obtained.
     -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
@@ -1159,7 +1163,8 @@ dashboard project definition.
     (project_id, version_id).
     -   **project_id** - INT - reference to project.project_id: The
         project to which the norm changes apply.
-    -   **version_id** - INT: Subversion revision number.
+    -   **version_id** - VARCHAR(100): SHA hash or revision number
+        belonging to the change of the target norms.
     -   **developer** - VARCHAR(64): Developer or quality lead that made
         the change.
     -   **message** - TEXT: Commit message describing the change. This
@@ -1179,8 +1184,9 @@ dashboard project definition.
     project.
     -   **project_id** - INT - reference to project.project_id: The
         project to which the target changes apply.
-    -   **version_id** - INT - reference to metric_version.version_id:
-        The version in which the changes were made.
+    -   **version_id** - VARCHAR(100) - reference to
+        metric_version.version_id: SHA hash or revision number belonging
+        to the change of the target norm.
     -   **metric_id** - INT - reference to metric.metric_id: Metric
         whose norms are changed.
     -   **type** - VARCHAR(100): Type of change: 'options',
@@ -1193,6 +1199,34 @@ dashboard project definition.
         describing the reason of the norm change. This is the empty
         string if no comment is provided or NULL if it could not be
         obtained.
+
+
+-   **metric_default**: The default values of metric targets in the
+    quality report repository at points in time that these values were
+    introduced or changed. Primary key is (base_name, version_id).
+    -   **base_name** - VARCHAR(100): Name of the metric that is being
+        measured, based on the class name from the quality report
+        repository used by the project definitions.
+    -   **version_id** - VARCHAR(100): SHA hash or revision number
+        belonging to the introduction or alteration of the default
+        target values.
+    -   **commit_date** - TIMESTAMP: Time at which the introduction or
+        alteration took place.
+    -   **direction** - BOOL: Whether the metric improves if the metric
+        value increases. This is true if a higher value is better, false
+        if a lower value is better, or NULL if it is not known or not
+        applicable for the metric.
+    -   **perfect** - INT: The perfect value of the metric (there are no
+        better values possible, indicated by a light green color in the
+        quality report). This is NULL if the perfect value is not known.
+    -   **target** - INT: The target value of the metric (values equal
+        or better to the target are indicated by a green color in the
+        quality report). This is NULL if the target value is not known.
+    -   *low_target*' - INT: The low target value of the metric (values
+        equal or better than the low target, but worse than the target,
+        are indicated by a yellow color in the quality report, while
+        worse values are indicated by a red value). This is NULL if the
+        low target value is not known.
 
 ## Docker dashboard tables (BigBoat)
 
