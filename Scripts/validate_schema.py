@@ -52,6 +52,47 @@ def parse_args(config):
 
     return args
 
+def handle_match(line, current_tokens, data, parent_data, context):
+    """
+    Perform actions based on a match of a token on the given line.
+    """
+
+    name = context['name']
+    token = context['token']
+    groups = context['groups']
+
+    if name == '__end':
+        # May not work embeddedly
+        return token['old'], None
+
+
+    if len(groups) > 1:
+        parent_data[name] = groups
+    elif not groups:
+        parent_data[name] = True
+    elif 'within' in token or 'line' in token:
+        if name not in parent_data:
+            parent_data[name] = {}
+
+        parent_data[name][groups[0]] = {}
+    else:
+        parent_data[name] = groups[0]
+
+    if 'line' in token:
+        test_line(line, token['line'], data, parent_data[name][groups[0]])
+    if 'within' in token:
+        old_current_tokens = current_tokens.copy()
+        current_tokens = token['within']
+        if 'end' in token:
+            current_tokens['__end'] = {
+                'pattern': token['end'],
+                'old': old_current_tokens
+            }
+
+        return current_tokens, parent_data[name][groups[0]]
+
+    return False
+
 def test_line(line, current_tokens, data, parent_data=None):
     """
     Test whether the current token scope match the given line.
@@ -61,38 +102,16 @@ def test_line(line, current_tokens, data, parent_data=None):
         parent_data = data
 
     for name, token in current_tokens.items():
-        result = token['pattern'].match(line)
-        if result:
-            if name == '__end':
-                # May not work embeddedly
-                return token['old'], None
-
-            groups = result.groups()
-
-            if len(groups) > 1:
-                parent_data[name] = groups
-            elif not groups:
-                parent_data[name] = True
-            elif 'within' in token or 'line' in token:
-                if name not in parent_data:
-                    parent_data[name] = {}
-
-                parent_data[name][groups[0]] = {}
-            else:
-                parent_data[name] = groups[0]
-
-            if 'line' in token:
-                test_line(line, token['line'], data, parent_data[name][groups[0]])
-            if 'within' in token:
-                old_current_tokens = current_tokens.copy()
-                current_tokens = token['within']
-                if 'end' in token:
-                    current_tokens['__end'] = {
-                        'pattern': token['end'],
-                        'old': old_current_tokens
-                    }
-
-                return current_tokens, parent_data[name][groups[0]]
+        match = token['pattern'].match(line)
+        if match:
+            groups = match.groups()
+            result = handle_match(line, current_tokens, data, parent_data, {
+                "name": name,
+                "token": token,
+                "groups": groups
+            })
+            if result:
+                return result
 
     return current_tokens, parent_data
 
