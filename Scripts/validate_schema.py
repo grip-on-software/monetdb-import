@@ -415,7 +415,7 @@ def main():
 
     if violations > 0:
         logging.warning('Schema violations: %d', violations)
-        sys.exit(1)
+        sys.exit(2)
     else:
         logging.info('No schema violations detected')
         sys.exit(0)

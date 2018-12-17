@@ -78,7 +78,16 @@ pipeline {
                     sh 'pip install -r Scripts/requirements.txt'
                     sh 'pip install pylint'
                     sh 'pylint Scripts/*.py'
-                    sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING --branch $BRANCH_NAME', returnStatus: true
+                    script {
+                        def ret = sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING --branch $BRANCH_NAME', returnStatus: true
+                        if (ret == 2) {
+                            currentBuild.result = 'UNSTABLE'
+                        }
+                        else if (ret != 0) {
+                            currentBuild.result = 'FAILURE'
+                            error("Validate state failed with exit code ${ret}")
+                        }
+                    }
                 }
             }
         }
