@@ -88,8 +88,8 @@ purpose.
         changelog. The earliest version is has a changelog id of 0.
     -   **key** - VARCHAR(Issue key): The JIRA issue key. **There may be
         multiple rows with the same key.**
-    -   **title** - VARCHAR(250): The human-readable title of the issue.
-        This reflects the title at the moment the issue version existed,
+    -   **title** - TEXT: The human-readable title of the issue. This
+        reflects the title at the moment the issue version existed,
         based on the changelog.
     -   **type** - INT - reference to issuetype.id: The issue type
         (Story, Bug, Use Case) as an internal JIRA identifier, or NULL
@@ -1049,9 +1049,9 @@ These tables include data from Gitlab/Git and Subversion.
         be multiple rows with the same issue_id.**
     -   **changelog_id** - INT: Version number deduced from the
         changelog. The earliest version is has a changelog id of 0.
-    -   **title** - VARCHAR(250): The human-readable title of the work
-        item. This reflects the title at the moment the work item
-        version existed, based on the changelog.
+    -   **title** - TEXT: The human-readable title of the work item.
+        This reflects the title at the moment the work item version
+        existed, based on the changelog.
     -   **type** - VARCHAR(64): The work item type (Task, Bug, UseCase),
         or NULL if this information is not provided by the API.
     -   **priority** - INT: The work item priority (0-99), or NULL if
