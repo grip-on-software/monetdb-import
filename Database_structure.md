@@ -46,14 +46,14 @@ specification. They describe the constraints set on the values stored in
 such fields more thoroughly and uniformly.
 
 -   **VARCHAR(Issue key)**: A field containing a JIRA issue key. The
-    maximum length limitation of this field is currently 20 characters,
-    which should hold most project keys and issue sequence numbers.
+    maximum length limitation is 20 characters. This field holds project
+    keys, a one-character delimiter and issue sequence numbers.
 -   **VARCHAR(JIRA developer)**: A field containing a developer short
-    name from JIRA. These are usually not more than 6 characters in the
-    source data, but the limit is set to 64 characters for all fields
-    for encryption purposes.
+    name from JIRA. The maximum length limitation is 64 characters for
+    all fields for encryption purposes, even though the unencrypted
+    source data is usually not more than 6 characters.
 -   **VARCHAR(Git branch)**: A field containing a Git branch object
-    name. The maximum length limitation of this field is 255 characters.
+    name. The maximum length limitation is 255 characters.
 -   **INT(row encryption)**: A field specifying which encryption level
     is applied to certain fields in the given row has encrypted fields.
     This field exists in tables with [sensitive
@@ -1216,17 +1216,18 @@ dashboard project definition.
         value increases. This is true if a higher value is better, false
         if a lower value is better, or NULL if it is not known or not
         applicable for the metric.
-    -   **perfect** - INT: The perfect value of the metric (there are no
-        better values possible, indicated by a light green color in the
-        quality report). This is NULL if the perfect value is not known.
-    -   **target** - INT: The target value of the metric (values equal
+    -   **perfect** - FLOAT: The perfect value of the metric (there are
+        no better values possible, indicated by a light green color in
+        the quality report). This is NULL if the perfect value is not
+        known.
+    -   **target** - FLOAT: The target value of the metric (values equal
         or better to the target are indicated by a green color in the
         quality report). This is NULL if the target value is not known.
-    -   *low_target*' - INT: The low target value of the metric (values
-        equal or better than the low target, but worse than the target,
-        are indicated by a yellow color in the quality report, while
-        worse values are indicated by a red value). This is NULL if the
-        low target value is not known.
+    -   **low_target** - FLOAT: The low target value of the metric
+        (values equal or better than the low target, but worse than the
+        target, are indicated by a yellow color in the quality report,
+        while worse values are indicated by a red value). This is NULL
+        if the low target value is not known.
 
 ## Docker dashboard tables (BigBoat)
 
