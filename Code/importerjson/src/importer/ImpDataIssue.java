@@ -160,16 +160,6 @@ public class ImpDataIssue extends BaseImport {
             }
         }
 
-        private void setDouble(PreparedStatement pstmt, int index, String value, BigDecimal maximum) throws SQLException {
-            if (value != null) {
-                BigDecimal points = BigDecimal.valueOf(Double.parseDouble(value));
-                pstmt.setBigDecimal(index, points.min(maximum));
-            }
-            else {
-                pstmt.setNull(index, java.sql.Types.NUMERIC);
-            }
-        }
-        
         private void setBoolean(PreparedStatement pstmt, int index, String value) throws SQLException {
             // For booleans, "-1" means false, "1" means true, and null or "0" means missing.
             if (value == null || value.equals("0")) {

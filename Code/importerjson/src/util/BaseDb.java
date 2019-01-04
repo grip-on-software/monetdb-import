@@ -6,6 +6,7 @@
 package util;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -279,7 +280,7 @@ public class BaseDb {
     }
     
     /**
-     * Set an floating point parameter to a prepared statement. If the parameter
+     * Set a floating point parameter to a prepared statement. If the parameter
      * is null, then this method performs the appropriate action to set the
      * designated parameter to NULL.
      * @param pstmt The prepared statement to set the parameter in
@@ -293,6 +294,26 @@ public class BaseDb {
         }
         else {
             pstmt.setNull(index, java.sql.Types.FLOAT);
+        }
+    }
+    
+    /**
+     * Set a decimal value parameter to a prepared statement parsed from a string.
+     * If the parameter is null, then this method performs the appropriate
+     * action to set the designated parameter to NULL.
+     * @param pstmt The prepared statement to set the parameter in
+     * @param index The index of the parameter
+     * @param value The parameter value to parse, possibly null
+     * @param maximum The maximum value that the value may have in the field
+     * @throws SQLException If a database access error occurred
+     */
+    protected void setDouble(PreparedStatement pstmt, int index, String value, BigDecimal maximum) throws SQLException {
+        if (value != null) {
+            BigDecimal points = BigDecimal.valueOf(Double.parseDouble(value));
+            pstmt.setBigDecimal(index, points.min(maximum));
+        }
+        else {
+            pstmt.setNull(index, java.sql.Types.NUMERIC);
         }
     }
     

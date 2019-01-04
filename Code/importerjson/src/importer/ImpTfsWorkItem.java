@@ -11,6 +11,7 @@ import dao.TeamDb;
 import java.beans.PropertyVetoException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -27,9 +28,11 @@ public class ImpTfsWorkItem extends BaseImport {
     private static final String[] FIELDS = {
         "issue_id", "changelog_id", "title", "type", "priority", "created",
         "updated", "description", "duedate", "project_id", "status", "reporter",
-        "assignee", "attachments", "additional_information", "sprint_id",
-        "team_id", "updated_by", "labels"
+        "assignee", "attachments", "additional_information", "story_points",
+        "sprint_id", "team_id", "updated_by", "labels"
     };
+
+    private static final BigDecimal MAX_POINTS = BigDecimal.valueOf(999.0);
 
     private static String getInsertSql() {
         String[] fields = new String[FIELDS.length];
@@ -84,6 +87,7 @@ public class ImpTfsWorkItem extends BaseImport {
             setString(pstmt, ++index, (String) jsonObject.get("assignee"), 100);
             setInteger(pstmt, ++index, (String) jsonObject.get("attachments"));
             setString(pstmt, ++index, (String) jsonObject.get("additional_information"));
+            setDouble(pstmt, ++index, (String) jsonObject.get("story_points"), MAX_POINTS);
             
             String sprint_name = (String) jsonObject.get("sprint_name");
             Integer sprint_id = null;

@@ -55,6 +55,7 @@ CREATE TABLE "gros"."tfs_work_item" (
 	"assignee"       VARCHAR(100)    NULL,
 	"attachments"    INTEGER    NOT NULL,
 	"additional_information" TEXT  NULL,
+	"story_points"   DECIMAL(5,2)    NULL,
 	"sprint_id"      INTEGER    NULL,
 	"team_id"        INTEGER    NULL,
 	"updated_by"     VARCHAR(100)    NULL,
