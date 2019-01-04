@@ -275,16 +275,22 @@ def check_equal(one, two, key, extra='', special_type=None):
             logging.warning('Missing %s%s', key, extra)
             return 1
 
-        value = one[key]
-        while special_type is not None and value in special_type:
-            if "limit" in special_type[value]:
-                value = "{type}({limit})".format(**special_type[value])
+        first = one[key]
+        second = two[key]
+        while special_type is not None and first in special_type:
+            if "limit" in special_type[first]:
+                first = "{type}({limit})".format(**special_type[first])
             else:
-                value = special_type[value]["type"]
+                first = special_type[first]["type"]
 
-        if value != two[key]:
+        if isinstance(first, list):
+            first = tuple(first)
+        if isinstance(second, list):
+            second = tuple(second)
+
+        if first != second:
             logging.warning('%s%s does not match: %s vs. %s', key, extra,
-                            value, two[key])
+                            first, second)
             return 1
 
     return 0
@@ -393,7 +399,7 @@ def main():
     session.auth = auth
 
     documentation = parse_documentation(session, args.url.format(branch=''))
-    if args.branch != 'master':
+    if args.branch != 'master' and '{branch}' in args.url:
         if args.branch is None:
             branch = git.Repo('..').active_branch.name
         else:
