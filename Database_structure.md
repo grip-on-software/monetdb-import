@@ -155,7 +155,7 @@ purpose.
     -   **story_points** - DECIMAL(5,2): The number of points assigned
         to a story after the developers meet in a refinement and
         determine the difficulty of the story. If not yet set, then this
-        is NULL. Maximum value is 100 and two digits after the decimal
+        is NULL. Maximum value is 999 and two digits after the decimal
         point is allowed.
     -   **resolution_date** - TIMESTAMP: The time at which the issue was
         marked as resolved. This may be manually adjusted, but should
@@ -1090,6 +1090,11 @@ These tables include data from Gitlab/Git and Subversion.
         shown within a tab beside the description, or NULL if it is not
         filled in. Often used for extra implementation/functional
         details.
+    -   **story_points** - DECIMAL(5,2): The number of points assigned
+        to a product backlog item after the developers meet in a
+        refinement and determine the difficulty of the item. If not yet
+        set, then this is NULL. Maximum value is 999 and two digits
+        after the decimal point is allowed.
     -   **sprint_id** - INT - reference to tfs_sprint.sprint_id: The
         sprint that this work item is pulled into. The sprint can differ
         by version. If the work item is not yet explicitly added into a
