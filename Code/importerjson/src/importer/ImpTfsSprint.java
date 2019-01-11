@@ -38,7 +38,7 @@ public class ImpTfsSprint extends BaseImport {
             for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String name = (String) jsonObject.get("name");
+                String name = (String) jsonObject.get("sprint_name");
                 String start = (String) jsonObject.get("start_date");
                 String end = (String) jsonObject.get("end_date");
                 String repo_name = (String) jsonObject.get("repo_name");
