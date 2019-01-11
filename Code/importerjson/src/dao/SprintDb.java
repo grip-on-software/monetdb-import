@@ -434,6 +434,9 @@ public class SprintDb extends BaseDb implements AutoCloseable {
             checkTfsStmt.close();
             checkTfsStmt = null;
         }
+        
+        insertTfsStmt.execute();
+        insertTfsStmt.close();
 
         for (HashMap<Integer, JiraSprint> cache : keyCache.values()) {
             cache.clear();
