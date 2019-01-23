@@ -103,7 +103,7 @@ public class ImpMetricValue extends BaseImport {
             }
         }
         
-        private void readLocal(MetricReader reader, String path, boolean compression) throws IOException, MetricReadException, SQLException, PropertyVetoException {
+        public void readLocal(MetricReader reader, String path, boolean compression) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             try (
                 InputStream is = new FileInputStream(path);
                 InputStream gis = compression ? new GZIPInputStream(is, BUFFER_SIZE) : is
@@ -112,7 +112,7 @@ public class ImpMetricValue extends BaseImport {
             }
         }
 
-        private void readNetworked(MetricReader reader, URL url, boolean compression) throws IOException, MetricReadException, SQLException, PropertyVetoException {
+        public void readNetworked(MetricReader reader, URL url, boolean compression) throws IOException, MetricReadException, SQLException, PropertyVetoException {
             URLConnection con = url.openConnection();
             con.connect();
             try (
@@ -456,21 +456,33 @@ public class ImpMetricValue extends BaseImport {
     }
 
     @Override
-    public void parser(){
-        try (
-            MetricCollector collector = new MetricCollector(getExportPath(), getProjectID());
-            // Read metrics JSON using buffered readers so that Java does not run out of memory
-            BufferedJSONReader br = new BufferedJSONReader(new FileReader(getMainImportPath()))
-        ) {
-            collector.readBufferedJSON(br);
+    public void parser() {
+        File exportPath = getExportPath();
+        int i = 0;
+        for (String file : getImportFiles()) {
+            File path = new File(exportPath, file);
+            try (MetricCollector collector = new MetricCollector(exportPath, getProjectID())) {
+                if (i == 0) {
+                    // Read metrics JSON using buffered readers so that Java does not run out of memory
+                    try (BufferedJSONReader br = new BufferedJSONReader(new FileReader(path))) {
+                        collector.readBufferedJSON(br);
+                    }
+                }
+                else {
+                    // Read additional JSON files as compact history files.
+                    collector.readLocal(new CompactHistoryReader(collector), path.toString(), false);
+                }
+            }
+            catch (FileNotFoundException ex) {
+                getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
+            }
+            catch (Exception ex) {
+                logException(ex);
+            }
+            finally {
+                i++;
+            }
         }
-        catch (FileNotFoundException ex) {
-            getLogger().log(Level.WARNING, "Cannot import {0}: {1}", new Object[]{getImportName(), ex.getMessage()});
-        }
-        catch (Exception ex) {
-            logException(ex);
-        }
-        
     }
 
     @Override
@@ -480,7 +492,7 @@ public class ImpMetricValue extends BaseImport {
 
     @Override
     public String[] getImportFiles() {
-        return new String[]{"data_metrics.json"};
+        return new String[]{"data_metrics.json", "data_history.json"};
     }
 
 }
