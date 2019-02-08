@@ -404,25 +404,32 @@ purpose.
     -   **encryption** - INT(row encryption)
 
 
--   **project_developer**: Names of JIRA users, encrypted using the
-    project-specific salt rather than a global salt. Only use this for
-    matching against (encrypted) developer names from other sources. The
-    fields duplicate those of *developer*, but the values are encrypted
-    differently and some of the fields of the latter table may be
-    removed.
+-   **project_developer**: Names of JIRA or TFS users, encrypted using
+    the project-specific salt rather than a global salt. Only use this
+    for matching against (encrypted) developer names from other sources.
+    The fields duplicate those of *developer*, but the values are
+    encrypted differently and some of the fields of the latter table may
+    be removed. Primary key is (project_id, team_id, developer_id).
     -   **project_id** - INT - reference to project.project_id: Project
-        that the JIRA developer worked on.
-    -   **developer_id** - INT - reference to developer.id: Global
-        version of the developer.
-    -   **name** - VARCHAR(JIRA developer): Abbreviation of the JIRA
-        developer.
-    -   **display_name** - VARCHAR(100): Name of the JIRA developer as
-        displayed in the JIRA interface. This is NULL if there is no
-        source information for the display name.
-    -   **email** - VARCHAR(100): The email address of the JIRA
+        that the developer worked on.
+    -   **developer_id** - INT - reference to developer.id: Identifier
+        of the developer. If the team_id is NULL then this is the
+        internal JIRA developer identifier, otherwise it is the internal
+        alias identifier vcs_developer.alias_id.
+    -   **name** - VARCHAR(JIRA developer): Encrypted, possibly
+        abbreviated name of the developer.
+    -   **display_name** - VARCHAR(100): Encrypted name of the developer
+        as displayed in the JIRA or TFS interface. This is NULL if there
+        is no source information for the display name.
+    -   **email** - VARCHAR(100): The encrypted email address of the
         developer. This is NULL if there is no source information for
         the email address.
     -   **encryption** - INT(row encryption)
+    -   **team_id** - INT - reference to tfs_team.team_id: Team that the
+        TFS developer is part of, or NULL if the developer is not a part
+        of a team. A developer may be a part of multiple team/project
+        combinations and may thus appear multiple times (possibly with
+        different encryptions) in this table.
 
 
 -   **fixversion**: Indicators in JIRA issues of the version to fix the
@@ -597,6 +604,9 @@ These tables include data from Gitlab/Git and Subversion.
         that brought the commit to the master branch. This is NULL for
         commits whose originating branch cannot be deduced, such as for
         Subversion repositories.
+    -   **team_id** - INT - reference to tfs_team.team_id: The team of
+        the developer that made the commit. This is NULL if we cannot
+        determine in which team the developer was creating the commit.
 
 
 -   **vcs_developer**: User names from VCS commits. The same developer
