@@ -78,7 +78,7 @@ public class ImpTfsWorkItem extends BaseImport {
             setString(pstmt, ++index, (String) jsonObject.get("issuetype"));
             setInteger(pstmt, ++index, (String) jsonObject.get("priority"));
             setTimestamp(pstmt, ++index, (String) jsonObject.get("created_date"));
-            setTimestamp(pstmt, ++index, (String) jsonObject.get("updated_date"));
+            setTimestamp(pstmt, ++index, (String) jsonObject.get("updated"));
             setString(pstmt, ++index, (String) jsonObject.get("description"));
             setDate(pstmt, ++index, (String) jsonObject.get("duedate"));
             pstmt.setInt(++index, projectID);
