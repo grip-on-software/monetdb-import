@@ -409,7 +409,8 @@ purpose.
     for matching against (encrypted) developer names from other sources.
     The fields duplicate those of *developer*, but the values are
     encrypted differently and some of the fields of the latter table may
-    be removed. Primary key is (project_id, team_id, developer_id).
+    be removed. The table has a unique index of (project_id, team_id,
+    developer_id).
     -   **project_id** - INT - reference to project.project_id: Project
         that the developer worked on.
     -   **developer_id** - INT - reference to developer.id: Identifier
