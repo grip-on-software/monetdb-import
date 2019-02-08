@@ -413,9 +413,9 @@ purpose.
     -   **project_id** - INT - reference to project.project_id: Project
         that the developer worked on.
     -   **developer_id** - INT - reference to developer.id: Identifier
-        of the developer. If the team_id is NULL then this is the
+        of the developer. If there is no team_id then this is the
         internal JIRA developer identifier, otherwise it is the internal
-        alias identifier vcs_developer.alias_id.
+        TFS developer identifier tfs_developer.alias_id.
     -   **name** - VARCHAR(JIRA developer): Encrypted, possibly
         abbreviated name of the developer.
     -   **display_name** - VARCHAR(100): Encrypted name of the developer
