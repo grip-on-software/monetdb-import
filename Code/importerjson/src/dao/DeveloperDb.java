@@ -101,7 +101,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         String sql = "insert into gros.developer (name,display_name,email,local_domain) values (?,?,?,?);";
         insertDeveloperStmt = new BatchedStatement(sql);
 
-        sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encryption) values (?,?,?,?,?,?);";
+        sql = "insert into gros.project_developer (project_id, developer_id, name, display_name, email, encryption, team_id) values (?,?,?,?,?,?,?);";
         insertProjectDeveloperStmt = new BatchedStatement(sql);
         
         sql = "insert into gros.ldap_developer (project_id, name, display_name, email, jira_dev_id) values (?,?,?,?,?);";
@@ -485,7 +485,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckProjectDeveloperStmt() throws SQLException, PropertyVetoException {
         if (checkProjectDeveloperStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT developer_id, name, email FROM gros.project_developer WHERE project_id = ? AND encryption = ? AND (name = ? OR display_name = ? OR (email IS NOT NULL AND email = ?))";
+            String sql = "SELECT developer_id, name, email, team_id FROM gros.project_developer WHERE project_id = ? AND encryption = ? AND (name = ? OR display_name = ? OR (email IS NOT NULL AND email = ?))";
             checkProjectDeveloperStmt = con.prepareStatement(sql);
         }
     }
@@ -493,7 +493,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private void getCheckProjectDeveloperIdStmt() throws SQLException, PropertyVetoException {
         if (checkProjectDeveloperIdStmt == null) {
             Connection con = insertDeveloperStmt.getConnection();
-            String sql = "SELECT developer_id FROM gros.project_developer WHERE project_id = ? AND developer_id = ?";
+            String sql = "SELECT developer_id, team_id FROM gros.project_developer WHERE project_id = ? AND developer_id = ?";
             checkProjectDeveloperIdStmt = con.prepareStatement(sql);
         }
     }
@@ -501,20 +501,37 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     /**
      * Inserts a developer in the project developer table of the database.
      * @param project_id the project the developer works on.
-     * @param dev_id the corresponding developer id in Jira 
+     * @param dev_id the corresponding developer id in Jira
      * @param dev The project developer.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_project_developer(int project_id, int dev_id, Developer dev) throws SQLException, PropertyVetoException{
+    public void insert_project_developer(int project_id, int dev_id, Developer dev) throws SQLException, PropertyVetoException {
+        insert_project_developer(project_id, dev_id, dev, null);
+    }
+
+    
+    /**
+     * Inserts a developer in the project developer table of the database.
+     * @param project_id the project the developer works on.
+     * @param dev_id the corresponding developer id in Jira/TFS
+     * @param dev The project developer.
+     * @param team_id The identifier of the TFS team that the developer belongs
+     * to, or null if the team is not known.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void insert_project_developer(int project_id, int dev_id, Developer dev, Integer team_id) throws SQLException, PropertyVetoException{
         getCheckProjectDeveloperIdStmt();
         
         // Check if the project developer already exists
         checkProjectDeveloperIdStmt.setInt(1, project_id);
         checkProjectDeveloperIdStmt.setInt(2, dev_id);
         try (ResultSet rs = checkProjectDeveloperIdStmt.executeQuery()) {
-            if (rs.next()) {
-                return;
+            while (rs.next()) {
+                if (team_id == null ? rs.getObject("team_id") == null : team_id == rs.getInt("team_id")) {
+                    return;
+                }
             }
         }
         
@@ -529,12 +546,13 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             setString(pstmt, 4, saltDb.hash(dev.getDisplayName(), pair));
             setString(pstmt, 5, saltDb.hash(dev.getEmail(), pair));
             pstmt.setInt(6, SaltDb.Encryption.PROJECT);
+            setInteger(pstmt, 7, team_id);
     
             // Execute immediately to avoid primary key constraint violations
             pstmt.execute();
         }
     }
-    
+
     /**
      * Check if a developer is registered in the project developer table, either
      * with their display name or email address. This is used for matching VCS
@@ -545,13 +563,36 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @param encryption the encryption level of the developer's display name and
      * email address (0=no encryption, 1=project encryption,
      * 2=global encrption, 3=project-then-global encryption).
-     * @return The ID in the developer table, or 0 if the developer was not found.
+     * @return The ID in the developer table, or 0 if the Jira developer was not
+     * found.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public int check_project_developer(int project_id, Developer dev, int encryption) throws SQLException, PropertyVetoException {
+        return check_project_developer(project_id, dev, encryption, null);
+    }
+    
+    /**
+     * Check if a developer is registered in the project developer table, either
+     * with their display name or email address. This is used for matching VCS
+     * developers with their global JIRA or TFS developer counterpart.
+     * @param project_id the project the developer works on, or 0 to use the
+     * global JIRA developer table instead.
+     * @param dev The project developer.
+     * @param encryption the encryption level of the developer's display name and
+     * email address (0=no encryption, 1=project encryption,
+     * 2=global encrption, 3=project-then-global encryption).
+     * @param team_id The identifier of the TFS team that the developer belongs
+     * to, or null if the team is not known. If this is null and the developer
+     * is only known to have a TFS team then this returns 0.
+     * @return The ID in the developer table, or 0 if the Jira or TFS developer
+     * was not found.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public int check_project_developer(int project_id, Developer dev, int encryption, Integer team_id) throws SQLException, PropertyVetoException {
         if (project_id == 0) {
-            return check_developer(dev);
+            return team_id == null ? check_developer(dev) : 0;
         }
         
         getCheckProjectDeveloperStmt();
@@ -578,7 +619,9 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         int idDeveloper = 0;
         try (ResultSet rs = checkProjectDeveloperStmt.executeQuery()) {
             while (rs.next()) {
-                idDeveloper = rs.getInt("developer_id");
+                if (team_id == null || rs.getInt("team_id") == team_id) {
+                    idDeveloper = rs.getInt("developer_id");
+                }
             }
         }
         
