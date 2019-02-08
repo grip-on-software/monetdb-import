@@ -61,6 +61,7 @@ public class ImpTfsTeamMember extends BaseImport {
                     DeveloperDb.Developer dev = new DeveloperDb.Developer(username, user, null);
                     Integer alias_id = devDb.update_vcs_developer(project, dev, encryption);
                     teamDb.insert_tfs_team_member(team, alias_id, username, user, encryption);
+                    devDb.insert_project_developer(project, alias_id, dev, team.getTeamId());
                 }
             }
         }

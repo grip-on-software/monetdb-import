@@ -79,7 +79,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
             result = CheckResult.MISSING;
             while (rs.next()) {
                 if (name.equals(rs.getString("name")) &&
-                        description.equals(rs.getString("description")) &&
+                        (description == null ? rs.getObject("description") == null : description.equals(rs.getString("description"))) &&
                         compareDates(start_date, rs.getDate("start_date")) &&
                         compareDates(release_date, rs.getDate("release_date")) &&
                         released == rs.getBoolean("released")) {
@@ -113,7 +113,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(1, id);
         pstmt.setInt(2, project_id);
         pstmt.setString(3, name);
-        pstmt.setString(4, description);
+        setString(pstmt, 4, description);
         setDate(pstmt, 5, start_date);
         setDate(pstmt, 6, release_date);
         pstmt.setBoolean(7, released);
@@ -138,7 +138,7 @@ public class FixVersionDb extends BaseDb implements AutoCloseable {
     public void update_version(int id, int project_id, String name, String description, Date start_date, Date release_date, boolean released) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         pstmt.setString(1, name);
-        pstmt.setString(2, description);
+        setString(pstmt, 2, description);
         setDate(pstmt, 3, start_date);
         setDate(pstmt, 4, release_date);
         pstmt.setBoolean(5, released);

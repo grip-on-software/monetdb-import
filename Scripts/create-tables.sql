@@ -95,8 +95,9 @@ CREATE TABLE "gros"."project_developer" (
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
 	"encryption"   INTEGER   DEFAULT 0,
-	    CONSTRAINT "pk_project_developer_id" PRIMARY KEY ("project_id", "developer_id")
+	"team_id"      INTEGER   NULL,
 );
+CREATE UNIQUE INDEX "pk_project_developer_id" ON "gros"."project_developer" ("project_id", "team_id", "developer_id");
 
 CREATE TABLE "gros"."project_salt" (
 	"project_id"      INTEGER   NOT NULL,
@@ -261,6 +262,7 @@ CREATE TABLE "gros"."commits" (
 	"repo_id"       INTEGER         NOT NULL,
 	"author_date"   TIMESTAMP       NULL,
 	"branch"        VARCHAR(255)    NULL,
+	"team_id"       INTEGER         NULL,
         CONSTRAINT "pk_commit_id" PRIMARY KEY ("version_id", "repo_id")
 );
 

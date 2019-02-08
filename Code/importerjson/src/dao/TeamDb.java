@@ -26,7 +26,7 @@ public class TeamDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertTfsMemberStmt = null;
     private PreparedStatement checkTfsMemberStmt = null;
 
-    private HashMap<Integer, HashMap<String, Team>> nameCache = new HashMap<>();
+    private final HashMap<Integer, HashMap<String, Team>> nameCache = new HashMap<>();
 
     public static class Team {
         private final int team_id;
@@ -97,6 +97,14 @@ public class TeamDb extends BaseDb implements AutoCloseable {
         if (checkTfsTeamStmt != null) {
             checkTfsTeamStmt.close();
             checkTfsTeamStmt = null;
+        }
+        
+        insertTfsMemberStmt.execute();
+        insertTfsMemberStmt.close();
+        
+        if (checkTfsMemberStmt != null) {
+            checkTfsMemberStmt.close();
+            checkTfsMemberStmt = null;
         }
     }
     
