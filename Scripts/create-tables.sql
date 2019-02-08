@@ -96,8 +96,8 @@ CREATE TABLE "gros"."project_developer" (
 	"email"           VARCHAR(100)   NULL,
 	"encryption"   INTEGER   DEFAULT 0,
 	"team_id"      INTEGER   NULL,
-	    CONSTRAINT "pk_project_developer_id" PRIMARY KEY ("project_id", "developer_id")
 );
+CREATE UNIQUE INDEX "pk_project_developer_id" ON "gros"."project_developer" ("project_id", "team_id", "developer_id");
 
 CREATE TABLE "gros"."project_salt" (
 	"project_id"      INTEGER   NOT NULL,
