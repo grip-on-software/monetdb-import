@@ -6,6 +6,7 @@
 package importer;
 
 import dao.BatchedUpdateStatement;
+import dao.RepositoryDb;
 import dao.SprintDb;
 import dao.TeamDb;
 import java.beans.PropertyVetoException;
@@ -16,6 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
 import util.BaseImport;
 import util.BufferedJSONReader;
@@ -56,6 +58,7 @@ public class ImpTfsWorkItem extends BaseImport {
         private final int projectID = getProjectID();
         private final SprintDb sprintDb = new SprintDb();
         private final TeamDb teamDb = new TeamDb();
+        private final RepositoryDb repoDb = new RepositoryDb();
         private final String projectName = getProjectName();
         
         public BatchedWorkItemStatement(String insertSql, String updateSql) {
@@ -90,14 +93,29 @@ public class ImpTfsWorkItem extends BaseImport {
             setDouble(pstmt, ++index, (String) jsonObject.get("story_points"), MAX_POINTS);
             
             String sprint_name = (String) jsonObject.get("sprint_name");
+            String team_name;
+            Integer repo_id = null;
+            Integer team_id = null;
             Integer sprint_id = null;
             if (sprint_name != null) {
-                sprint_id = sprintDb.check_tfs_sprint(projectID, sprint_name);
+                String[] parts = sprint_name.split(Pattern.quote("\\"));
+                if (parts.length > 1) {
+                    String repo_name = parts[0];
+                    repo_id = repoDb.check_repo(repo_name, projectID);
+                }
+                if (parts.length > 2) {
+                    team_name = parts[1];
+                    TeamDb.Team team = teamDb.check_tfs_team(team_name, projectID);
+                    if (team != null) {
+                        team_id = team.getTeamId();
+                    }
+                }
+                sprint_name = parts[parts.length - 1];
+                sprint_id = sprintDb.check_tfs_sprint(projectID, sprint_name, repo_id, team_id);
             }
             setInteger(pstmt, ++index, sprint_id);
             
-            String team_name = (String) jsonObject.get("team_name");
-            Integer team_id = null;
+            team_name = (String) jsonObject.get("team_name");
             if (team_name != null) {
                 TeamDb.Team team = teamDb.check_tfs_team(team_name, projectID);
                 if (team != null) {

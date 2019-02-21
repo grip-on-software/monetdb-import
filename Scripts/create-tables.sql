@@ -350,8 +350,8 @@ CREATE TABLE "gros"."tfs_developer" (
 CREATE TABLE "gros"."tfs_sprint" (
 	"sprint_id" INTEGER NOT NULL AUTO_INCREMENT,
 	"project_id"   INTEGER NOT NULL,
-	"repo_id" INTEGER NOT NULL,
-	"team_id" INTEGER NOT NULL,
+	"repo_id" INTEGER NULL,
+	"team_id" INTEGER NULL,
 	"name" VARCHAR(100) NOT NULL,
 	"start_date"     TIMESTAMP      NULL,
 	"end_date"       TIMESTAMP      NULL,
