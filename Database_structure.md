@@ -1004,9 +1004,11 @@ These tables include data from Gitlab/Git and Subversion.
     -   **project_id** - INT - reference to project.project_id: Project
         in which the sprint occurs.
     -   **repo_id** - INT - reference to repo.id: Repository in which
-        the sprint occurs.
+        the sprint occurs. This is NULL if no repository could be
+        determined for the sprint.
     -   **team_id** - INT - reference to tfs_team.team_id: Team which is
-        working on the sprint.
+        working on the sprint. This is NULL if no team could be
+        determined for the sprint.
     -   **name** - VARCHAR(100): Human-readable name of the sprint.
         Depending on the project, team and the person who creates the
         sprints, this may include a sequence number (not unique), the
