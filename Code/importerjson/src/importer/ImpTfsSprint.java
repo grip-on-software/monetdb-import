@@ -44,7 +44,18 @@ public class ImpTfsSprint extends BaseImport {
                 String repo_name = (String) jsonObject.get("repo_name");
                 String team_name = (String) jsonObject.get("team_name");
                 
-                Integer id = sprintDb.check_tfs_sprint(project, name);
+                Integer repo_id = repoDb.check_repo(repo_name, project);
+                if (repo_id == 0) {
+                    repoDb.insert_repo(repo_name, project);
+                    repo_id = repoDb.check_repo(repo_name, project);
+                }
+                TeamDb.Team team = teamDb.check_tfs_team(team_name, project);
+                if (team == null) {
+                    teamDb.insert_tfs_team(team_name, project, repo_id, null);
+                    team = teamDb.check_tfs_team(team_name, project);
+                }
+                
+                Integer id = sprintDb.check_tfs_sprint(project, name, repo_id, team.getTeamId());
                 if (id == null) {
                     Timestamp start_date = null;
                     if (start != null && !start.equals("0")) {
@@ -56,17 +67,6 @@ public class ImpTfsSprint extends BaseImport {
                         end_date = Timestamp.valueOf(end);
                     }
 
-                    Integer repo_id = repoDb.check_repo(repo_name, project);
-                    if (repo_id == 0) {
-                        repoDb.insert_repo(repo_name, project);
-                        repo_id = repoDb.check_repo(repo_name, project);
-                    }
-                    TeamDb.Team team = teamDb.check_tfs_team(team_name, project);
-                    if (team == null) {
-                        teamDb.insert_tfs_team(team_name, project, repo_id, null);
-                        team = teamDb.check_tfs_team(team_name, project);
-                    }
-                    
                     sprintDb.insert_tfs_sprint(project, name, start_date, end_date, repo_id, team.getTeamId());
                 }
             }

@@ -448,7 +448,7 @@ public class SprintDb extends BaseDb implements AutoCloseable {
     private void getCheckTfsStmt() throws SQLException, PropertyVetoException {
         if (checkTfsStmt == null) {
             Connection con = insertTfsStmt.getConnection();
-            String sql = "SELECT sprint_id FROM gros.tfs_sprint WHERE project_id=? AND name=?";
+            String sql = "SELECT sprint_id FROM gros.tfs_sprint WHERE project_id=? AND repo_id=? AND team_id=? AND name=?";
             checkTfsStmt = con.prepareStatement(sql);
         }
     }
@@ -458,16 +458,20 @@ public class SprintDb extends BaseDb implements AutoCloseable {
      * properties as the provided parameters.
      * @param project_id The project identifier.
      * @param name The human-readable name of the sprint as provided in TFS.
+     * @param repo_id The internal identifier of the TFS repository.
+     * @param team_id The internal identifier of the TFS team in the repository.
      * @return The sprint ID: null if the sprint name and project ID
      * combination is not found, or the sprint ID if a match is found.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public Integer check_tfs_sprint(int project_id, String name) throws SQLException, PropertyVetoException {
+    public Integer check_tfs_sprint(int project_id, String name, Integer repo_id, Integer team_id) throws SQLException, PropertyVetoException {
         getCheckTfsStmt();
         
         checkTfsStmt.setInt(1, project_id);
-        checkTfsStmt.setString(2, name);
+        setInteger(checkTfsStmt, 2, repo_id);
+        setInteger(checkTfsStmt, 3, team_id);
+        checkTfsStmt.setString(4, name);
         
         Integer sprintId = null;
         try (ResultSet rs = checkTfsStmt.executeQuery()) {
