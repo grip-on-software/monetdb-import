@@ -1301,6 +1301,7 @@ dashboard project definition.
         domain object's metric data trough the source ID.
     -   **source_id** - VARCHAR(100): Identifier used by the source to
         provide access to the domain object's metric data.
+    -   **source_type** - VARCHAR(32): The type of the source.
 
 ## Build system tables (Jenkins)
 
