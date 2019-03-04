@@ -117,7 +117,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricVersionStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
-        sql = "insert into gros.source_id(project_id,domain_name,url,source_id,source_type) values (?,?,?,?,?);";
+        sql = "insert into gros.source_id(project_id,domain_name,url,source_type,source_id) values (?,?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target) values (?,?,?,?,?,?,?);";
         insertDefaultTargetStmt = new BatchedStatement(sql);
@@ -598,19 +598,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @param domain_name The name of the object that is being measured.
      * @param url The URL of the source at which the source ID may be used to
      * identify the domain object.
-     * @param source_id The identifier of the domain object at the source.
      * @param source_type The type of the source.
+     * @param source_id The identifier of the domain object at the source.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_source_id(int projectId, String domain_name, String url, String source_id, String source_type) throws SQLException, PropertyVetoException {
+    public void insert_source_id(int projectId, String domain_name, String url, String source_type, String source_id) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertSourceIdStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
         pstmt.setString(2, domain_name);
         pstmt.setString(3, url);
-        pstmt.setString(4, source_id);
-        setString(pstmt, 5, source_type);
+        setString(pstmt, 4, source_type);
+        pstmt.setString(5, source_id);
         
         insertSourceIdStmt.batch();
     }
