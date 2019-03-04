@@ -41,7 +41,7 @@ public class ImpSourceId extends BaseImport {
                 if (url != null) {
                     boolean result = metricDb.check_source_id(project, domain_name, url, source_id);
                     if (!result) {
-                        metricDb.insert_source_id(project, domain_name, url, source_id, source_type);
+                        metricDb.insert_source_id(project, domain_name, url, source_type, source_id);
                     }
                 }
             }
