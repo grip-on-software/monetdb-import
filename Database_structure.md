@@ -1299,10 +1299,10 @@ dashboard project definition.
         which could be an application, product, or component.
     -   **url** - VARCHAR(255): Base URL to the source that provides the
         domain object's metric data trough the source ID.
-    -   **source_id** - VARCHAR(100): Identifier used by the source to
-        provide access to the domain object's metric data.
     -   **source_type** - VARCHAR(32): The type of the source. This is
         NULL if the source type could not be identified.
+    -   **source_id** - TEXT: Identifier used by the source to provide
+        access to the domain object's metric data.
 
 ## Build system tables (Jenkins)
 
