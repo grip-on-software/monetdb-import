@@ -39,9 +39,12 @@ public class ImpSourceId extends BaseImport {
                 String source_id = (String) jsonObject.get("source_id");
                 String source_type = (String) jsonObject.get("source_type");
                 if (url != null) {
-                    boolean result = metricDb.check_source_id(project, domain_name, url, source_id);
-                    if (!result) {
+                    MetricDb.CheckResult result = metricDb.check_source_id(project, domain_name, url, source_type, source_id);
+                    if (result == MetricDb.CheckResult.MISSING) {
                         metricDb.insert_source_id(project, domain_name, url, source_type, source_id);
+                    }
+                    else if (result == MetricDb.CheckResult.DIFFERS) {
+                        metricDb.update_source_id(project, domain_name, url, source_type, source_id);
                     }
                 }
             }

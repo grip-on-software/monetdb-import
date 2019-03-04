@@ -36,11 +36,16 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private BatchedStatement insertMetricTargetStmt = null;
     private PreparedStatement checkSourceIdStmt = null;
     private BatchedStatement insertSourceIdStmt = null;
+    private BatchedStatement updateSourceIdStmt = null;
     private PreparedStatement checkDefaultTargetStmt = null;
     private BatchedStatement insertDefaultTargetStmt = null;
     private HashMap<String, MetricName> nameCache = null;
     private HashSet<String> baseNameCache = null;
     
+    public enum CheckResult {
+        MISSING, DIFFERS, EXISTS
+    }
+
     /**
      * Object describing a name of a metric as well as the components in it.
      */
@@ -119,6 +124,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricTargetStmt = new BatchedStatement(sql);
         sql = "insert into gros.source_id(project_id,domain_name,url,source_type,source_id) values (?,?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
+        sql = "update gros.source_id set source_type = ?, source_id = ? where project_id = ? domain_name = ? url = ?";
+        updateSourceIdStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target) values (?,?,?,?,?,?,?);";
         insertDefaultTargetStmt = new BatchedStatement(sql);
     }
@@ -557,7 +564,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private void getCheckSourceIdStmt() throws SQLException, PropertyVetoException {
         if (checkSourceIdStmt == null) {
             Connection con = insertSourceIdStmt.getConnection();
-            String sql = "SELECT source_id FROM gros.source_id WHERE project_id = ? AND domain_name = ? AND url = ?";
+            String sql = "SELECT source_type, source_id FROM gros.source_id WHERE project_id = ? AND domain_name = ? AND url = ?";
             checkSourceIdStmt = con.prepareStatement(sql);
         }
     }
@@ -569,12 +576,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @param domain_name The name of the object that is being measured.
      * @param url The URL of the source at which the source ID may be used to
      * identify the domain object.
+     * @param source_type The type of the source.
      * @param source_id The identifier of the domain object at the source.
-     * @return Whether the source ID is registered for the domain name.
+     * @return An indicator of the state of the database regarding the source ID.
+     * This is CheckResult.MISSING if the source ID for the provided project,
+     * domain name and URL does not exist. This is CheckResult.DIFFERS if there
+     * is a row for the provided domain name in the database, but it has
+     * a different source type or ID in its fields. This is CheckResult.EXISTS
+     * if there is a source ID in the database that matches all the provided
+     * parameters.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public boolean check_source_id(int projectId, String domain_name, String url, String source_id) throws SQLException, PropertyVetoException {
+    public CheckResult check_source_id(int projectId, String domain_name, String url, String source_type, String source_id) throws SQLException, PropertyVetoException {
         getCheckSourceIdStmt();
         
         checkSourceIdStmt.setInt(1, projectId);
@@ -583,13 +597,15 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         try (ResultSet rs = checkSourceIdStmt.executeQuery()) {
             while (rs.next()) {
-                if (source_id.equals(rs.getString("source_id"))) {
-                    return true;
+                if ((source_type == null ? rs.getObject("source_type") == null : source_type.equals(rs.getString("source_type"))) &&
+                    source_id.equals(rs.getString("source_id"))) {
+                    return CheckResult.EXISTS;
                 }
+                return CheckResult.DIFFERS;
             }
         }
         
-        return false;
+        return CheckResult.MISSING;
     }
     
     /**
@@ -613,6 +629,29 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.setString(5, source_id);
         
         insertSourceIdStmt.batch();
+    }
+
+    /**
+     * Update a source ID for the given domain name for the project's metric source.
+     * @param projectId Identifier of the project in which the domain name exists.
+     * @param domain_name The name of the object that is being measured.
+     * @param url The URL of the source at which the source ID may be used to
+     * identify the domain object.
+     * @param source_type The type of the source.
+     * @param source_id The identifier of the domain object at the source.
+     * @throws SQLException If a database access error occurs
+     * @throws PropertyVetoException If the database connection cannot be configured
+     */
+    public void update_source_id(int projectId, String domain_name, String url, String source_type, String source_id) throws SQLException, PropertyVetoException {
+        PreparedStatement pstmt = updateSourceIdStmt.getPreparedStatement();
+        
+        setString(pstmt, 1, source_type);
+        pstmt.setString(2, source_id);
+        pstmt.setInt(3, projectId);
+        pstmt.setString(4, domain_name);
+        pstmt.setString(5, url);
+        
+        updateSourceIdStmt.batch();
     }
 
     private void getCheckDefaultTargetStmt() throws SQLException, PropertyVetoException {
