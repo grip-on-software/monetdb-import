@@ -124,7 +124,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricTargetStmt = new BatchedStatement(sql);
         sql = "insert into gros.source_id(project_id,domain_name,url,source_type,source_id) values (?,?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
-        sql = "update gros.source_id set source_type = ?, source_id = ? where project_id = ? domain_name = ? url = ?";
+        sql = "update gros.source_id set source_type = ?, source_id = ? where project_id = ? and domain_name = ? and url = ?";
         updateSourceIdStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target) values (?,?,?,?,?,?,?);";
         insertDefaultTargetStmt = new BatchedStatement(sql);
