@@ -6,6 +6,7 @@ pipeline {
         BUILD_FILE = 'Code/importerjson/build.xml'
         GITLAB_TOKEN = credentials('monetdb-import-gitlab-token')
         SCANNER_HOME = tool name: 'SonarQube Scanner 3', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        VALIDATE_IMAGE = "${env.DOCKER_REGISTRY}/gros-monetdb-import-validate"
     }
 
     options {
@@ -61,10 +62,17 @@ pipeline {
                 }
             }
         }
+        stage('Build validate') {
+            agent { label 'docker' }
+            steps {
+                sh 'docker build -t $VALIDATE_IMAGE Scripts'
+                sh 'docker push $VALIDATE_IMAGE'
+            }
+        }
         stage('Validate') {
             agent {
                 docker {
-                    image 'python:3.7-alpine'
+                    image '$VALIDATE_IMAGE'
                     args '-u root'
                 }
             }
