@@ -151,7 +151,7 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
                         foundValues.add(rs.getObject(key));
                     }
                     if (!checkValues.containsKey(foundValues)) {
-                        throw new SQLException("Received result key tuple that is not in the check batch: " + Arrays.toString(foundValues.toArray()));
+                        Logger.getLogger("importer").log(Level.WARNING, "Received result key tuple that is not in the check batch: {0}", Arrays.toString(foundValues.toArray()));
                     }
                     markExisting(foundValues);
                 }
