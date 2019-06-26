@@ -2,7 +2,7 @@ pipeline {
     agent { label 'ant' }
 
     environment {
-        BUILD_TARGET = 'default'
+        BUILD_TARGET = 'clean default'
         BUILD_FILE = 'Code/importerjson/build.xml'
         GITLAB_TOKEN = credentials('monetdb-import-gitlab-token')
         SCANNER_HOME = tool name: 'SonarQube Scanner 3', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
