@@ -2,7 +2,7 @@ pipeline {
     agent { label 'ant' }
 
     environment {
-        BUILD_TARGET = 'default'
+        BUILD_TARGET = 'clean default'
         BUILD_FILE = 'Code/importerjson/build.xml'
         GITLAB_TOKEN = credentials('monetdb-import-gitlab-token')
         SCANNER_HOME = tool name: 'SonarQube Scanner 3', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
@@ -30,6 +30,7 @@ pipeline {
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'Code/importerjson/dist/javadoc', reportFiles: 'index.html', reportName: 'Javadoc', reportTitles: ''])
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, includes: 'junit/**/*,html/**/*', keepAll: false, reportDir: 'Code/importerjson/build/test', reportFiles: 'html/htmlReport.html', reportName: 'JUnit Results', reportTitles: ''])
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'Code/importerjson/build/test/jacoco', reportFiles: 'index.html', reportName: 'JaCoCo coverage', reportTitles: ''])
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'owasp-dep/', reportFiles: 'dependency-check-report.html', reportName: 'Dependencies', reportTitles: ''])
             junit 'Code/importerjson/build/test/results/*.xml'
         }
     }
@@ -52,6 +53,17 @@ pipeline {
                     withAnt(installation: 'Ant 1.10.1', jdk: 'JDK 8') {
                         sh "ant -buildfile $BUILD_FILE -propertyfile $BUILD_PROPERTIES $BUILD_TARGET"
                     }
+                }
+            }
+        }
+        stage('Dependency Check') {
+            steps {
+                dir('security-tooling') {
+                    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/ICTU/security-tooling']]]
+                    sh 'sed -i "s/\\r$//" *.sh'
+                    sh 'cp ../Code/importerjson/suppression.xml suppression.xml'
+                    sh 'sed -i "s/\\(:\\/tmp\\/src\\)/\\1 -v dependency-check-data:\\/tmp\\/dependency-check\\/data/" ./security_dependencycheck.sh'
+                    sh 'bash ./security_dependencycheck.sh "$WORKSPACE" "$WORKSPACE/owasp-dep" --exclude "**/.git/**" --exclude "**/coverage/**" --exclude "**/build/**" --exclude "**/dist/**"'
                 }
             }
         }
