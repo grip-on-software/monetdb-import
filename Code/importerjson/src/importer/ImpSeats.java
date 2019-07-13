@@ -51,8 +51,11 @@ public class ImpSeats extends BaseImport {
                 else if (value instanceof Double) {
                     seats = ((Double) value).floatValue();
                 }
+                else if (value instanceof String) {
+                    seats = Double.valueOf((String) value).floatValue();
+                }
                 else {
-                    throw new ImporterException("Cannot parse seats value for month " + month);
+                    throw new ImporterException("Cannot parse seats value for month " + month + ", unexpected type of value: " + value.getClass().getSimpleName());
                 }
                 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
