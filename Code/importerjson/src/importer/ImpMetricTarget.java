@@ -55,6 +55,7 @@ public class ImpMetricTarget extends BaseImport {
                 String base_name = (String) jsonObject.get("base_name");
                 String domain_name = (String) jsonObject.get("domain_name");
                 String unchanged = (String) jsonObject.get("default");
+                String debt_target = (String) jsonObject.get("debt_target");
                 
                 MetricName metricName = metricDb.check_metric(name);
                 if (metricName == null) {
@@ -63,6 +64,10 @@ public class ImpMetricTarget extends BaseImport {
                 }
                 
                 if (unchanged == null || "0".equals(unchanged)) {
+                    if (debt_target != null) {
+                        type = "TechnicalDebtTarget";
+                        target = debt_target;
+                    }
                     metricDb.insert_target(projectId, revision, metricName.getId(), type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
                 }
             }            
