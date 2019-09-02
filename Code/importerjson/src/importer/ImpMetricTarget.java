@@ -54,6 +54,7 @@ public class ImpMetricTarget extends BaseImport {
                 String revision = (String) jsonObject.get("revision");
                 String base_name = (String) jsonObject.get("base_name");
                 String domain_name = (String) jsonObject.get("domain_name");
+                String unchanged = (String) jsonObject.get("default");
                 
                 MetricName metricName = metricDb.check_metric(name);
                 if (metricName == null) {
@@ -61,7 +62,9 @@ public class ImpMetricTarget extends BaseImport {
                     metricName = metricDb.check_metric(name, true);
                 }
                 
-                metricDb.insert_target(projectId, revision, metricName.getId(), type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
+                if (unchanged == null || "0".equals(unchanged)) {
+                    metricDb.insert_target(projectId, revision, metricName.getId(), type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
+                }
             }            
         }
         catch (FileNotFoundException ex) {
