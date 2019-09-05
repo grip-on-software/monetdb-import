@@ -8,6 +8,8 @@ package importer;
 import dao.EnvironmentDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -39,6 +41,14 @@ public class ImpEnvironment extends BaseImport {
                 String url = (String) jsonObject.get("url");
                 String version = (String) jsonObject.get("version");
                 if (url != null) {
+                    try {
+                        URL parsedUrl = new URL(url);
+                        URL cleanUrl = new URL(parsedUrl.getProtocol(), parsedUrl.getHost(), parsedUrl.getPort(), parsedUrl.getFile());
+                        url = cleanUrl.toString();
+                    }
+                    catch (MalformedURLException ex) {
+                        getLogger().log(Level.INFO, "Source environment {0} is not a URL: {1}", new Object[]{url, ex.getMessage()});
+                    }
                     EnvironmentDb.CheckResult result = envDb.check_source(project, type, url, environment, version);
                     if (result == EnvironmentDb.CheckResult.MISSING) {
                         envDb.insert_source(project, type, url, environment, version);
