@@ -320,7 +320,7 @@ public class ImpCommit extends BaseImport {
                         if (devDb.link_vcs_developer(projectID, jira_id, matchDev)) {
                             successes++;
                         }
-                        if (devDb.link_ldap_developer(projectID, jira_id, dev)) {
+                        if (devDb.link_ldap_developer(projectID, jira_id, matchDev)) {
                             successes++;
                         }
                     }
