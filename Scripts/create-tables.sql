@@ -243,6 +243,7 @@ CREATE TABLE "gros"."project" (
 	"quality_name"    VARCHAR(100)   NULL,
 	"quality_display_name"    VARCHAR(100)    NULL,
 	"is_support_team" BOOLEAN        NULL,
+	"jira_name"       VARCHAR(100)   NULL,
         CONSTRAINT "pk_project_id" PRIMARY KEY ("project_id")
 );
 

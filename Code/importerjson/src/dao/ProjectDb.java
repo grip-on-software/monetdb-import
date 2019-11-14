@@ -23,9 +23,9 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
     private BatchedStatement updateStmt = null;
     
     public ProjectDb() {
-        String sql = "insert into gros.project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team) values (?,?,?,?,?,?,?);";
+        String sql = "insert into gros.project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team, jira_name) values (?,?,?,?,?,?,?,?);";
         insertStmt = new BatchedStatement(sql);
-        sql = "update gros.project set main_project=?, github_team=?, gitlab_group=?, quality_name=?, quality_display_name=?, is_support_team=? where project_id=?;";
+        sql = "update gros.project set main_project=?, github_team=?, gitlab_group=?, quality_name=?, quality_display_name=?, is_support_team=?, jira_name=? where project_id=?;";
         updateStmt = new BatchedStatement(sql);
     }
     
@@ -52,12 +52,13 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public void insert_project(String name) throws SQLException, PropertyVetoException {
-        insert_project(name, null, null, null, null, null, null);
+        insert_project(name, null, null, null, null, null, null, null);
     }
 
     /**
      * Insert a new project including metadata in the database.
      * @param name The shorthand name of the project
+     * @param jira_name The long name of the project as shown in JIRA
      * @param main_project The JIRA shorthand name of the main project, as used
      * in issue keys, or null if not known/set.
      * @param github_team The team name of the GitHub team working on the project,
@@ -73,7 +74,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */    
-    public void insert_project(String name, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name, Boolean is_support_team) throws SQLException, PropertyVetoException {
+    public void insert_project(String name, String jira_name, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name, Boolean is_support_team) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertStmt.getPreparedStatement();
         
         pstmt.setString(1, name);
@@ -83,6 +84,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
         setString(pstmt, 5, quality_name);
         setString(pstmt, 6, quality_display_name);
         setBoolean(pstmt, 7, is_support_team);
+        setString(pstmt, 8, jira_name);
         
         // Execute immediately because we need to have the row available.
         pstmt.execute();
@@ -91,6 +93,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
     /**
      * Update an existing project with metadata in the database.
      * @param project_id The internal project ID in the table
+     * @param jira_name The long name of the project as shown in JIRA
      * @param main_project The JIRA shorthand name of the main project, as used
      * in issue keys, or null if not known/set.
      * @param github_team The team name of the GitHub team working on the project,
@@ -106,7 +109,7 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */    
-    public void update_project(int project_id, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name, Boolean is_support_team) throws SQLException, PropertyVetoException {
+    public void update_project(int project_id, String jira_name, String main_project, String github_team, String gitlab_group, String quality_name, String quality_display_name, Boolean is_support_team) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateStmt.getPreparedStatement();
         
         setString(pstmt, 1, main_project);
@@ -115,8 +118,9 @@ public class ProjectDb extends BaseDb implements AutoCloseable {
         setString(pstmt, 4, quality_name);
         setString(pstmt, 5, quality_display_name);
         setBoolean(pstmt, 6, is_support_team);
+        setString(pstmt, 7, jira_name);
         
-        pstmt.setInt(7, project_id);
+        pstmt.setInt(8, project_id);
         
         updateStmt.batch();
     }

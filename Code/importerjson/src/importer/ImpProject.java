@@ -24,6 +24,7 @@ public class ImpProject extends BaseImport {
         String name = getProjectName();
         
         boolean has_metadata = false;
+        String jira_name = null;
         String main_project = null;
         String github_team = null;
         String gitlab_group = null;
@@ -39,6 +40,7 @@ public class ImpProject extends BaseImport {
         ) {
             JSONObject jsonObject = (JSONObject) parser.parse(fr);
 
+            jira_name = (String) jsonObject.get("jira_name");
             main_project = (String) jsonObject.get("main_project");
             github_team = (String) jsonObject.get("github_team");
             gitlab_group = (String) jsonObject.get("gitlab_group_name");
@@ -58,11 +60,11 @@ public class ImpProject extends BaseImport {
             project = pDB.check_project(name);
             
             if (project == 0) {
-                pDB.insert_project(name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team);
+                pDB.insert_project(name, jira_name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team);
                 project = pDB.check_project(name);
             }
             else if (has_metadata) {
-                pDB.update_project(project, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team);
+                pDB.update_project(project, jira_name, main_project, github_team, gitlab_group, quality_name, quality_display_name, is_support_team);
             }
         }
         catch (Exception ex) {
