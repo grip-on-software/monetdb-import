@@ -310,6 +310,8 @@ purpose.
     -   **is_support_team** - BOOLEAN: Whether the project is maintained
         by a support team. This is NULL if the information is not
         available.
+    -   **jira_name** - VARCHAR(100): Human-readable name of the project
+        as shown in JIRA.
 
 
 -   **comment**: Individual comment that was added to a JIRA issue.
