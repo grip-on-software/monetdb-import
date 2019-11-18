@@ -202,7 +202,7 @@ public class ImpDataIssue extends BaseImport {
                     // subproject of this one, which is overwritten if it
                     // is an actual project that we import, and helps hiding
                     // it from most purposes.
-                    projectDb.insert_project(project, projectName, null, null, null, null, null);
+                    projectDb.insert_project(project, projectName, null, null, null, null, null, null);
                     project_id = projectDb.check_project(project);
                 }
                 return project_id;
