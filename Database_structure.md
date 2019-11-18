@@ -311,7 +311,8 @@ purpose.
         by a support team. This is NULL if the information is not
         available.
     -   **jira_name** - VARCHAR(100): Human-readable name of the project
-        as shown in JIRA.
+        as shown in JIRA. This is NULL if the information is not
+        available.
 
 
 -   **comment**: Individual comment that was added to a JIRA issue.
