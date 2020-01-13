@@ -124,6 +124,7 @@
                 </sourcefiles>
             </structure>
             <html destdir="${build.dir}/test/jacoco" />
+			<xml destfile="${build.dir}/test/jacoco.xml" />
         </jacoco:report>
     </target>
 </project>

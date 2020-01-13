@@ -70,7 +70,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh '${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=monetdb-import:$BRANCH_NAME'
+                    sh '${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=monetdb-import:$BRANCH_NAME -Dsonar.projectName="MonetDB importer $BRANCH_NAME"'
                 }
             }
         }
