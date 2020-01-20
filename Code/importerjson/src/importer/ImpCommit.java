@@ -144,11 +144,20 @@ public class ImpCommit extends BaseImport {
 
             pstmt.setInt(5, developer_id);
             pstmt.setString(6, message);
-            pstmt.setInt(7, Integer.parseInt(size_of_commit));
-            pstmt.setInt(8, Integer.parseInt(insertions));
-            pstmt.setInt(9, Integer.parseInt(deletions));
-            pstmt.setInt(10, Integer.parseInt(number_of_files));
-            pstmt.setInt(11, Integer.parseInt(number_of_lines));
+            if (size_of_commit == null) {
+                pstmt.setNull(7, java.sql.Types.INTEGER);
+                pstmt.setNull(8, java.sql.Types.INTEGER);
+                pstmt.setNull(9, java.sql.Types.INTEGER);
+                pstmt.setNull(10, java.sql.Types.INTEGER);
+                pstmt.setNull(11, java.sql.Types.INTEGER);
+            }
+            else {
+                pstmt.setInt(7, Integer.parseInt(size_of_commit));
+                pstmt.setInt(8, Integer.parseInt(insertions));
+                pstmt.setInt(9, Integer.parseInt(deletions));
+                pstmt.setInt(10, Integer.parseInt(number_of_files));
+                pstmt.setInt(11, Integer.parseInt(number_of_lines));
+            }
             pstmt.setString(12, type);
             pstmt.setInt(13, repo_id);
 
