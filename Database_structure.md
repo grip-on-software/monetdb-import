@@ -586,15 +586,22 @@ These tables include data from Gitlab/Git and Subversion.
         version control logs.
     -   **size_of_commit** - INT: The byte size of the commit. The
         semantic meaning differs between version control system, namely
-        whether it includes the diff or other data.
+        whether it includes the diff or other data. This is NULL for
+        commits in repositories which have disabled statistics lookups
+        for efficiency reasons.
     -   **insertions** - INT: Number of lines "added" or changed but not
-        deleted in this commit.
+        deleted in this commit. This is NULL for commits in repositories
+        which have disabled statistics lookups for efficiency reasons.
     -   **deletions** - INT: Number of lines "deleted" or changed in
-        this commit.
+        this commit. This is NULL for commits in repositories which have
+        disabled statistics lookups for efficiency reasons.
     -   **number_of_files** - INT: Number of files touched by this
-        commit.
+        commit. This is NULL for commits in repositories which have
+        disabled statistics lookups for efficiency reasons.
     -   **number_of_lines** - INT: Number of lines touched by this
-        commit, be it added, deleted or changed.
+        commit, be it added, deleted or changed. This is NULL for
+        commits in repositories which have disabled statistics lookups
+        for efficiency reasons.
     -   **type** - VARCHAR(100): The type of code change made (commit,
         revert, merge). Deduced from auxiliary data and possibly the
         commit message.
