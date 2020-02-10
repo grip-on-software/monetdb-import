@@ -63,6 +63,13 @@ public class ImpMetricTarget extends BaseImport {
                     metricName = metricDb.check_metric(name, true);
                 }
                 
+                if ("".equals(target)) {
+                    target = "0";
+                }
+                if ("".equals(low_target)) {
+                    low_target = "0";
+                }
+                
                 if (unchanged == null || "0".equals(unchanged)) {
                     if (debt_target != null && !"".equals(debt_target)) {
                         type = "TechnicalDebtTarget";
