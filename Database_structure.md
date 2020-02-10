@@ -1218,7 +1218,9 @@ dashboard project definition.
     -   **metric_id** - INT - reference to metric.metric_id: Metric
         whose norms are changed.
     -   **type** - VARCHAR(100): Type of change: 'options',
-        'old_options' or 'TechnicalDebtTarget'.
+        'old_options' or 'TechnicalDebtTarget'. This is NULL if the type
+        of change comes from Quality Time and it does not contain a
+        technical debt target.
     -   **target** - INT: Norm value at which the category changes from
         green to yellow.
     -   **low_target** - INT: Norm value at which the category changes
