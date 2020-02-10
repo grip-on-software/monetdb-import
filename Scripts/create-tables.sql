@@ -205,7 +205,7 @@ CREATE TABLE "gros"."metric_target" (
 	"project_id"     INTEGER     NOT NULL,
 	"version_id"     VARCHAR(100)     NOT NULL,
 	"metric_id"      INTEGER     NOT NULL,
-	"type"           VARCHAR(100) NOT NULL,
+	"type"           VARCHAR(100) NULL,
 	"target"         INTEGER     NOT NULL,
 	"low_target"     INTEGER     NOT NULL,
 	"comment"        TEXT     NULL
