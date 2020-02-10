@@ -64,7 +64,7 @@ public class ImpMetricTarget extends BaseImport {
                 }
                 
                 if (unchanged == null || "0".equals(unchanged)) {
-                    if (debt_target != null) {
+                    if (debt_target != null && !"".equals(debt_target)) {
                         type = "TechnicalDebtTarget";
                         target = debt_target;
                     }
