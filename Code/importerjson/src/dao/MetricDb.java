@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,6 +107,28 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         public Integer getId() {
             return this.id;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (other == null) {
+                return false;
+            }
+            if (other instanceof MetricName) {
+                MetricName otherName = (MetricName)other;
+                return (name.equals(otherName.name) &&
+                        (base_name == null ? otherName.base_name == null : base_name.equals(otherName.base_name)) &&
+                        (domain_name == null ? otherName.domain_name == null : domain_name.equals(otherName.domain_name)) &&
+                        (id == null || otherName.id == null || id.equals(otherName.id)));
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 37 * hash + Objects.hashCode(this.name);
+            return hash;
         }
     }
     

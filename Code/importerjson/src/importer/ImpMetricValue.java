@@ -143,20 +143,28 @@ public class ImpMetricValue extends BaseImport {
 
         private void handleObject(JSONObject jsonObject) throws SQLException, PropertyVetoException {
             String metric_name = (String) jsonObject.get("name");
+            String base_name = (String) jsonObject.get("base_name");
+            String domain_name = (String) jsonObject.get("domain_name");
             String value = (String) jsonObject.get("value");
             String category = (String) jsonObject.get("category");
             String date = (String) jsonObject.get("date");
             String since_date = (String) jsonObject.get("since_date");
+            MetricName nameParts = null;
+            if (base_name != null && domain_name != null) {
+                nameParts = new MetricName(metric_name, base_name, domain_name);
+            }
 
-            insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), Timestamp.valueOf(since_date));
+            insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), Timestamp.valueOf(since_date), nameParts);
         }
 
-        public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date) throws SQLException, PropertyVetoException {
+        public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date, MetricName nameParts) throws SQLException, PropertyVetoException {
             // Using the metric name, check if the metric was not already stored
             MetricName metricName = mDB.check_metric(metric_name);
 
             if (metricName == null) {
-                MetricName nameParts = mDB.split_metric_name(metric_name, false);
+                if (nameParts == null) {
+                    nameParts = mDB.split_metric_name(metric_name, false);
+                }
                 // Check the metric name after splitting because the original name
                 // may have been altered.
                 metricName = mDB.check_metric(nameParts.getName());
@@ -168,14 +176,20 @@ public class ImpMetricValue extends BaseImport {
                     }
                 }
             }
-            else if (!metric_name.equals(metricName.getName())) {
-                MetricName nameParts = mDB.split_metric_name(metric_name, false);
+            else if (!metric_name.equals(metricName.getName()) || (nameParts != null && !metricName.equals(nameParts))) {
+                if (nameParts == null) {
+                    nameParts = mDB.split_metric_name(metric_name, false);
+                }
                 mDB.update_metric(metricName.getId(), metricName.getName(), nameParts);
             }
             
             int sprint_id = sprintDb.find_sprint(projectID, date);
 
             mDB.insert_metricValue(metricName.getId(), value, category, date, sprint_id, since_date, projectID);
+        }
+        
+        public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date) throws SQLException, PropertyVetoException {
+            insert(metric_name, value, category, date, since_date, null);
         }
         
         @Override
