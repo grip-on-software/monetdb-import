@@ -145,9 +145,9 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         insertMetricVersionStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
-        sql = "insert into gros.source_id(project_id,domain_name,url,source_type,source_id) values (?,?,?,?,?);";
+        sql = "insert into gros.source_id(project_id,domain_name,url,source_type,source_id,domain_type) values (?,?,?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
-        sql = "update gros.source_id set source_type = ?, source_id = ? where project_id = ? and domain_name = ? and url = ?";
+        sql = "update gros.source_id set source_type = ?, source_id = ?, domain_type = ? where project_id = ? and domain_name = ? and url = ?";
         updateSourceIdStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target) values (?,?,?,?,?,?,?);";
         insertDefaultTargetStmt = new BatchedStatement(sql);
@@ -595,7 +595,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private void getCheckSourceIdStmt() throws SQLException, PropertyVetoException {
         if (checkSourceIdStmt == null) {
             Connection con = insertSourceIdStmt.getConnection();
-            String sql = "SELECT source_type, source_id FROM gros.source_id WHERE project_id = ? AND domain_name = ? AND url = ?";
+            String sql = "SELECT source_type, source_id, domain_type FROM gros.source_id WHERE project_id = ? AND domain_name = ? AND url = ?";
             checkSourceIdStmt = con.prepareStatement(sql);
         }
     }
@@ -609,17 +609,18 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * identify the domain object.
      * @param source_type The type of the source.
      * @param source_id The identifier of the domain object at the source.
+     * @param domain_type The type of the domain object.
      * @return An indicator of the state of the database regarding the source ID.
      * This is CheckResult.MISSING if the source ID for the provided project,
      * domain name and URL does not exist. This is CheckResult.DIFFERS if there
      * is a row for the provided domain name in the database, but it has
-     * a different source type or ID in its fields. This is CheckResult.EXISTS
-     * if there is a source ID in the database that matches all the provided
-     * parameters.
+     * a different source type, ID or domain type in its fields. This is
+     * CheckResult.EXISTS if there is a source ID in the database that matches
+     * all the provided parameters.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public CheckResult check_source_id(int projectId, String domain_name, String url, String source_type, String source_id) throws SQLException, PropertyVetoException {
+    public CheckResult check_source_id(int projectId, String domain_name, String url, String source_type, String source_id, String domain_type) throws SQLException, PropertyVetoException {
         getCheckSourceIdStmt();
         
         checkSourceIdStmt.setInt(1, projectId);
@@ -629,7 +630,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         try (ResultSet rs = checkSourceIdStmt.executeQuery()) {
             while (rs.next()) {
                 if ((source_type == null ? rs.getObject("source_type") == null : source_type.equals(rs.getString("source_type"))) &&
-                    source_id.equals(rs.getString("source_id"))) {
+                    source_id.equals(rs.getString("source_id")) &&
+                    (domain_type == null ? rs.getObject("domain_type") == null : domain_type.equals(rs.getString("domain_type")))) {
                     return CheckResult.EXISTS;
                 }
                 return CheckResult.DIFFERS;
@@ -647,10 +649,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * identify the domain object.
      * @param source_type The type of the source.
      * @param source_id The identifier of the domain object at the source.
+     * @param domain_type The type of the domain object.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_source_id(int projectId, String domain_name, String url, String source_type, String source_id) throws SQLException, PropertyVetoException {
+    public void insert_source_id(int projectId, String domain_name, String url, String source_type, String source_id, String domain_type) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertSourceIdStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
@@ -658,6 +661,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         pstmt.setString(3, url);
         setString(pstmt, 4, source_type);
         pstmt.setString(5, source_id);
+        setString(pstmt, 6, domain_type);
         
         insertSourceIdStmt.batch();
     }
@@ -670,17 +674,19 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * identify the domain object.
      * @param source_type The type of the source.
      * @param source_id The identifier of the domain object at the source.
+     * @param domain_type The type of the domain object.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void update_source_id(int projectId, String domain_name, String url, String source_type, String source_id) throws SQLException, PropertyVetoException {
+    public void update_source_id(int projectId, String domain_name, String url, String source_type, String source_id, String domain_type) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = updateSourceIdStmt.getPreparedStatement();
         
         setString(pstmt, 1, source_type);
         pstmt.setString(2, source_id);
-        pstmt.setInt(3, projectId);
-        pstmt.setString(4, domain_name);
-        pstmt.setString(5, url);
+        setString(pstmt, 3, domain_type);
+        pstmt.setInt(4, projectId);
+        pstmt.setString(5, domain_name);
+        pstmt.setString(6, url);
         
         updateSourceIdStmt.batch();
     }
