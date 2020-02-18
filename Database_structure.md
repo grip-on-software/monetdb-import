@@ -1315,6 +1315,8 @@ dashboard project definition.
         NULL if the source type could not be identified.
     -   **source_id** - TEXT: Identifier used by the source to provide
         access to the domain object's metric data.
+    -   **domain_type** - VARCHAR(32): The type of the domain object.
+        This is NULL if the domain type could not be identified.
 
 ## Build system tables (Jenkins)
 
