@@ -1155,6 +1155,8 @@ dashboard project definition.
         before August 2014, the domain name is the type of domain
         object, e.g., 'Product' or 'Street'. This is NULL if the domain
         name has not been deduced yet.
+    -   **domain_type** - VARCHAR(32): The type of the domain object.
+        This is NULL if the domain type could not be identified.
 
 
 -   **metric_value**: Singular metric data from quality report
