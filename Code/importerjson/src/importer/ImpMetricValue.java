@@ -145,13 +145,14 @@ public class ImpMetricValue extends BaseImport {
             String metric_name = (String) jsonObject.get("name");
             String base_name = (String) jsonObject.get("base_name");
             String domain_name = (String) jsonObject.get("domain_name");
+            String domain_type = (String) jsonObject.get("domain_type");
             String value = (String) jsonObject.get("value");
             String category = (String) jsonObject.get("category");
             String date = (String) jsonObject.get("date");
             String since_date = (String) jsonObject.get("since_date");
             MetricName nameParts = null;
             if (base_name != null && domain_name != null) {
-                nameParts = new MetricName(metric_name, base_name, domain_name);
+                nameParts = new MetricName(metric_name, base_name, domain_name, domain_type);
             }
 
             insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), Timestamp.valueOf(since_date), nameParts);

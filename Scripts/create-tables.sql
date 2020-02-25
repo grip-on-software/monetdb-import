@@ -178,6 +178,7 @@ CREATE TABLE "gros"."metric" (
 	"name"            VARCHAR(100)   NOT NULL,
 	"base_name"       VARCHAR(100)   NULL,
 	"domain_name"     VARCHAR(100)   NULL
+	"domain_type" VARCHAR(32) NULL,
 );
 
 CREATE TABLE "gros"."metric_value" (

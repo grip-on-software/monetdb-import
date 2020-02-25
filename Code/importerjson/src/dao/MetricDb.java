@@ -54,6 +54,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         private final String name;
         private final String base_name;
         private final String domain_name;
+        private final String domain_type;
         private final Integer id;
         
         /**
@@ -62,7 +63,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
          * domain names.
          */
         public MetricName(String name) {
-            this(name, null, null, null);
+            this(name, null, null, null, null);
         }
         
         /**
@@ -74,7 +75,20 @@ public class MetricDb extends BaseDb implements AutoCloseable {
          * team name, or product name.
          */
         public MetricName(String name, String base_name, String domain_name) {
-            this(name, base_name, domain_name, null);
+            this(name, base_name, domain_name, null, null);
+        }
+        
+        /**
+         * Create a metric name which has been split out into base name and domain name.
+         * @param name The name of the metric, possibly including project-specific
+         * domain names.
+         * @param base_name The base name of the metric, shared with other projects.
+         * @param domain_name The domain name of the metric, such as a project name,
+         * team name, or product name.
+         * @param domain_type The type of the domain object.
+         */
+        public MetricName(String name, String base_name, String domain_name, String domain_type) {
+            this(name, base_name, domain_name, domain_type, null);
         }
         
         /**
@@ -84,12 +98,14 @@ public class MetricDb extends BaseDb implements AutoCloseable {
          * @param base_name The base name of the metric, shared with other projects.
          * @param domain_name The domain name of the metric, such as a project name,
          * team name, or product name.
+         * @param domain_type The type of the domain object.
          * @param id The identifier of the metric name in the database.
          */
-        public MetricName(String name, String base_name, String domain_name, Integer id) {
+        public MetricName(String name, String base_name, String domain_name, String domain_type, Integer id) {
             this.name = name;
             this.base_name = base_name;
             this.domain_name = domain_name;
+            this.domain_type = domain_type;
             this.id = id;
         }
         
@@ -103,6 +119,10 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         public String getDomainName() {
             return this.domain_name;
+        }
+
+        public String getDomainType() {
+            return this.domain_type;
         }
         
         public Integer getId() {
@@ -119,6 +139,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 return (name.equals(otherName.name) &&
                         (base_name == null ? otherName.base_name == null : base_name.equals(otherName.base_name)) &&
                         (domain_name == null ? otherName.domain_name == null : domain_name.equals(otherName.domain_name)) &&
+                        (domain_type == null ? otherName.domain_type == null : domain_type.equals(otherName.domain_type)) &&
                         (id == null || otherName.id == null || id.equals(otherName.id)));
             }
             return false;
@@ -324,7 +345,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         baseNameCache = new HashSet<>();
         
         Connection con = insertMetricValueStmt.getConnection();
-        String sql = "SELECT name, base_name, domain_name, metric_id FROM gros.metric";
+        String sql = "SELECT name, base_name, domain_name, domain_type, metric_id FROM gros.metric";
         
         try (
             Statement stmt = con.createStatement();
@@ -334,8 +355,9 @@ public class MetricDb extends BaseDb implements AutoCloseable {
                 String name = rs.getString("name");
                 String base_name = rs.getString("base_name");
                 String domain_name = rs.getString("domain_name");
+                String domain_type = rs.getString("domain_type");
                 Integer id = Integer.parseInt(rs.getString("metric_id"));
-                nameCache.put(caseFold(name), new MetricName(name, base_name, domain_name, id));
+                nameCache.put(caseFold(name), new MetricName(name, base_name, domain_name, domain_type, id));
                 if (base_name != null) {
                     baseNameCache.add(base_name);
                 }
@@ -400,7 +422,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
             checkMetricStmt.setString(1, key);
             try (ResultSet rs = checkMetricStmt.executeQuery()) {
                 if (rs.next()) {
-                    found = new MetricName(rs.getString("name"), rs.getString("base_name"), rs.getString("domain_name"), rs.getInt("metric_id"));
+                    found = new MetricName(rs.getString("name"), rs.getString("base_name"), rs.getString("domain_name"), rs.getString("domain_type"), rs.getInt("metric_id"));
                 }
             }
 
@@ -429,7 +451,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
             }
             // Update the name cache to use the new name to refer to the metric ID
             nameCache.put(key, null);
-            nameCache.put(caseFold(name.getName()), new MetricName(name.getName(), name.getBaseName(), name.getDomainName(), metric_id));
+            nameCache.put(caseFold(name.getName()), new MetricName(name.getName(), name.getBaseName(), name.getDomainName(), name.getDomainType(), metric_id));
         }
         
         PreparedStatement pstmt = updateMetricStmt.getPreparedStatement();

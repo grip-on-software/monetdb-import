@@ -56,10 +56,11 @@ public class ImpMetricTarget extends BaseImport {
                 String domain_name = (String) jsonObject.get("domain_name");
                 String unchanged = (String) jsonObject.get("default");
                 String debt_target = (String) jsonObject.get("debt_target");
+                String domain_type = (String) jsonObject.get("domain_type");
                 
                 MetricName metricName = metricDb.check_metric(name);
                 if (metricName == null) {
-                    metricDb.insert_metric(new MetricName(name, base_name, domain_name));
+                    metricDb.insert_metric(new MetricName(name, base_name, domain_name, domain_type));
                     metricName = metricDb.check_metric(name, true);
                 }
                 
