@@ -317,7 +317,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
     private void getCheckMetricStmt() throws SQLException, PropertyVetoException {
         if (checkMetricStmt == null) {
             Connection con = insertMetricValueStmt.getConnection();
-            String sql = "SELECT metric_id, name, base_name, domain_name FROM gros.metric WHERE UPPER(name) = ?";
+            String sql = "SELECT metric_id, name, base_name, domain_name, domain_type FROM gros.metric WHERE UPPER(name) = ?";
             checkMetricStmt = con.prepareStatement(sql);
         }
     }
