@@ -5,18 +5,24 @@
  */
 package importer;
 
+import dao.BatchedStatement;
 import dao.BatchedUpdateStatement;
+import dao.DataSource;
 import dao.ProjectDb;
 import dao.SaltDb;
 import java.beans.PropertyVetoException;
 import util.BaseImport;
 import java.io.FileReader;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.logging.Level;
 import org.json.simple.JSONObject;
 import util.BufferedJSONReader;
 
@@ -237,7 +243,43 @@ public class ImpDataIssue extends BaseImport {
             logException(ex);
         }
     }
-        
+
+    public void update_changelog_id(int projectID) {
+        String selectQuery = "SELECT issue.issue_id, issue.changelog_id\n" +
+            "FROM gros.issue\n" +
+            "LEFT JOIN gros.issue AS next_issue\n" +
+            "ON issue.issue_id = next_issue.issue_id AND issue.changelog_id = next_issue.changelog_id - 1\n" +
+            "LEFT JOIN gros.issue AS later_issue\n" +
+            "ON issue.issue_id = later_issue.issue_id AND issue.changelog_id = later_issue.changelog_id - 2\n" +
+            "WHERE next_issue.changelog_id IS NULL\n" +
+            "AND later_issue.changelog_id IS NOT NULL\n" +
+            (projectID == 0 ? "" : "AND issue.project_id = " + projectID);
+        String updateQuery = "UPDATE gros.issue SET changelog_id = changelog_id - 1 WHERE issue_id = ? AND changelog_id > ?";
+        try (
+            Connection con = DataSource.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(selectQuery);
+            BatchedStatement bstmt = new BatchedStatement(updateQuery)
+        ) {
+            int found = 0;
+            PreparedStatement pstmt = bstmt.getPreparedStatement();
+            while (rs.next()) {
+                int issue_id = rs.getInt("issue_id");
+                int changelog_id = rs.getInt("changelog_id");
+                pstmt.setInt(1, issue_id);
+                pstmt.setInt(2, changelog_id);
+                bstmt.batch();
+                found++;
+            }
+            
+            bstmt.execute();
+            getLogger().log(Level.INFO, "Corrected {0} skipped changelog IDs", found);
+        }
+        catch (Exception ex) {
+            logException(ex);
+        }
+    }
+
     @Override
     public String getImportName() {
         return "JIRA issues";

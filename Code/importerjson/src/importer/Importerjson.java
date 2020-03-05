@@ -96,7 +96,7 @@ public class Importerjson {
     private final static List<String> SPECIAL_TASKS = Arrays.asList(
         "sprintlink", "developerproject", "developerlink",
         "metric_domain_name", "metric_default_target",
-        "repo_sources",
+        "repo_sources", "issue_changelog_id",
         "encrypt"
     );
         
@@ -344,7 +344,7 @@ public class Importerjson {
         else if ("--".equals(args[0])) {
             // Only allow special tasks that may run project-independently
             if (!SPECIAL_TASKS.containsAll(tasks)) {
-                throw new ImporterException("Project must given for the provided tasks" + formatUsage());
+                throw new ImporterException("Project must be given for the provided tasks" + formatUsage());
             }
         }
         else {
@@ -450,6 +450,13 @@ public class Importerjson {
             catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "Cannot update repository sources", ex);
             }
+        }
+        
+        if (tasks.contains("issue_changelog_id")) {
+            long startTime = System.currentTimeMillis();
+            ImpDataIssue impIssue = new ImpDataIssue();
+            impIssue.update_changelog_id(projectID);
+            showCompleteTask("Updated issue changelog identifiers", startTime);
         }
         
         if (tasks.contains("encrypt")) {        
