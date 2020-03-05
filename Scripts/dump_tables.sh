@@ -116,6 +116,7 @@ large_tables=$(cat "$SCRIPT_DIR/large_tables.txt")
 echo "HOST=$HOST"
 echo "SCRIPT_DIR=$SCRIPT_DIR"
 echo "DUMPER_PATH=$DUMPER_PATH"
+echo "DUMPER_CONFIG=$DUMPER_CONFIG"
 echo "DUMP_DIRECTORY=$DUMP_DIRECTORY"
 echo "DEFINES=$DEFINES"
 
@@ -132,7 +133,7 @@ else
 	if [ -d "$DUMP_DIRECTORY" ]; then
 		rm -rf "$DUMP_DIRECTORY"
 	fi
-	mkdir "$DUMP_DIRECTORY"
+	mkdir -p "$DUMP_DIRECTORY"
 fi
 
 LINES=`cat "$SCRIPT_DIR/create-tables.sql" | grep '^CREATE TABLE' | \
