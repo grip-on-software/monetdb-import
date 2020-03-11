@@ -28,7 +28,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     private PreparedStatement insertVcsDeveloperStmt = null;
     private PreparedStatement checkVcsDeveloperStmt = null;
     private PreparedStatement searchVcsDeveloperStmt = null;
-    private PreparedStatement linkVcsDeveloperStmt = null;
+    private BatchedStatement linkVcsDeveloperStmt = null;
     
     private BatchedStatement insertProjectDeveloperStmt = null;
     private PreparedStatement checkProjectDeveloperStmt = null;
@@ -36,7 +36,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
     
     private BatchedStatement insertLdapDeveloperStmt = null;
     private PreparedStatement checkLdapDeveloperStmt = null;
-    private PreparedStatement linkLdapDeveloperStmt = null;
+    private BatchedStatement linkLdapDeveloperStmt = null;
 
     private BatchedStatement insertTfsDeveloperStmt = null;
     private PreparedStatement checkTfsDeveloperStmt = null;
@@ -110,6 +110,14 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         sql = "insert into gros.tfs_developer (project_id, display_name, email, alias_id, encryption) values (?,?,?,?,?);";
         insertTfsDeveloperStmt = new BatchedStatement(sql);
 
+        String condition = "(encryption=? AND ((display_name IS NOT NULL AND display_name=?) OR (email IS NOT NULL AND email=?)))";
+        sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
+        linkVcsDeveloperStmt = new BatchedStatement(sql);
+
+        condition = "(encryption=? AND ((display_name IS NOT NULL AND display_name=?) OR (email IS NOT NULL AND email=?)))";
+        sql = "UPDATE gros.ldap_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
+        linkLdapDeveloperStmt = new BatchedStatement(sql);
+        
         localDomain = getBundle().getString("email_domain");
     }
     
@@ -150,8 +158,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         checkVcsDeveloperStmt = null;
         closeStatement(searchVcsDeveloperStmt);
         searchVcsDeveloperStmt = null;
-        closeStatement(linkVcsDeveloperStmt);
-        linkVcsDeveloperStmt = null;
+        linkVcsDeveloperStmt.execute();
+        linkVcsDeveloperStmt.close();
         
         if (vcsNameCache != null) {
             vcsNameCache.clear();
@@ -171,8 +179,8 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         
         closeStatement(checkLdapDeveloperStmt);
         checkLdapDeveloperStmt = null;
-        closeStatement(linkLdapDeveloperStmt);
-        linkLdapDeveloperStmt = null;
+        linkLdapDeveloperStmt.execute();
+        linkLdapDeveloperStmt.close();
         
         closeStatement(checkTfsDeveloperStmt);
         checkTfsDeveloperStmt = null;
@@ -287,15 +295,6 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
             Connection con = insertDeveloperStmt.getConnection();
             String sql = "SELECT display_name, email FROM gros.vcs_developer WHERE encryption = 0 AND display_name LIKE ?";
             searchVcsDeveloperStmt = con.prepareStatement(sql);
-        }
-    }
-    
-    private void getLinkVcsDeveloperStmt() throws SQLException, PropertyVetoException {
-        if (linkVcsDeveloperStmt == null) {
-            Connection con = insertDeveloperStmt.getConnection();
-            String condition = "(encryption=? AND ((display_name IS NOT NULL AND display_name=?) OR (email IS NOT NULL AND email=?)))";
-            String sql = "UPDATE gros.vcs_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
-            linkVcsDeveloperStmt = con.prepareStatement(sql);
         }
     }
     
@@ -459,27 +458,27 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public boolean link_vcs_developer(int project_id, int jira_id, Developer dev) throws SQLException, PropertyVetoException {
-        getLinkVcsDeveloperStmt();
-        
         if (jira_id == 0) {
             return false;
         }
         
-        linkVcsDeveloperStmt.setInt(1, jira_id);
+        PreparedStatement pstmt = linkVcsDeveloperStmt.getPreparedStatement();
         
-        linkVcsDeveloperStmt.setInt(2, SaltDb.Encryption.NONE);
-        setString(linkVcsDeveloperStmt, 3, dev.getDisplayName());
-        setString(linkVcsDeveloperStmt, 4, dev.getEmail());
+        pstmt.setInt(1, jira_id);
+        
+        pstmt.setInt(2, SaltDb.Encryption.NONE);
+        setString(pstmt, 3, dev.getDisplayName());
+        setString(pstmt, 4, dev.getEmail());
 
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(project_id);
-            linkVcsDeveloperStmt.setInt(5, project_id == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
-            setString(linkVcsDeveloperStmt, 6, saltDb.hash(dev.getDisplayName(), pair));
-            setString(linkVcsDeveloperStmt, 7, saltDb.hash(dev.getEmail(), pair));
+            pstmt.setInt(5, project_id == 0 ? SaltDb.Encryption.GLOBAL : SaltDb.Encryption.PROJECT);
+            setString(pstmt, 6, saltDb.hash(dev.getDisplayName(), pair));
+            setString(pstmt, 7, saltDb.hash(dev.getEmail(), pair));
         }
         
-        int rows = linkVcsDeveloperStmt.executeUpdate();
-        return rows > 0;
+        linkVcsDeveloperStmt.batch();
+        return true;
     }
     
     private void getCheckProjectDeveloperStmt() throws SQLException, PropertyVetoException {
@@ -636,15 +635,6 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         }
     }
     
-    private void getLinkLdapDeveloperStmt() throws SQLException, PropertyVetoException {
-        if (linkLdapDeveloperStmt == null) {
-            Connection con = insertDeveloperStmt.getConnection();
-            String condition = "(encryption=? AND ((display_name IS NOT NULL AND display_name=?) OR (email IS NOT NULL AND email=?)))";
-            String sql = "UPDATE gros.ldap_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
-            linkLdapDeveloperStmt = con.prepareStatement(sql);
-        }
-    }
-
     /**
      * Insert a developer in the LDAP developer table of the database. In case developer
      * id is not set, the developer id from Jira will be 0.
@@ -782,27 +772,27 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
      * @throws PropertyVetoException If the database connection cannot be configured
      */
     public boolean link_ldap_developer(int project_id, int jira_id, Developer dev) throws SQLException, PropertyVetoException {
-        getLinkLdapDeveloperStmt();
-        
         if (project_id == 0 || jira_id == 0) {
             return false;
         }
         
-        linkLdapDeveloperStmt.setInt(1, jira_id);
+        PreparedStatement pstmt = linkLdapDeveloperStmt.getPreparedStatement();
         
-        linkLdapDeveloperStmt.setInt(2, SaltDb.Encryption.NONE);
-        setString(linkLdapDeveloperStmt, 3, dev.getDisplayName());
-        setString(linkLdapDeveloperStmt, 4, dev.getEmail());
+        pstmt.setInt(1, jira_id);
+        
+        pstmt.setInt(2, SaltDb.Encryption.NONE);
+        setString(pstmt, 3, dev.getDisplayName());
+        setString(pstmt, 4, dev.getEmail());
 
         try (SaltDb saltDb = new SaltDb()) {
             SaltDb.SaltPair pair = saltDb.get_salt(project_id);
-            linkLdapDeveloperStmt.setInt(5, SaltDb.Encryption.PROJECT);
-            setString(linkLdapDeveloperStmt, 6, saltDb.hash(dev.getDisplayName(), pair));
-            setString(linkLdapDeveloperStmt, 7, saltDb.hash(dev.getEmail(), pair));
+            pstmt.setInt(5, SaltDb.Encryption.PROJECT);
+            setString(pstmt, 6, saltDb.hash(dev.getDisplayName(), pair));
+            setString(pstmt, 7, saltDb.hash(dev.getEmail(), pair));
         }
         
-        int rows = linkLdapDeveloperStmt.executeUpdate();
-        return rows > 0;
+        linkLdapDeveloperStmt.batch();
+        return true;
     }
 
     private void getCheckTfsDeveloperStmt() throws SQLException, PropertyVetoException {

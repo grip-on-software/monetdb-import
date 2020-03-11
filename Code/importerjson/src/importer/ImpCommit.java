@@ -344,7 +344,7 @@ public class ImpCommit extends BaseImport {
                     }
                 }
             }
-            getLogger().log(Level.INFO, "Linked {0} VCS/LDAP developers to JIRA developers", successes);
+            getLogger().log(Level.INFO, "Linked up to {0} VCS/LDAP developers to JIRA developers", successes);
         }
         catch (FileNotFoundException ex) {
             getLogger().log(Level.WARNING, "Cannot link VCS/LDAP developers to JIRA developers: {0}", ex.getMessage());
