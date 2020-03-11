@@ -249,10 +249,9 @@ public class ImpDataIssue extends BaseImport {
             "FROM gros.issue\n" +
             "LEFT JOIN gros.issue AS next_issue\n" +
             "ON issue.issue_id = next_issue.issue_id AND issue.changelog_id = next_issue.changelog_id - 1\n" +
-            "LEFT JOIN gros.issue AS later_issue\n" +
-            "ON issue.issue_id = later_issue.issue_id AND issue.changelog_id = later_issue.changelog_id - 2\n" +
+            "JOIN (SELECT issue_id, MAX(changelog_id) AS changelog_id FROM gros.issue GROUP BY issue_id) AS max_issue\n" +
+            "ON issue.issue_id = max_issue.issue_id AND issue.changelog_id < max_issue.changelog_id\n" +
             "WHERE next_issue.changelog_id IS NULL\n" +
-            "AND later_issue.changelog_id IS NOT NULL\n" +
             (projectID == 0 ? "" : "AND issue.project_id = " + projectID);
         String updateQuery = "UPDATE gros.issue SET changelog_id = changelog_id - 1 WHERE issue_id = ? AND changelog_id > ?";
         try (
