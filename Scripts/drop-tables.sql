@@ -31,3 +31,4 @@ DROP TABLE "gros"."merge_request_note";
 DROP TABLE "gros"."commit_comment";
 DROP TABLE "gros"."reservation";
 DROP TABLE "gros"."update_tracker";
+DROP TABLE "gros"."sprint_features";
