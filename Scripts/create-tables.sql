@@ -177,7 +177,7 @@ CREATE TABLE "gros"."metric" (
 	"metric_id"       INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL,
 	"base_name"       VARCHAR(100)   NULL,
-	"domain_name"     VARCHAR(100)   NULL
+	"domain_name"     VARCHAR(100)   NULL,
 	"domain_type" VARCHAR(32) NULL
 );
 
