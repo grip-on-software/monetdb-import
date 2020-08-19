@@ -95,7 +95,7 @@ CREATE TABLE "gros"."project_developer" (
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
 	"encryption"   INTEGER   DEFAULT 0,
-	"team_id"      INTEGER   NULL,
+	"team_id"      INTEGER   NULL
 );
 CREATE UNIQUE INDEX "pk_project_developer_id" ON "gros"."project_developer" ("project_id", "team_id", "developer_id");
 
@@ -178,7 +178,7 @@ CREATE TABLE "gros"."metric" (
 	"name"            VARCHAR(100)   NOT NULL,
 	"base_name"       VARCHAR(100)   NULL,
 	"domain_name"     VARCHAR(100)   NULL
-	"domain_type" VARCHAR(32) NULL,
+	"domain_type" VARCHAR(32) NULL
 );
 
 CREATE TABLE "gros"."metric_value" (
