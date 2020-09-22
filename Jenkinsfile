@@ -58,11 +58,12 @@ pipeline {
         }
         stage('Dependency Check') {
             steps {
-                dir('security-tooling') {
+                dir('security') {
                     checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/ICTU/security-tooling']]]
                     sh 'sed -i "s/\\r$//" *.sh'
                     sh 'cp ../Code/importerjson/suppression.xml suppression.xml'
-                    sh 'sed -i "s/\\(:\\/tmp\\/src\\)/\\1 -v dependency-check-data:\\/tmp\\/dependency-check\\/data/" ./security_dependencycheck.sh'
+                    sh 'mkdir -p -m 0777 "$HOME/OWASP-Dependency-Check/data/cache"'
+                    sh 'mkdir -p -m 0777 "$WORKSPACE/owasp-dep"'
                     sh 'bash ./security_dependencycheck.sh "$WORKSPACE" "$WORKSPACE/owasp-dep" --exclude "**/.git/**" --exclude "**/coverage/**" --exclude "**/build/**" --exclude "**/dist/**"'
                 }
             }
