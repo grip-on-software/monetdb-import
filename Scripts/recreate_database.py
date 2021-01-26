@@ -130,7 +130,7 @@ def main():
     try:
         control = Control(hostname=args.hostname, passphrase=args.passphrase)
     except socket.error as error:
-        raise RuntimeError('Cannot connect, address resolution error: {}'.format(error.strerror))
+        raise RuntimeError('Cannot connect, address resolution error') from error
 
     if not args.force and not check(args.database):
         logging.info('Canceling process due to user input.')
