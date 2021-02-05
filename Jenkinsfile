@@ -96,7 +96,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'monetdb-import-settings', variable: 'VALIDATE_SETTINGS')]) {
                     sh 'pip install -r Scripts/requirements.txt'
                     sh 'pip install pylint'
-                    sh 'pylint Scripts/*.py'
+                    sh 'pylint --disable=duplicate-code Scripts/*.py'
                     script {
                         def ret = sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING --branch $BRANCH_NAME', returnStatus: true
                         if (ret == 2) {

@@ -1,3 +1,9 @@
+-- %%
+-- schema: gros
+-- table: source_id
+-- action: create
+-- %%
+
 CREATE TABLE "gros"."source_id" (
 	"project_id" INTEGER NOT NULL,
 	"domain_name" VARCHAR(100) NOT NULL,

@@ -1,3 +1,9 @@
+-- %%
+-- schema: gros
+-- table: metric_default
+-- action: add
+-- %%
+
 CREATE TABLE "gros"."metric_default" (
 	"base_name"      VARCHAR(100) NOT NULL,
 	"version_id"     VARCHAR(100) NOT NULL,

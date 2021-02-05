@@ -1,3 +1,9 @@
+-- %%
+-- schema: gros
+-- table: ldap_developer
+-- action: create
+-- %%
+
 CREATE TABLE "gros"."ldap_developer" (
 	"project_id"   INTEGER NOT NULL,
 	"name"         VARCHAR(64) NOT NULL, 
