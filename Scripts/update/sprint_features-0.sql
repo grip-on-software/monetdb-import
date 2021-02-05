@@ -1,3 +1,11 @@
+-- %%
+-- schema: gros
+-- table: sprint_features
+-- action: create
+-- %%
+
+-- Sprint features cache table
+
 CREATE TABLE "gros"."sprint_features" (
     "project_id" INTEGER NOT NULL,
     "sprint_id" INTEGER NOT NULL,

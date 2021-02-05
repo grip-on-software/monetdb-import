@@ -1,4 +1,31 @@
+-- %%
+-- schema: gros
+-- table: issue
+-- columns:
+-- - name: watchers
+--   action: alter
+--   "null": false
+-- - name: labels
+--   action: alter
+--   "null": false
+-- - name: resolution_date
+--   action: alter
+--   "null": true
+-- - name: sprint_id
+--   action: alter
+--   "null": true
+-- - name: updated_by
+--   action: alter
+--   "null": true
+-- - name: environment
+--   action: add
+-- - name: external_project
+--   action: add
+-- %%
+
 -- Update NULLable fields
+-- Note that a later update reverts the changes to expected_ltcs, expected_phtcs
+-- and test_execution_time. Thus they are not in the schema above.
 
 ALTER TABLE gros.issue ALTER COLUMN "watchers" SET NOT NULL;
 ALTER TABLE gros.issue ALTER COLUMN "labels" SET NOT NULL;

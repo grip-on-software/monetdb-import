@@ -1,3 +1,4 @@
 gitpython
 pymonetdb
+PyYAML
 requests

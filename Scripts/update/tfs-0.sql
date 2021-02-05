@@ -1,5 +1,11 @@
 -- TFS items
 
+-- %%
+-- schema: gros
+-- table: tfs_developer
+-- action: create
+-- %%
+
 CREATE TABLE "gros"."tfs_developer" (
 	"project_id"   INTEGER NOT NULL,
 	"display_name" VARCHAR(100) NOT NULL,
@@ -8,6 +14,12 @@ CREATE TABLE "gros"."tfs_developer" (
 	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_tfs_developer_id" PRIMARY KEY ("project_id", "display_name")
 );
+
+-- %%
+-- schema: gros
+-- table: tfs_sprint
+-- action: create
+-- %%
 
 CREATE TABLE "gros"."tfs_sprint" (
 	"sprint_id" INTEGER NOT NULL AUTO_INCREMENT,
@@ -20,6 +32,12 @@ CREATE TABLE "gros"."tfs_sprint" (
         CONSTRAINT "pk_tfs_sprint_id" PRIMARY KEY ("sprint_id")
 );
 
+-- %%
+-- schema: gros
+-- table: tfs_team
+-- action: create
+-- %%
+
 CREATE TABLE "gros"."tfs_team" (
 	"team_id" INTEGER NOT NULL AUTO_INCREMENT,
 	"project_id" INTEGER NOT NULL,
@@ -28,6 +46,12 @@ CREATE TABLE "gros"."tfs_team" (
 	"description" VARCHAR(500) NULL,
 		CONSTRAINT "pk_tfs_team_id" PRIMARY KEY ("team_id")
 );
+
+-- %%
+-- schema: gros
+-- table: tfs_team_member
+-- action: create
+-- %%
 
 CREATE TABLE "gros"."tfs_team_member" (
 	"team_id" INTEGER NOT NULL,
@@ -38,6 +62,12 @@ CREATE TABLE "gros"."tfs_team_member" (
 	"encryption"     INTEGER   DEFAULT 0,
         CONSTRAINT "pk_tfs_team_member_id" PRIMARY KEY ("team_id", "name")
 );
+
+-- %%
+-- schema: gros
+-- table: tfs_work_item
+-- action: create
+-- %%
 
 CREATE TABLE "gros"."tfs_work_item" (
 	"issue_id"       INTEGER     NOT NULL,
