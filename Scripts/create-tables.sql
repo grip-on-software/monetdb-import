@@ -95,7 +95,7 @@ CREATE TABLE "gros"."project_developer" (
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
 	"encryption"   INTEGER   DEFAULT 0,
-	"team_id"      INTEGER   NULL,
+	"team_id"      INTEGER   NULL
 );
 CREATE UNIQUE INDEX "pk_project_developer_id" ON "gros"."project_developer" ("project_id", "team_id", "developer_id");
 
@@ -177,8 +177,8 @@ CREATE TABLE "gros"."metric" (
 	"metric_id"       INTEGER     NOT NULL AUTO_INCREMENT,
 	"name"            VARCHAR(100)   NOT NULL,
 	"base_name"       VARCHAR(100)   NULL,
-	"domain_name"     VARCHAR(100)   NULL
-	"domain_type" VARCHAR(32) NULL,
+	"domain_name"     VARCHAR(100)   NULL,
+	"domain_type" VARCHAR(32) NULL
 );
 
 CREATE TABLE "gros"."metric_value" (
@@ -576,4 +576,14 @@ CREATE TABLE "gros"."update_tracker" (
 	"contents" TEXT NOT NULL,
 	"update_date" TIMESTAMP NULL,
 		CONSTRAINT "pk_update_tracker_id" PRIMARY KEY ("project_id", "filename")
+);
+
+CREATE TABLE "gros"."sprint_features" (
+    "project_id" INTEGER NOT NULL,
+    "sprint_id" INTEGER NOT NULL,
+    "component" VARCHAR(100) NULL,
+    "name" VARCHAR(200) NOT NULL,
+    "value" FLOAT NULL,
+    "details" TEXT NULL,
+    "update_date" TIMESTAMP NULL
 );
