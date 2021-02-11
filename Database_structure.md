@@ -1425,3 +1425,28 @@ dashboard project definition.
         indicates a global hash pair.
     -   **salt** - VARCHAR(32): First salt of the project data.
     -   **pepper** - VARCHAR(32): Second salt of the project data.
+
+## Cache tables
+
+-   **sprint_features**: Cached features related to sprints.
+    -   **project_id** - INT - reference to project.project_id: The
+        project for which the sprint feature holds.
+    -   **sprint_id** - INT - reference to sprint.sprint_id: The sprint
+        for which the feature holds.
+    -   **component** - VARCHAR(100): The subcomponent of the project
+        for which the feature holds. Can be NULL if it applies to the
+        full project (or there are no subcomponents known for this
+        project).
+    -   **name** - VARCHAR(200): The name of the feature that is stored
+        in the cache.
+    -   **value** - FLOAT: The value of the feature. This can be NULL if
+        the feature is known to be unknown for this combination of
+        project and sprint.
+    -   **details** - TEXT: Additional information that is collected
+        during the calculation of the feature, which could be used to
+        link to sources or describe subparts of the feature. This can be
+        NULL if there are no details for this feature.
+    -   **update_date** - TIMESTAMP: The latest date at which the
+        feature was calculated for this project and sprint. This can be
+        NULL if older cached data was used that does not track the date
+        of the calculation.
