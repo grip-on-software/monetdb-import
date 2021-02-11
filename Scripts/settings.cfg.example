@@ -12,6 +12,7 @@ token = $JENKINS_TOKEN
 crumb = yes
 [schema]
 url = $SCHEMA_URL
+path = create-tables.sql
 verify = $SCHEMA_VERIFY
 username = $SCHEMA_USERNAME
 password = $SCHEMA_PASSWORD

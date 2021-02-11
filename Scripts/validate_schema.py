@@ -9,6 +9,7 @@ import logging
 import os.path
 import re
 import sys
+from urllib.parse import urlparse
 import git
 from requests import Session
 from requests.auth import HTTPBasicAuth
@@ -27,8 +28,8 @@ def parse_args(config):
         verify = True
 
     parser = ArgumentParser(description=description)
-    parser.add_argument('--path', default='create-tables.sql',
-                        help='Path to read schema from')
+    parser.add_argument('--path', default=config.get('schema', 'path'),
+                        help='Path or URL to retrieve schema from')
     parser.add_argument('--url', default=config.get('schema', 'url'),
                         help='URL to retrieve documentation from')
     parser.add_argument('--verify', nargs='?', const=True, default=verify,
@@ -134,7 +135,7 @@ def parse(tokens, line_iterator, data=None):
 
     return data
 
-def parse_schema(path):
+def parse_schema(session, path):
     """
     Parse an SQL table schema.
     """
@@ -169,8 +170,27 @@ def parse_schema(path):
         }
     }
 
-    with open(path, 'r') as schema_file:
-        return parse(tokens, schema_file)
+    try:
+        url = urlparse(path)
+        if url.scheme == '' or url.netloc == '':
+            raise ValueError('URL must be absolute')
+
+        request = session.get(path)
+        if request.status_code == 404:
+            raise RuntimeError(f"Schema URL not found: {url}")
+
+        request.raise_for_status()
+        if request.headers['Content-Type'] != 'application/json':
+            raise RuntimeError('Can only use JSON schema URLs, content type of '
+                               f"{url} is {request.headers['Content-Type']}")
+
+        try:
+            return request.json()
+        except ValueError as error:
+            raise RuntimeError(f"JSON schema at {url} was invalid") from error
+    except ValueError:
+        with open(path, 'r') as schema_file:
+            return parse(tokens, schema_file)
 
 def parse_documentation(session, url, data=None):
     """
@@ -409,7 +429,7 @@ def main():
         documentation = parse_documentation(session, branch_url,
                                             data=documentation)
 
-    schema = parse_schema(args.path)
+    schema = parse_schema(session, args.path)
 
     if args.export:
         with open('tables-documentation.json', 'w') as tables_file:
