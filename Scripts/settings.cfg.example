@@ -5,7 +5,7 @@ username = $MONETDB_USERNAME
 password = $MONETDB_PASSWORD
 database = $MONETDB_DATABASE
 [jenkins]
-url = $JENKINS_URL
+host = $JENKINS_HOST
 job = $JENKINS_JOB
 username = $JENKINS_USERNAME
 token = $JENKINS_TOKEN

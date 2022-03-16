@@ -1,5 +1,5 @@
 """
-Script to validate a documentation page against the datbase schema.
+Script to validate a documentation page against the database schema.
 """
 
 from argparse import ArgumentParser

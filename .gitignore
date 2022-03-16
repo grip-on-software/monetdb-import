@@ -2,7 +2,7 @@
 /Code/importerjson/build/
 /Code/importerjson/nbproject/private/
 /Code/importerjson/src/util/import.properties
-/Scripts/settings.cfg
+/Scripts/settings*.cfg
 /Scripts/.monetdb
 /Scripts/tables-documentation.json
 /Scripts/tables-schema.json
