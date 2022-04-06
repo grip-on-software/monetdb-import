@@ -400,6 +400,7 @@ CREATE TABLE "gros"."tfs_work_item" (
 	"team_id"        INTEGER    NULL,
 	"updated_by"     VARCHAR(100)    NULL,
 	"labels"         INTEGER    NULL,
+    "encryption"     INTEGER    DEFAULT 0,
         CONSTRAINT "pk_work_item_id" PRIMARY KEY ("issue_id", "changelog_id")
 );
 
