@@ -56,6 +56,10 @@ public class ImpCommit extends BaseImport {
         
         keys.put("issue", new String[]{"issue_id", "changelog_id"});
         keys.put("comment", new String[]{"comment_id"});
+
+        keys.put("tfs_developer", new String[]{"project_id", "display_name"});
+        keys.put("tfs_team_member", new String[]{"team_id", "name"});
+        keys.put("tfs_work_item", new String[]{"issue_id", "changelog_id"});
         return keys;
     }
         
@@ -72,6 +76,10 @@ public class ImpCommit extends BaseImport {
         
         fields.put("issue", new String[]{"reporter", "assignee", "updated_by"});
         fields.put("comment", new String[]{"author", "updater"});
+
+        fields.put("tfs_developer", new String[]{"display_name", "email"});
+        fields.put("tfs_team_member", new String[]{"name", "display_name"});
+        fields.put("tfs_work_item", new String[]{"reporter", "assignee", "updated_by"});
         return fields;
     }
     
