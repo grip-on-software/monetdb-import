@@ -13,7 +13,7 @@ exports partially via the `monetdb-dumper` repository.
 ### Requirements, configuration and building
 
 The importer application has been tested with OpenJDK 8. In order to build the 
-application, we use Ant 1.10.1+.
+application, we use Ant 1.10.1+ with the JDK (a package with `javac`).
 
 Before building, ensure you have create a file in the path 
 `Code/importerjson/nbproject/private/config.properties` containing the 
