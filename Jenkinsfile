@@ -86,7 +86,7 @@ pipeline {
         stage('Validate') {
             agent {
                 docker {
-                    image '$VALIDATE_IMAGE'
+                    image "${env.VALIDATE_IMAGE}"
                     args '-u root'
                 }
             }
