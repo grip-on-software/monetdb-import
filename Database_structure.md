@@ -1133,6 +1133,7 @@ These tables include data from Gitlab/Git and Subversion.
     -   **labels** - INT: The number of labels that the work item
         currently has. This is NULL if the number of labels could not be
         obtained for this work item.
+    -   **encryption** - INT(row encryption)
 
 ## Metrics tables (Quality dashboard history)
 
