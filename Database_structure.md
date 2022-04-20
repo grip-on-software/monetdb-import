@@ -245,9 +245,8 @@ purpose.
 ### Context tables
 
 -   **sprint**: Data regarding a sprint registered in JIRA, including
-    the start and end dates.
-    -   **sprint_id** - INT - primary key: Internal JIRA identifier of
-        the sprint.
+    the start and end dates. Primary key is (sprint_id, project_id).
+    -   **sprint_id** - INT: Internal JIRA identifier of the sprint.
     -   **project_id** - INT - reference to project.project_id: Project
         in which the sprint occurs. There may be multiple projects which
         use the same sprint ID, for example in subprojects and projects
@@ -553,7 +552,7 @@ purpose.
 
 
 -   **subtask**: Links that exists between issues and their subtasks,
-    different from the issue links.
+    different from the issue links. Primary key is (id_parent, id_subtask).
     -   **id_parent** - INT - reference to issue.issue_id: The parent
         issue.
     -   **id_subtask** - INT - reference to issue.issue_id: The subtask
@@ -675,7 +674,8 @@ These tables include data from Gitlab/Git and Subversion.
         whether it includes the diff or if it is the new file size.
 
 
--   **tag**: Release tags specified in the repository.
+-   **tag**: Release tags specified in the repository. Primary key is (repo_id, 
+    tag_name).
     -   **repo_id** - INT - reference to repo.id: The repository in
         which the tag is added.
     -   **tag_name** - VARCHAR(100): The name of the tag.
@@ -805,7 +805,7 @@ These tables include data from Gitlab/Git and Subversion.
         obtained.
     -   **closed_date** - TIMESTAMP: Time at which the issue is closed.
         This is NULL if the issue is not yet closed.
-    -   **closer_id**: INT - reference to vcs_developer.alias_id:
+    -   **closer_id** - INT - reference to vcs_developer.alias_id:
         Identifier of the developer that closed the issue, either by
         fixing the problem or by considering it to not be an issue that
         should be solved. This is NULL if the issue is not yet closed.
@@ -886,7 +886,8 @@ These tables include data from Gitlab/Git and Subversion.
 
 
 -   **merge_request_review**: A vote given by a reviewer to a pull
-    request in a GitHub or Team Foundation Server instance.
+    request in a GitHub or Team Foundation Server instance. Primary key is 
+    (repo_id, request_id, reviewer_id).
     -   **repo_id** - reference to repo.id: Repository for which the
         review was made.
     -   **request_id** - INT - reference to merge_request.request_id:
@@ -1371,7 +1372,8 @@ dashboard project definition.
 
 ## User administration (LDAP)
 
--   **ldap_developer**: User names from an LDAP database.
+-   **ldap_developer**: User names from an LDAP database. Primary key is 
+    (project_id, name).
     -   **project_id** - INT - reference to project.project_id: Project
         to which the developer has (administrative) access to by being a
         part of a group specifically created for the project.
@@ -1406,7 +1408,7 @@ dashboard project definition.
 
 -   **update_tracker**: Files that keep track of where to start
     gathering data from for incremental updates and database
-    synchronization.
+    synchronization. Primary key is (project_id, filename).
     -   **project_id** - INT - reference to project.project_id: The
         project to which the tracker file belongs.
     -   **filename** - VARCHAR(255): The name of the file (without path)
@@ -1420,8 +1422,8 @@ dashboard project definition.
 
 -   **project_salt**: Project-specific hash pairs that are used for
     one-way encryption of [sensitive data](sensitive_data).
-    -   **project_id** - INT - reference to project.project_id: The
-        project for which the hash holds. If this is 0, then it
+    -   **project_id** - INT - reference to project.project_id - primary key: 
+        The project for which the hash holds. If this is 0, then it
         indicates a global hash pair.
     -   **salt** - VARCHAR(32): First salt of the project data.
     -   **pepper** - VARCHAR(32): Second salt of the project data.
