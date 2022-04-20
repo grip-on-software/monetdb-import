@@ -49,10 +49,10 @@ such fields more thoroughly and uniformly.
     name. The maximum length limitation is 255 characters.
 -   **INT(row encryption)**: A field specifying which encryption level
     is applied to certain fields in the given row has encrypted fields.
-    This field exists in tables with sensitive data, specifically those with 
-    personally identifying information. The field levels bitmask is simply an
-    integer, where 0 means no encryption, 1 is encryption using
-    project-specific salts, 2 is encryption with global
+    This field exists in tables with [sensitive data](Sensitive_data.md), 
+    specifically those with personally identifying information. The field 
+    levels bitmask is simply an integer, where 0 means no encryption, 1 is 
+    encryption using project-specific salts, 2 is encryption with global
     (project-independent) salt and 3 means project-specific then global
     salt encryption. This can be extended later on with other masks to
     indicate which parts of the row are encrypted, e.g., only personal
@@ -1413,7 +1413,7 @@ dashboard project definition.
 
 
 -   **project_salt**: Project-specific hash pairs that are used for
-    one-way encryption of sensitive data.
+    one-way encryption of [sensitive data](Sensitive_data.md).
     -   **project_id** - INT - reference to project.project_id - primary key: 
         The project for which the hash holds. If this is 0, then it
         indicates a global hash pair.
