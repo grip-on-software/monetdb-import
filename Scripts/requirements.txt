@@ -2,3 +2,4 @@ gitpython
 pymonetdb
 PyYAML
 requests
+regex

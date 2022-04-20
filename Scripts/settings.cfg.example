@@ -12,6 +12,7 @@ token = $JENKINS_TOKEN
 crumb = yes
 [schema]
 url = $SCHEMA_URL
+doc = Database_structure.md
 path = create-tables.sql
 verify = $SCHEMA_VERIFY
 username = $SCHEMA_USERNAME
