@@ -11,33 +11,26 @@ follows:
     -   **Attribute** - TYPE(Special field type)
     -   **Attribute** - TYPE
 
-The schema documentation on this page is parsed by
-[validate_schema.py](http://git.liacs.nl/gros/monetdb-import/blob/master/Scripts/validate_schema.py)
-to compare against the schema definition
-[create-tables.sql](http://git.liacs.nl/gros/monetdb-import/blob/master/Scripts/create-tables.sql).
+The schema documentation is parsed by `validate_schema.py` to compare against 
+the schema definition `create-tables.sql`.
 Therefore, all table structures adhere to this format.
 
 Some attributes may mention their fields as being nullable by indicating
 the term `NULL` in their description. In some cases the NULL values are
 actually not in use because the data gatherer and importer do not
 provide such values to the database. However, in the future, the NULL
-values could be in use for the condition as is reserved on this page.
+values could be in use for the condition as is reserved in this documentation.
 Also note the (current) use of other types of values to indicate missing
 relations or unobtainable data, such as zeroes or empty strings.
 
-Additional details about how the data is imported can be found by
-browsing the
-[Javadoc](http://www.jenkins.example:8080/job/build-monetdb-import/job/master/Javadoc/)
-of the importer, especially the dao package.
+Additional details about how the data is imported can be found by browsing the 
+Javadoc of the importer which can be generated through `ant`. In particular, 
+the `dao` package may provide helpful documentation.
 
-Development of new schemas on branches of the monetdb-import repository
-may also create a development subpage for validation of the schema
-changes in the build in comparison to the documentation on this page as
-well as its overrides in the subpage. Additionally, an upgrade path is
-provided through new files in the
-[update](http://git.liacs.nl/gros/monetdb-import/tree/master/Scripts/update)
-tree on the branch. When the branch is merged, the subpage should be
-merged into this page and deleted.
+Development of new schemas on branches of the `monetdb-import` repository
+must provide adjustments to this documentation for validation of the schema
+changes in the build in comparison to the documentation. Additionally, an 
+upgrade path is provided through new files in the `update` tree on the branch.
 
 ## Special field types
 
@@ -56,9 +49,8 @@ such fields more thoroughly and uniformly.
     name. The maximum length limitation is 255 characters.
 -   **INT(row encryption)**: A field specifying which encryption level
     is applied to certain fields in the given row has encrypted fields.
-    This field exists in tables with [sensitive
-    data](sensitive_data), specifically those with personally
-    identifying information. The field levels bitmask is simply an
+    This field exists in tables with sensitive data, specifically those with 
+    personally identifying information. The field levels bitmask is simply an
     integer, where 0 means no encryption, 1 is encryption using
     project-specific salts, 2 is encryption with global
     (project-independent) salt and 3 means project-specific then global
@@ -401,8 +393,7 @@ purpose.
         the developer due to missing source information.
     -   **local_domain** - BOOL: Whether the email address of the
         developer has a local domain as defined in the importer
-        properties. In this case, whether the email ends with
-        '@ictu.nl'.
+        properties.
     -   **encryption** - INT(row encryption)
 
 
@@ -1422,7 +1413,7 @@ dashboard project definition.
 
 
 -   **project_salt**: Project-specific hash pairs that are used for
-    one-way encryption of [sensitive data](sensitive_data).
+    one-way encryption of sensitive data.
     -   **project_id** - INT - reference to project.project_id - primary key: 
         The project for which the hash holds. If this is 0, then it
         indicates a global hash pair.
