@@ -207,7 +207,7 @@ def handle_schema(update_filename, args, cursor, schema_tables, types):
     schema = ''
     do_update = False
     command = ""
-    with Path(update_filename).open('r') as update_file:
+    with Path(update_filename).open('r', encoding='utf-8') as update_file:
         for number, line in enumerate(update_file):
             if not do_update and line.rstrip() == '-- %%':
                 if yaml_start is None:

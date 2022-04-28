@@ -19,10 +19,10 @@ def check(database):
     Check whether the user confirms the action.
     """
 
-    prompt = '''This action wipes out the {0} database.
+    prompt = f'''This action wipes out the {database} database.
 This is a destructive process!
-Are you sure you want to delete all data from the {0} database,
-and replace the {0} database with a clean state? [y/N] '''.format(database)
+Are you sure you want to delete all data from the {database} database,
+and replace the {database} database with a clean state? [y/N] '''
     answer = input(prompt)
 
     if answer.lower() != 'y':
@@ -114,8 +114,7 @@ def delete_workspace(args):
     else:
         headers = {}
 
-    url = '{}/job/{}/doWipeOutWorkspace'.format(args.jenkins_host,
-                                                args.jenkins_job)
+    url = f'{args.jenkins_host}/job/{args.jenkins_job}/doWipeOutWorkspace'
     requests.post(url, auth=auth, headers=headers)
 
 def main():
@@ -168,7 +167,7 @@ def main():
 
     if args.import_tables:
         logging.info('Creating tables...')
-        with open(args.import_tables, 'r') as table_file:
+        with open(args.import_tables, 'r', encoding='utf-8') as table_file:
             command = ""
             for line in table_file:
                 if line.strip() == "":
