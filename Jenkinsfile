@@ -95,7 +95,6 @@ pipeline {
             }
             steps {
                 withCredentials([file(credentialsId: 'monetdb-import-settings', variable: 'VALIDATE_SETTINGS')]) {
-                    sh 'pip install -r Scripts/requirements.txt'
                     sh 'pip install pylint'
                     sh 'pylint --disable=duplicate-code Scripts/*.py'
                     script {
