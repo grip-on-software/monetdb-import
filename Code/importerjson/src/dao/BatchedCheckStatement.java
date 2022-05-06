@@ -60,10 +60,10 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
      */
     protected final int[] types;
     private int batchSize;
-	/**
-	 * A map of values of key fields to check for existing rows, and data fields
-	 * to insert in case the row is new.
-	 */
+    /**
+     * A map of values of key fields to check for existing rows, and data fields
+     * to insert in case the row is new.
+     */
     protected Map<List<Object>, Object> checkValues;
     
     private static int[] makeDefaultTypes(int length) {
@@ -191,12 +191,12 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
         return hasInserts;
     }
 
-	/**
-	 * Denote that a combination of key values and data values that is already
-	 * queued for insertion is actually existing and should not be inserted.
+    /**
+     * Denote that a combination of key values and data values that is already
+     * queued for insertion is actually existing and should not be inserted.
      * @param values The tuple of key values that belong to the data and should
-	 * not be inserted.
-	 */
+     * not be inserted.
+     */
     protected void markExisting(List<Object> foundValues) {
         checkValues.remove(foundValues);
     }

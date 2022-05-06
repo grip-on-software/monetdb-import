@@ -38,10 +38,10 @@ public abstract class BatchedUpdateStatement extends BatchedCheckStatement {
      * The batched statement that is used for updates of existing rows.
      */
     protected final BatchedStatement updateStmt;
-	/**
-	 * A map of values of key fields to select an existing row, and data fields
-	 * to replace existing values with.
-	 */
+    /**
+     * A map of values of key fields to select an existing row, and data fields
+     * to replace existing values with.
+     */
     protected Map<List<Object>, Object> updateValues = new HashMap<>();
 
     
