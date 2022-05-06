@@ -1,16 +1,54 @@
 #!/bin/bash
+
+# MonetDB database dumper.
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 set -e -o pipefail
 
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+SKIP_PATTERN="^$"
+OUTPUT_DIRECTORY=`pwd`
+DUMPER_PATH="$SCRIPT_DIR/../../monetdb-dumper/dist/databasedumper.jar"
+DUMPER_CONFIG="$SCRIPT_DIR/../../monetdb-dumper/nbproject/private/config.properties"
+
 function do_help() {
-	echo "$0 <-h host|--help|--dry-run> [-o|--output directory]"
-	echo "   [-s|--skip pattern] [-p|--dumper path] [-c|--config properies]"
-	echo "   [-d|--defines ...]"
+	echo "$0 <-h [host]|--help|--dry-run> [[-o|--output] directory]"
+	echo "   [[-s|--skip] pattern] [[-p|--dumper] path]"
+	echo "   [[-c|--config] properties] [-d|--defines ...]"
 	echo ""
 	echo "Perform a (partial) database dump of the GROS database."
 	echo "Each table is written into a separate file in a timestamped output"
 	echo "directory; depending on whether it is considered a large table,"
 	echo "the file is named <table>.sql.gz or <table>.csv.gz. Additionally,"
 	echo "the database schema is dumped to schema.sql."
+	echo ""
+	echo "Arguments (may also be positional, in this order):"
+	echo "   -o/--output: The directory to write the files into"
+	echo "      (default: working directory ($OUTPUT_DIRECTORY))"
+	echo "   -s/--skip: Regex that matches table names to skip dumping contents"
+	echo "   -p/--dumper: Path to monetdb-dumper for CSV dumps of large tables"
+	echo "      (default: $(realpath -m $DUMPER_PATH)"
+	echo "   -c/--config: Path to properties file for monetdb-dumper"
+	echo "      (default: $(realpath -m $DUMPER_CONFIG)"
+	echo "Non-positional arguments:"
+	echo "   -d/--defines: Property defines for monetdb-dumper"
+	echo "   -h: Database host to connect to for dumps, or show this help"
+	echo "   --help: Show this help"
+	echo "   --dry-run: Do not connect to database, only show what would happen"
 	exit
 }
 
@@ -32,9 +70,6 @@ function is_in_list() {
 
 	return $status
 }
-
-SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
-SKIP_PATTERN="^$"
 
 while [[ $# -gt 0 ]]; do
 	key="$1"
@@ -99,14 +134,6 @@ if [ ! -z "$4" ]; then
 fi
 if [ ! -z "$5" ]; then
 	DUMPER_CONFIG="$5"
-fi
-
-if [ -z "$OUTPUT_DIRECTORY" ]; then
-	OUTPUT_DIRECTORY=`pwd`
-fi
-if [ -z "$DUMPER_PATH" ]; then
-	DUMPER_PATH="$SCRIPT_DIR/../../monetdb-dumper/dist/databasedumper.jar"
-	DUMPER_CONFIG="$SCRIPT_DIR/../../monetdb-dumper/nbproject/private/config.properties"
 fi
 
 TIMESTAMP=`date +%Y-%m-%d`

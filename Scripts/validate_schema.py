@@ -1,5 +1,20 @@
 """
 Script to validate a documentation page against the database schema.
+
+Copyright 2017-2020 ICTU
+Copyright 2017-2022 Leiden University
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
 
 from argparse import ArgumentParser
@@ -32,7 +47,7 @@ SQL_TOKENS = {
                     'type': {
                         'pattern': regex.compile(rf'''{SQL_FIELD}\s+([A-Z]+
                                                       (?:\([0-9,]+\))?)''',
-                                                      re.X)
+                                                 re.X)
                     },
                     'null': {
                         'pattern': regex.compile(rf'{SQL_FIELD_TYPE}\s*NULL')
@@ -74,7 +89,7 @@ MW_TOKENS = {
             'primary_key_combined': {
                 'pattern': regex.compile(r'''.*\sPrimary\skey\sis\s
                                              \(([a-z_]+)(?:,\s([a-z_]+))*\)''',
-                                             re.X)
+                                         re.X)
             }
         },
         'within': {
@@ -85,7 +100,7 @@ MW_TOKENS = {
                         'pattern': regex.compile(rf"""{MW_FIELD}\s-\s
                                                       ([A-Z]+(?:
                                                       \([A-Za-z0-9, ]+\))?)""",
-                                                      re.X)
+                                                 re.X)
                     },
                     'primary_key': {
                         'pattern': regex.compile(rf"""{MW_FIELD}\s-\s[^:]*
@@ -95,7 +110,7 @@ MW_TOKENS = {
                         'pattern': regex.compile(rf"""{MW_FIELD}\s-\s[^:]
                                                       reference\sto\s
                                                       ([a-z_]+)\.([a-z_]+):""",
-                                                      re.X)
+                                                 re.X)
                     },
                     'null': {
                         'pattern': regex.compile(rf"""{MW_FIELD}[^:]*:\s.+\s
@@ -122,7 +137,7 @@ MD_TOKENS = {
             'limit': {
                 'pattern': regex.compile(r""".*\s+maximum\s+length\s+
                                              limitation\s+is\s+(\d+)""",
-                                             re.S | re.X)
+                                         re.S | re.X)
             }
         },
         'end': regex.compile(r"^- +\*\*[A-Z]+\([A-Za-z0-9, ]+\)")
@@ -135,13 +150,13 @@ MD_TOKENS = {
                 'data': False,
                 'pattern': regex.compile(rf"""^-\s+\*\*([a-z_]+)\*\*
                                               (?!.+^{MD_FIELD})""",
-                                              re.M | re.S | re.X)
+                                         re.M | re.S | re.X)
             },
             'primary_key_combined': {
                 'pattern': regex.compile(r'''.*\s+Primary\s+key\s+
                                              (?:is|consists\s+of)\s+\(
                                              ([a-z_]+)(?:,\s+([a-z_]+))*\)''',
-                                             re.S | re.X)
+                                         re.S | re.X)
             }
         },
         'within': {
@@ -155,14 +170,14 @@ MD_TOKENS = {
                                                       ^{MD_FIELD}\s+-\s+([A-Z]+
                                                       (?:\([A-Za-z0-9, ]+\))?)
                                                       (?!.+^{MD_FIELD})""",
-                                                      re.M | re.S | re.X)
+                                                 re.M | re.S | re.X)
                     },
                     'primary_key': {
                         'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
                                                       ^{MD_FIELD}\s+-\s+[^:]*
                                                       primary\s+key[:-]
                                                       (?!.+^{MD_FIELD})""",
-                                                      re.M | re.S | re.X)
+                                                 re.M | re.S | re.X)
                     },
                     'reference': {
                         'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
@@ -170,13 +185,13 @@ MD_TOKENS = {
                                                       reference\s+to\s+
                                                       ([a-z_]+)\.([a-z_]+):
                                                       (?!.+^{MD_FIELD})""",
-                                                      re.M | re.S | re.X)
+                                                 re.M | re.S | re.X)
                     },
                     'null': {
                         'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
                                                       ^{MD_FIELD}[^:]*:\s+.+\s+
                                                       NULL(?!.+^{MD_FIELD})""",
-                                                      re.M | re.S | re.X)
+                                                 re.M | re.S | re.X)
                     },
                 },
                 'end': regex.compile(rf".*^{MD_FIELD}.*^{MD_FIELD}|.*\n\n",
