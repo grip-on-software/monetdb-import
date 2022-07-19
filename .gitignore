@@ -5,5 +5,9 @@
 /Scripts/env/
 /Scripts/settings*.cfg
 /Scripts/.monetdb
+/Scripts/database-model.pdf
+/Scripts/database-model.png
+/Scripts/database-model.svg
+/Scripts/document.mwb.xml
 /Scripts/tables-documentation.json
 /Scripts/tables-schema.json

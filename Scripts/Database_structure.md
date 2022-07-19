@@ -61,7 +61,9 @@ such fields more thoroughly and uniformly.
     fields can only be used in an encrypted fashion. We can only check
     whether such as field holds a certain value if we have the original
     value as well as the global or project-specific salts. The field can
-    be matched against other fields with the same encryption level.
+    be matched against other fields with the same encryption level. 
+    Incompatible encryption levels may break references such as developer names 
+    in issue tables.
 
 Where applicable, we describe the semantics of the field types in text.
 If a field can be NULL, then we explain the circumstances when this
@@ -126,13 +128,15 @@ purpose.
         identifier, or NULL if this information is not provided by the
         API.
     -   **reporter** - VARCHAR(JIRA developer) - reference to
-        developer.name: The reporter of the issue according to the issue
+        developer.name or project_developer.name: The reporter of the issue 
+        according to the issue
         data. Usually, this is the same developer as *updated_by* on the
         first version, but this may be different due to cloned issues or
         intermediate changes. This is NULL if this information is not
         provided by the API.
     -   **assignee** - VARCHAR(JIRA developer) - reference to
-        developer.name: The developer that should resolve the issue, or
+        developer.name or project_developer.name: The developer that should 
+        resolve the issue, or
         NULL if none is assigned thus far.
     -   **attachments** - INT: The number of attachments in the issue.
         This tracks updates in the changelog.
@@ -164,9 +168,9 @@ purpose.
         then this is NULL. For example, subtasks may have a sprint ID of
         0 while only the parent task is in a sprint.
     -   **updated_by** - VARCHAR(JIRA developer) - reference to
-        developer.name: The developer that made a change in this version
-        of the issue. This is NULL if this information is not provided
-        by the API.
+        developer.name or project_developer.name: The developer that made 
+        a change in this version of the issue. This is NULL if this information 
+        is not provided by the API.
     -   **rank_change** - BOOL: The rank change performed in this
         change. Possible values are *true*, meaning an increase in rank,
         *false*, meaning a decrease in rank, or NULL, which means that
@@ -314,13 +318,14 @@ purpose.
     -   **message** - TEXT: The current message contents, including
         edits.
     -   **author** - VARCHAR(JIRA developer) - reference to
-        developer.name: Developer that wrote the message initially.
+        developer.name or project_developer.name: Developer that wrote the 
+        message initially.
     -   **date** - TIMESTAMP: Date at which the message was originally
         written.
     -   **updater** - VARCHAR(JIRA developer) - reference to
-        developer.name: Developer that edited the message most recently.
-        If the comment has not been updated, then this is equal to
-        *author*.
+        developer.name or project_developer.name: Developer that edited the 
+        message most recently. If the comment has not been updated, then this 
+        is equal to *author*.
     -   **updated_date** - TIMESTAMP: Most recent time at which the
         message was edited. This is equal to *date* if the comment has
         not been updated.
@@ -621,7 +626,10 @@ These tables include data from Gitlab/Git and Subversion.
         on the VCS developer's display name and email, and the JIRA
         developer display name, short name or email. The matching is
         also manually tweaked using the file data_vcsdev_to_dev.json
-        (which is retrieved from ownCloud).
+        (which is retrieved from ownCloud). A value of 0 means that no 
+        developer from JIRA could be matched with the developer from VCS, 
+        whereas a value of -1 means that the developer from VCS should be 
+        ignored (e.g., bot accounts).
     -   **display_name** - VARCHAR(500): The name of the developer used
         in the version control system.
     -   **email** - VARCHAR(100): Email address that the developer uses.
@@ -1091,14 +1099,16 @@ These tables include data from Gitlab/Git and Subversion.
         Open, In progress, Closed), or NULL if this information is not
         provided by the API.
     -   **reporter** - VARCHAR(100) - reference to
-        tfs_developer.display_name: The reporter of the work item
-        according to the work item data. Usually, this is the same
-        developer as *updated_by* on the first version, but this may be
+        tfs_developer.display_name or project_developer.display_name: The 
+        reporter of the work item according to the work item data. Usually, 
+        this is the same developer as *updated_by* on the first version, but 
+        this may be
         different due to cloned issues or intermediate changes. This is
         NULL if this information is not provided by the API.
     -   **assignee** - VARCHAR(100) - reference to
-        tfs_developer.display_name: The developer that should resolve
-        the work item, or NULL if none is assigned thus far.
+        tfs_developer.display_name or project_developer.display_name: The 
+        developer that should resolve the work item, or NULL if none is 
+        assigned thus far.
     -   **attachments** - INT: The number of attachments in the work
         item. This tracks updates in the changelog.
     -   **additional_information** - TEXT: Human-readable text that is
@@ -1118,9 +1128,9 @@ These tables include data from Gitlab/Git and Subversion.
         is working on this work item. This is NULL if no team could be
         obtained for this work item version.
     -   **updated_by** - VARCHAR(100) - reference to
-        tfs_developer.display_name: The developer that made a change in
-        this version of the work item. This is NULL if this information
-        is not provided by the API.
+        tfs_developer.display_name or project_developer.display_name: The 
+        developer that made a change in this version of the work item. This is 
+        NULL if this information is not provided by the API.
     -   **labels** - INT: The number of labels that the work item
         currently has. This is NULL if the number of labels could not be
         obtained for this work item.

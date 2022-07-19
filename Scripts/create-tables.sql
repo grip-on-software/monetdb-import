@@ -42,7 +42,7 @@ CREATE TABLE "gros"."issue" (
 	"test_execution_time" INTEGER   NULL,
 	"environment"    VARCHAR(100)   NULL,
 	"external_project" VARCHAR(20) NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_issue_id" PRIMARY KEY ("issue_id","changelog_id")
 );
 
@@ -84,7 +84,7 @@ CREATE TABLE "gros"."developer" (
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
 	"local_domain"    BOOLEAN NOT NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_developer_id" PRIMARY KEY ("id")
 );
 
@@ -94,7 +94,7 @@ CREATE TABLE "gros"."project_developer" (
 	"name"          VARCHAR(64) NOT NULL,
 	"display_name"     VARCHAR(100)   NULL,
 	"email"           VARCHAR(100)   NULL,
-	"encryption"   INTEGER   DEFAULT 0,
+	"encryption"   INTEGER   NOT NULL DEFAULT 0,
 	"team_id"      INTEGER   NULL
 );
 CREATE UNIQUE INDEX "pk_project_developer_id" ON "gros"."project_developer" ("project_id", "team_id", "developer_id");
@@ -198,7 +198,7 @@ CREATE TABLE "gros"."metric_version" (
 	"message"        TEXT      NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
 	"sprint_id"      INTEGER   NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_metric_version_id" PRIMARY KEY ("project_id","version_id")
 );
 
@@ -276,26 +276,26 @@ CREATE TABLE "gros"."comment" (
 	"date"           TIMESTAMP      NOT NULL,
 	"updater"        VARCHAR(64)   NOT NULL,
 	"updated_date"   TIMESTAMP      NOT NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_comment_id" PRIMARY KEY ("comment_id")
 );
 
 CREATE TABLE "gros"."ldap_developer" (
 	"project_id"   INTEGER NOT NULL,
 	"name"         VARCHAR(64) NOT NULL, 
-	"display_name" VARCHAR(100),
+	"display_name" VARCHAR(100) NOT NULL,
 	"email"        VARCHAR(100) NULL,
 	"jira_dev_id"  INTEGER NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_ldap_developer_id" PRIMARY KEY ("project_id", "name")
 );
 
 CREATE TABLE "gros"."vcs_developer" (
 	"alias_id"     INTEGER       NOT NULL AUTO_INCREMENT,
-	"jira_dev_id"  INTEGER,
-	"display_name" VARCHAR(500),
+	"jira_dev_id"  INTEGER NOT NULL,
+	"display_name" VARCHAR(500) NOT NULL,
 	"email"        VARCHAR(100) NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_alias_id" PRIMARY KEY ("alias_id")
 );
 
@@ -345,7 +345,7 @@ CREATE TABLE "gros"."tfs_developer" (
 	"display_name" VARCHAR(100) NOT NULL,
 	"email"        VARCHAR(100) NULL,
 	"alias_id"  INTEGER NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_tfs_developer_id" PRIMARY KEY ("project_id", "display_name")
 );
 
@@ -375,7 +375,7 @@ CREATE TABLE "gros"."tfs_team_member" (
 	"alias_id" INTEGER NULL,
 	"name" VARCHAR(100) NOT NULL,
 	"display_name" VARCHAR(100) NOT NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
         CONSTRAINT "pk_tfs_team_member_id" PRIMARY KEY ("team_id", "name")
 );
 
@@ -400,7 +400,7 @@ CREATE TABLE "gros"."tfs_work_item" (
 	"team_id"        INTEGER    NULL,
 	"updated_by"     VARCHAR(100)    NULL,
 	"labels"         INTEGER    NULL,
-    "encryption"     INTEGER    DEFAULT 0,
+    "encryption"     INTEGER    NOT NULL DEFAULT 0,
         CONSTRAINT "pk_work_item_id" PRIMARY KEY ("issue_id", "changelog_id")
 );
 
@@ -559,7 +559,7 @@ CREATE TABLE "gros"."reservation" (
 	"prepare_date" TIMESTAMP NULL,
 	"close_date" TIMESTAMP NULL,
 	"sprint_id" INTEGER NULL,
-	"encryption"     INTEGER   DEFAULT 0,
+	"encryption"     INTEGER   NOT NULL DEFAULT 0,
 		CONSTRAINT "pk_reservation_id" PRIMARY KEY ("reservation_id")
 );
 

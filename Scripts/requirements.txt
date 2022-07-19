@@ -1,4 +1,4 @@
-gitpython
+defusedxml
 pymonetdb
 PyYAML
 requests

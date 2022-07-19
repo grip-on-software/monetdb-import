@@ -21,14 +21,17 @@ from argparse import ArgumentParser
 from configparser import RawConfigParser
 from collections import OrderedDict
 from copy import deepcopy
+from functools import total_ordering
+import io
 import json
 import logging
 from pathlib import Path
 import re
 import sys
 from urllib.parse import urlparse
+import zipfile
+import defusedxml.ElementTree
 import regex
-import git
 from requests import Session
 from requests.auth import HTTPBasicAuth
 
@@ -68,58 +71,117 @@ SQL_TOKENS = {
     }
 }
 
-# Tokens for MediaWiki documentation
-MW_FIELD = r"^\*\*\s'''[a-z_]+'''"
-MW_TOKENS = {
-    'special_type': {
-        'pattern': regex.compile(r"^\* '''([A-Z]+\([A-Za-z0-9, ]+\))"),
-        'line': {
-            'type': {
-                'pattern': regex.compile(r"^\* '''([A-Z]+)\([A-Za-z0-9, ]+\)")
-            },
-            'limit': {
-                'pattern': regex.compile(r""".*\smaximum\slength\slimitation\s
-                                             is\s(\d+)""", re.X)
-            }
-        }
-    },
+# Tokens for MySQL Workbench XML schemas
+MWB_TOKENS = {
     'table': {
-        'pattern': regex.compile(r"^\* '''([a-z_]+)'''"),
+        'selector': {
+            'struct-name': 'db.mysql.Table'
+        },
         'line': {
-            'primary_key_combined': {
-                'pattern': regex.compile(r'''.*\sPrimary\skey\sis\s
-                                             \(([a-z_]+)(?:,\s([a-z_]+))*\)''',
-                                         re.X)
-            }
+            'name': 'name'
         },
         'within': {
             'field': {
-                'pattern': regex.compile(r"^\*\* '''([a-z_]+)'''"),
+                'selector': {
+                    'struct-name': 'db.mysql.Column'
+                },
                 'line': {
-                    'type': {
-                        'pattern': regex.compile(rf"""{MW_FIELD}\s-\s
-                                                      ([A-Z]+(?:
-                                                      \([A-Za-z0-9, ]+\))?)""",
-                                                 re.X)
-                    },
+                    'name': 'name',
                     'primary_key': {
-                        'pattern': regex.compile(rf"""{MW_FIELD}\s-\s[^:]*
-                                                      primary key:""", re.X)
+                        'selector': {
+                            'key': 'autoIncrement'
+                        },
+                        'filter': '1',
+                        'mapping': {
+                            '1': True,
+                            '0': False
+                        }
                     },
-                    'reference': {
-                        'pattern': regex.compile(rf"""{MW_FIELD}\s-\s[^:]
-                                                      reference\sto\s
-                                                      ([a-z_]+)\.([a-z_]+):""",
-                                                 re.X)
+                    'type': {
+                        'selector': {
+                            'key': 'simpleType'
+                        },
+                        'mapping': {
+                            'com.mysql.rdbms.mysql.datatype.date': 'DATE',
+                            'com.mysql.rdbms.mysql.datatype.decimal': 'DECIMAL',
+                            'com.mysql.rdbms.mysql.datatype.float': 'FLOAT',
+                            'com.mysql.rdbms.mysql.datatype.int': 'INTEGER',
+                            'com.mysql.rdbms.mysql.datatype.text': 'TEXT',
+                            'com.mysql.rdbms.mysql.datatype.timestamp_f':
+                                'TIMESTAMP',
+                            'com.mysql.rdbms.mysql.datatype.tinyint': 'BOOLEAN',
+                            'com.mysql.rdbms.mysql.datatype.varchar': 'VARCHAR'
+                        }
                     },
+                    'limit': 'length',
+                    'precision': 'precision',
+                    'scale': 'scale',
                     'null': {
-                        'pattern': regex.compile(rf"""{MW_FIELD}[^:]*:\s.+\s
-                                                      NULL""", re.X)
+                        'selector': {
+                            'key': 'isNotNull',
+                        },
+                        'filter': '0',
+                        'mapping': {
+                            '1': False,
+                            '0': True
+                        }
+                    }
+                }
+            },
+            'primary_key_combined': {
+                'unroll_prefix': '',
+                'selector': {
+                    'struct-name': 'db.mysql.Index'
+                },
+                'filter': {
+                    'key': 'indexType',
+                    '.': 'PRIMARY'
+                },
+                'within': {
+                    'index': {
+                        'selector': {
+                            'struct-name': 'db.mysql.IndexColumn'
+                        },
+                        'line': {
+                            'reference': 'referencedColumn'
+                        }
+                    }
+                }
+            },
+            'reference': {
+                'selector': {
+                    'struct-name': 'db.mysql.ForeignKey'
+                },
+                'within': {
+                    'from': {
+                        'selector': {
+                            'key': 'columns'
+                        },
+                        'unroll_prefix': True,
+                        'line': {
+                            'reference': {
+                                'selector': {
+                                    'type': 'object'
+                                }
+                            }
+                        }
+                    },
+                    'to': {
+                        'selector': {
+                            'key': 'referencedColumns'
+                        },
+                        'unroll_prefix': True,
+                        'line': {
+                            'reference': {
+                                'selector': {
+                                    'type': 'object'
+                                }
+                            }
+                        }
                     }
                 }
             }
-        },
-        'end': regex.compile(r"^$")
+        }
     }
 }
 
@@ -183,7 +245,9 @@ MD_TOKENS = {
                         'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
                                                       ^{MD_FIELD}\s+-\s+[^:]*
                                                       reference\s+to\s+
-                                                      ([a-z_]+)\.([a-z_]+):
+                                                      ([a-z_]+)\.([a-z_]+)
+                                                      (?:\s+or\s+
+                                                      ([a-z_]+)\.([a-z_]+))*:
                                                       (?!.+^{MD_FIELD})""",
                                                  re.M | re.S | re.X)
                     },
@@ -221,7 +285,7 @@ def parse_args(config):
     parser.add_argument('--doc', default=config.get('schema', 'doc'),
                         help='Path to retrieve Markdown documentation from')
     parser.add_argument('--url', default=config.get('schema', 'url'),
-                        help='URL to retrieve MediaWiki documentation from')
+                        help='URL to retrieve JSON documentation from')
     parser.add_argument('--verify', nargs='?', const=True, default=verify,
                         help='Enable SSL certificate verification')
     parser.add_argument('--no-verify', action='store_false', dest='verify',
@@ -230,8 +294,6 @@ def parse_args(config):
                         default=config.get('schema', 'username'))
     parser.add_argument('--password', help='Password for documentation URL',
                         default=config.get('schema', 'password'))
-    parser.add_argument('--branch', nargs='?', default=None, const='master',
-                        help='Branch to retrieve unmerged documentation for')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
     parser.add_argument('--export', action='store_true', default=False,
@@ -243,31 +305,45 @@ def parse_args(config):
 
     return args
 
-class Parser:
+class SchemaParser:
     """
-    Token-based documentation parser.
+    Token-based parser of documented schemas.
     """
 
-    def __init__(self, tokens, data=None, single_line=True):
+    def __init__(self, tokens):
         self._current_tokens = tokens
-
-        if data is None:
-            # No existing data
-            self._data = {}
-        else:
-            self._data = data
-
+        self._data = {}
         self._parent_data = self._data
+
+    def handle_field(self, name, token, field):
+        """
+        Handle a nested field.
+        """
+
+        raise NotImplementedError('Must be implemented by subclasses')
+
+    def parse(self, line_iterator):
+        """
+        Parse a file, sequence or other iterable that provides lines.
+        """
+
+        raise NotImplementedError('Must be implemented by subclasses')
+
+class LineParser(SchemaParser):
+    """
+    Token-based documentation parser which reads line by line, possibly with
+    additional line context storage.
+    """
+
+    def __init__(self, tokens, single_line=True):
+        super().__init__(tokens)
+
         self._single_line = single_line
         self._multiline = False
         self._reverse = False
         self._previous = ""
 
-    def handle_match(self, name, token, groups):
-        """
-        Perform actions based on a match of a token on the given line.
-        """
-
+    def handle_field(self, name, token, field):
         if name == '__end':
             self._current_tokens = token['old']
             old_name = token.pop('old_token')
@@ -280,17 +356,17 @@ class Parser:
         # Only use the 'parent' match if we haven't matched it before for the
         # multi-line
         if '__skip_line' not in token and '__skip_within' not in token:
-            if len(groups) > 1:
-                self._parent_data[name] = groups
-            elif not groups:
+            if len(field) > 1:
+                self._parent_data[name] = field
+            elif not field:
                 self._parent_data[name] = True
             elif 'within' in token or 'line' in token:
                 if name not in self._parent_data:
                     self._parent_data[name] = {}
 
-                self._parent_data[name][groups[0]] = {}
+                self._parent_data[name][field[0]] = {}
             else:
-                self._parent_data[name] = groups[0]
+                self._parent_data[name] = field[0]
 
         if 'line' in token or 'within' in token:
             old_current_tokens = deepcopy(self._current_tokens)
@@ -310,7 +386,7 @@ class Parser:
 
             if self._single_line or \
                 ('__skip_line' not in token and '__skip_within' not in token):
-                self._parent_data = self._parent_data[name][groups[0]]
+                self._parent_data = self._parent_data[name][field[0]]
 
             self._multiline = token.get('multiline', False)
             return True
@@ -347,7 +423,7 @@ class Parser:
                     else:
                         groups.append(None)
 
-                result = self.handle_match(name, token, groups)
+                result = self.handle_field(name, token, groups)
                 if result:
                     return matches
 
@@ -415,10 +491,6 @@ class Parser:
         return False if not matches else None
 
     def parse(self, line_iterator):
-        """
-        Parse a file, iterable by lines, using line-based token patterns.
-        """
-
         self._previous = ""
         for line in line_iterator:
             first = True
@@ -452,6 +524,167 @@ class Parser:
 
         return self._data
 
+@total_ordering
+class SymbolicRef:
+    """
+    Symbolic reference to another named object.
+    """
+
+    def __init__(self, identifier, references):
+        self._id = identifier
+        self._references = references
+
+    @property
+    def reference(self):
+        """
+        Retrieve the reference ID.
+        """
+
+        return self._id
+
+    def __str__(self):
+        return self._references.get(self._id, self._id)
+
+    def __repr__(self):
+        return repr(str(self))
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __eq__(self, other):
+        return str(self) == other
+
+    def __lt__(self, other):
+        return str(self) < other
+
+class XMLParser(SchemaParser):
+    """
+    Parser for XML files.
+    """
+
+    def __init__(self, tokens):
+        super().__init__(tokens)
+        self._references = {}
+
+    def handle_field(self, name, token, field):
+        if 'filter' in token and field != token['filter']:
+            return False
+
+        if 'mapping' in token:
+            self._parent_data[name] = token['mapping'].get(field)
+            return True
+
+        if name == 'reference':
+            self._parent_data[name] = [
+                SymbolicRef(reference, self._references)
+                for reference in field
+            ]
+            return True
+
+        if field != "-1":
+            self._parent_data[name] = field
+            return True
+
+        return False
+
+    @staticmethod
+    def _get_path(selector, nesting='//', tag='value'):
+        selectors = ''.join(
+            f"[{'@' if key != '.' else ''}{key}='{value}']"
+            for key, value in selector.items()
+        )
+        return f".{nesting}{tag}{selectors}"
+
+    @classmethod
+    def _flatten(cls, data, prefix=True):
+        for element in data:
+            if isinstance(element, list):
+                yield from cls._flatten(element, prefix=prefix)
+            elif isinstance(element, dict):
+                yield from cls._flatten(element.values(), prefix=prefix)
+            elif isinstance(prefix, str):
+                reference = str(element)
+                yield f"{prefix}{reference[reference.find('.') + 1:]}"
+            else:
+                yield element
+
+    def parse_line(self, element, tokens):
+        """
+        Parse elements in a field.
+        """
+
+        for name, token in tokens.items():
+            if isinstance(token, str):
+                token = {'selector': {'key': token}}
+
+            path = self._get_path(token['selector'], nesting='/', tag='*')
+            children = element.findall(path)
+            if len(children) == 0:
+                continue
+
+            if 'key' in token['selector'] and name != 'reference':
+                field = children[0].text
+            else:
+                field = [child.text for child in children]
+
+            self.handle_field(name, token, field)
+
+    def parse_nested(self, element, tokens, data, prefix=''):
+        """
+        Parse nested elements.
+        """
+
+        for name, token in tokens.items():
+            data.setdefault(name, [])
+
+            path = self._get_path(token['selector'])
+            filter_path = self._get_path(token['filter']) if 'filter' in token \
+                else None
+            named = False
+            for child in element.findall(path):
+                if filter_path is not None and child.find(filter_path) is None:
+                    continue
+
+                data[name].append({})
+                old_data = self._parent_data
+                self._parent_data = data[name][-1]
+
+                if 'line' in token:
+                    self.parse_line(child, token['line'])
+
+                name_prefix = ''
+                if 'name' in self._parent_data and 'id' in child.attrib:
+                    # Create fully qualified names for references
+                    named = True
+                    self._references[child.attrib['id']] = \
+                        f"{prefix}{self._parent_data['name']}"
+                    if prefix == '':
+                        name_prefix = f"{self._parent_data['name']}."
+
+                if 'within' in token:
+                    self.parse_nested(child, token['within'], data[name][-1],
+                                      prefix=name_prefix)
+
+                self._parent_data = old_data
+
+            if 'unroll_prefix' in token:
+                data[name] = list(self._flatten(data[name],
+                                  prefix=token['unroll_prefix']))
+            elif named:
+                data[name] = {
+                    child_data['name']: child_data for child_data in data[name]
+                }
+
+    def parse(self, line_iterator):
+        if isinstance(line_iterator, io.IOBase):
+            root = defusedxml.ElementTree.parse(line_iterator).getroot()
+        else:
+            root = defusedxml.ElementTree.fromstring("\n".join(line_iterator))
+
+        self.parse_nested(root, self._current_tokens, self._data)
+
+        return self._data
+
 def parse_schema(session, path):
     """
     Parse an SQL table schema.
@@ -476,35 +709,38 @@ def parse_schema(session, path):
         except ValueError as error:
             raise RuntimeError(f"JSON schema at {url} was invalid") from error
     except ValueError:
-        parser = Parser(SQL_TOKENS)
-        with open(path, 'r', encoding='utf-8') as schema_file:
-            return parser.parse(schema_file)
+        if zipfile.is_zipfile(path):
+            parser = XMLParser(MWB_TOKENS)
+            with zipfile.ZipFile(path, 'r') as zip_file:
+                with zip_file.open('document.mwb.xml') as workbench_file:
+                    return parser.parse(workbench_file)
+        else:
+            parser = LineParser(SQL_TOKENS)
+            with open(path, 'r', encoding='utf-8') as schema_file:
+                return parser.parse(schema_file)
 
-def parse_documentation(session, url, path=None, data=None):
+def parse_documentation(session, url, path):
     """
-    Parse a documentation wiki.
+    Parse a documentation file or JSON structure from a URL.
     """
 
     if path is not None and path.is_file():
-        md_parser = Parser(MD_TOKENS, data=data, single_line=False)
+        md_parser = LineParser(MD_TOKENS, single_line=False)
         with path.open('r') as structure_file:
             return md_parser.parse(structure_file)
 
     request = session.get(url)
     if request.status_code == 404:
         logging.warning('Documentation URL not found: %s', url)
-        return data
+        return None
 
     request.raise_for_status()
-    if request.headers['Content-Type'] == 'application/json':
-        if data is not None:
-            logging.warning('Cannot append JSON to existing data')
-            return data
+    if request.headers['Content-Type'] != 'application/json':
+        logging.warning('Documentation URL must have JSON content type, not %s',
+                        request.headers['Content-Type'])
+        return None
 
-        return request.json()
-
-    mw_parser = Parser(MW_TOKENS, data=data)
-    return mw_parser.parse(request.text.splitlines())
+    return request.json()
 
 def check_existing(one, two, key, extra=''):
     """
@@ -551,6 +787,12 @@ def check_equal(one, two, key, extra='', special_type=None):
 
         first = one[key]
         second = two[key]
+        if special_type is not None:
+            if 'limit' in two:
+                second = f"{second}({two['limit']})"
+            elif 'precision' in two and 'scale' in two:
+                second = f"{second}({two['precision']},{two['scale']})"
+
         while special_type is not None and first in special_type:
             if "type" not in special_type[first]:
                 logging.warning('Missing type for special_type %s of %s%s',
@@ -575,33 +817,64 @@ def check_equal(one, two, key, extra='', special_type=None):
 
     return 0
 
-def check_reference(documentation, doc_field, field_text):
+def check_reference(table_name, field_name, table, documentation, doc_field):
     """
     Check whether a field reference is valid and has the same type as the
     referent.
     """
 
+    field_text = f' of field {field_name} in table {table_name}'
+    from_name = f"{table_name}.{field_name}"
+    references = set()
     if 'reference' in doc_field:
-        ref_table_name, ref_field_name = doc_field['reference']
-        if ref_table_name not in documentation['table'] or \
-            'field' not in documentation['table'][ref_table_name]:
-            logging.warning('Invalid table reference %s%s',
-                            ref_table_name, field_text)
-            return 1
+        reference = doc_field['reference']
+        while reference and reference[0] is not None:
+            ref_table_name, ref_field_name = reference[:2]
+            reference = reference[2:]
 
-        ref_fields = documentation['table'][ref_table_name]['field']
-        if ref_field_name not in ref_fields:
-            logging.warning('Invalid field reference %s.%s%s',
-                            ref_table_name, ref_field_name, field_text)
-            return 1
+            if ref_table_name not in documentation['table'] or \
+                'field' not in documentation['table'][ref_table_name]:
+                logging.warning('Invalid table reference %s%s',
+                                ref_table_name, field_text)
+                return 1
 
-        ref_field = ref_fields[ref_field_name]
-        if 'type' in doc_field and 'type' in ref_field and \
-            doc_field['type'] != ref_field['type']:
-            logging.warning('Referenced field %s.%s with type %s does not match type %s%s',
-                            ref_table_name, ref_field_name, ref_field['type'],
-                            doc_field['type'], field_text)
-            return 1
+            ref_fields = documentation['table'][ref_table_name]['field']
+            if ref_field_name not in ref_fields:
+                logging.warning('Invalid field reference %s.%s%s',
+                                ref_table_name, ref_field_name, field_text)
+                return 1
+
+            if 'type' in doc_field and \
+                'type' in ref_fields[ref_field_name] and \
+                doc_field['type'] != ref_fields[ref_field_name]['type']:
+                logging.warning('Referenced field %s.%s with type %s does not match type %s%s',
+                                ref_table_name, ref_field_name,
+                                ref_fields[ref_field_name]['type'],
+                                doc_field['type'], field_text)
+                return 1
+
+            if 'reference' in table:
+                to_name = f"{ref_table_name}.{ref_field_name}"
+                references.add(to_name)
+                if not any(candidate for candidate in table['reference']
+                           if from_name in candidate['from'] and
+                           to_name in candidate['to']):
+                    logging.warning('Superfluous reference to %s%s',
+                                    to_name, field_text)
+                    return 1
+
+    # Validate documentation references to MWB references from/to names pairs
+    if 'reference' in table:
+        for relationship in table['reference']:
+            if not references.isdisjoint(relationship['to']) and \
+                from_name in relationship['from']:
+                index = relationship['to'].index(
+                    references.intersection(relationship['to']).pop()
+                )
+                if relationship['from'][index] != from_name:
+                    logging.warning('Missing reference to %s%s',
+                                    relationship['to'][index], field_text)
+                    return 1
 
     return 0
 
@@ -620,12 +893,8 @@ def validate_schema(schema, documentation):
         return violations + 1
 
     documentation['special_type'].update({
-        'INT': {
-            'type': 'INTEGER'
-        },
-        'BOOL': {
-            'type': 'BOOLEAN'
-        }
+        'INT': {'type': 'INTEGER'},
+        'BOOL': {'type': 'BOOLEAN'}
     })
 
     for table_name, table in schema['table'].items():
@@ -668,9 +937,20 @@ def validate_schema(schema, documentation):
                                 table_name, field_name)
                 violations += 1
 
-            violations += check_reference(documentation, doc_field, field_text)
+            violations += check_reference(table_name, field_name,
+                                          table, documentation, doc_field)
 
     return violations
+
+def serialize_ref(json_object):
+    """
+    JSON object serializer for symbolic references.
+    """
+
+    if isinstance(json_object, SymbolicRef):
+        return str(json_object)
+
+    raise TypeError(f'Object of type {type(json_object)} is not JSON serializable')
 
 def main():
     """
@@ -691,17 +971,7 @@ def main():
     session.auth = auth
 
     documentation = parse_documentation(session, args.url.format(branch=''),
-                                        path=Path(args.doc))
-    if args.branch != 'master' and '{branch}' in args.url:
-        if args.branch is None:
-            branch = git.Repo('..').active_branch.name
-        else:
-            branch = args.branch
-
-        branch_url = args.url.format(branch='/' + branch)
-        documentation = parse_documentation(session, branch_url,
-                                            data=documentation)
-
+                                        Path(args.doc))
     schema = parse_schema(session, args.path)
 
     if args.export:
@@ -711,7 +981,7 @@ def main():
         }
         for filename, table in tables.items():
             with open(filename, 'w', encoding='utf-8') as tables_file:
-                json.dump(table, tables_file, indent=4)
+                json.dump(table, tables_file, indent=4, default=serialize_ref)
 
     violations = validate_schema(schema, documentation)
 

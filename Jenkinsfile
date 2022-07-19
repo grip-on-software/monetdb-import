@@ -98,7 +98,7 @@ pipeline {
                     sh 'pip install pylint'
                     sh 'pylint --disable=duplicate-code Scripts/*.py'
                     script {
-                        def ret = sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING --branch $BRANCH_NAME', returnStatus: true
+                        def ret = sh script: 'cd Scripts && cp $VALIDATE_SETTINGS settings.cfg && python validate_schema.py --log WARNING', returnStatus: true
                         if (ret == 2) {
                             currentBuild.result = 'UNSTABLE'
                         }
