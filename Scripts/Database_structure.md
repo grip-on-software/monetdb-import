@@ -698,7 +698,7 @@ These tables include data from Gitlab/Git and Subversion.
         the case of overlapping sprints, the latest sprint that still
         contains the date is used.
 
-### Review system tables (GitHub, GitLab, TFS/Azure DevOps)
+## Review system tables (GitHub, GitLab, TFS/Azure DevOps)
 
 -   **vcs_event**: An event from an activity timeline of a repository.
     The events include pushes of commits or tags, or possibly also other
@@ -990,6 +990,7 @@ These tables include data from Gitlab/Git and Subversion.
         recently edited. This is NULL if this information was not
         available from the API.
 
+## Work item tables (TFS/Azure DevOps)
 
 -   **tfs_developer**: User names from TFS/Azure work items. Primary key
     is (project_id, display_name).
@@ -1393,7 +1394,7 @@ dashboard project definition.
         NULL if no matching JIRA developer was found.
     -   **encryption** - INT(row encryption)
 
-## Seat counts
+## Seat counts (XLS)
 
 -   **seats**: Seat count for a project team. Primary key is
     (project_id, sprint_id, date).
@@ -1406,7 +1407,7 @@ dashboard project definition.
     -   **seats** - FLOAT: The number of seats for the given month. This
         is NULL if the seat count is not known for the given month.
 
-## Internal trackers
+## Internal trackers (GROS)
 
 -   **update_tracker**: Files that keep track of where to start
     gathering data from for incremental updates and database
@@ -1430,7 +1431,7 @@ dashboard project definition.
     -   **salt** - VARCHAR(32): First salt of the project data.
     -   **pepper** - VARCHAR(32): Second salt of the project data.
 
-## Cache tables
+### Cache tables
 
 -   **sprint_features**: Cached features related to sprints.
     -   **project_id** - INT - reference to project.project_id: The

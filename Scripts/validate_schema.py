@@ -98,9 +98,7 @@ MWB_TOKENS = {
                         }
                     },
                     'type': {
-                        'selector': {
-                            'key': 'simpleType'
-                        },
+                        'selector': {'key': 'simpleType'},
                         'mapping': {
                             'com.mysql.rdbms.mysql.datatype.date': 'DATE',
                             'com.mysql.rdbms.mysql.datatype.decimal': 'DECIMAL',
@@ -117,9 +115,7 @@ MWB_TOKENS = {
                     'precision': 'precision',
                     'scale': 'scale',
                     'null': {
-                        'selector': {
-                            'key': 'isNotNull',
-                        },
+                        'selector': {'key': 'isNotNull'},
                         'filter': '0',
                         'mapping': {
                             '1': False,
@@ -130,52 +126,36 @@ MWB_TOKENS = {
             },
             'primary_key_combined': {
                 'unroll_prefix': '',
-                'selector': {
-                    'struct-name': 'db.mysql.Index'
-                },
+                'selector': {'struct-name': 'db.mysql.Index'},
                 'filter': {
                     'key': 'indexType',
                     '.': 'PRIMARY'
                 },
                 'within': {
                     'index': {
-                        'selector': {
-                            'struct-name': 'db.mysql.IndexColumn'
-                        },
-                        'line': {
-                            'reference': 'referencedColumn'
-                        }
+                        'selector': {'struct-name': 'db.mysql.IndexColumn'},
+                        'line': {'reference': 'referencedColumn'}
                     }
                 }
             },
             'reference': {
-                'selector': {
-                    'struct-name': 'db.mysql.ForeignKey'
-                },
+                'selector': {'struct-name': 'db.mysql.ForeignKey'},
                 'within': {
                     'from': {
-                        'selector': {
-                            'key': 'columns'
-                        },
+                        'selector': {'key': 'columns'},
                         'unroll_prefix': True,
                         'line': {
                             'reference': {
-                                'selector': {
-                                    'type': 'object'
-                                }
+                                'selector': {'type': 'object'}
                             }
                         }
                     },
                     'to': {
-                        'selector': {
-                            'key': 'referencedColumns'
-                        },
+                        'selector': {'key': 'referencedColumns'},
                         'unroll_prefix': True,
                         'line': {
                             'reference': {
-                                'selector': {
-                                    'type': 'object'
-                                }
+                                'selector': {'type': 'object'}
                             }
                         }
                     }
@@ -203,6 +183,10 @@ MD_TOKENS = {
             }
         },
         'end': regex.compile(r"^- +\*\*[A-Z]+\([A-Za-z0-9, ]+\)")
+    },
+    'group': {
+        'pattern': regex.compile(r"^## (.+ \(.+\))$"),
+        'gobble': 'table'
     },
     'table': {
         'pattern': regex.compile(r"^- +\*\*([a-z_]+)\*\*"),
@@ -342,6 +326,7 @@ class LineParser(SchemaParser):
         self._multiline = False
         self._reverse = False
         self._previous = ""
+        self._gobble = None
 
     def handle_field(self, name, token, field):
         if name == '__end':
@@ -361,10 +346,18 @@ class LineParser(SchemaParser):
             elif not field:
                 self._parent_data[name] = True
             elif 'within' in token or 'line' in token:
-                if name not in self._parent_data:
-                    self._parent_data[name] = {}
-
+                self._parent_data.setdefault(name, {})
                 self._parent_data[name][field[0]] = {}
+
+                if self._gobble is not None and name == self._gobble['token']:
+                    self._gobble['field'].append(field[0])
+            elif 'gobble' in token:
+                self._parent_data.setdefault(name, {})
+                self._parent_data[name][field[0]] = []
+                self._gobble = {
+                    'token': token['gobble'],
+                    'field': self._parent_data[name][field[0]]
+                }
             else:
                 self._parent_data[name] = field[0]
 
