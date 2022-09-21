@@ -40,13 +40,19 @@ def main():
         "#e69f00", "#009e73", "#d55e00", "#0072b2", "#cc79a7", "#f0e442",
         "#8c8c8c", "#56b4e9", "#8f34eb", "#9df07a", "#ffffff", "#d2d2d2"
     ]
+    max_group = ""
     for index, group in enumerate(sorted(schema["group"].keys())):
         tables = schema["group"][group]
         color = colors[index % len(colors)]
         for table in diagram.rootLayer.figures:
             if table.table.name in tables:
                 table.color = color
+        if len(tables) > len(schema["group"].get(max_group, [])):
+            max_group = group
+
+    # Save colors
     grt.modules.Workbench.saveModel()
+    max_tables = set(schema["group"][max_group])
 
     for group, tables in schema["group"].items():
         # Reopen model so that any changes from other groups are rolled back
@@ -59,18 +65,18 @@ def main():
         grt.modules.Workbench.activateDiagram(diagram)
         tables = set(tables)
         connected_tables = set()
-        print(tables)
         for connection in diagram.connections:
             # Determine if the connection should be visible
-            # TODO: Skip main group (JIRA), primary keys, ???
-            if  connection.foreignKey.owner.name in tables: #and
-                #(connection.foreignKey.referencedTable.name in tables or part_of_primary_key):
+            # Skip largest group table connections outside of largest group
+            if connection.foreignKey.owner.name in tables and \
+                (connection.foreignKey.referencedTable.name in tables or \
+                connection.foreignKey.referencedTable.name not in max_tables):
                 connection.visible = 1
                 connected_tables.add(connection.foreignKey.referencedTable.name)
                 connected_tables.add(connection.foreignKey.owner.name)
             else:
                 connection.visible = 0
-        print(connected_tables)
+
         for table in diagram.rootLayer.figures:
             # Determine if the table should be visible
             if table.table.name in tables:

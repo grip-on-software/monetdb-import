@@ -139,3 +139,25 @@ The following scripts are available to manage the database:
 
 Use the `--help` argument for the scripts to receive more details on running 
 the scripts and their arguments.
+
+The script `workbench_group.py` only works within the MySQL Workbench Scripting 
+Shell and is meant to alter the model file for entity-relationship diagrams.
+
+### Schema documentation
+
+Within the `Scripts` directory, several versions of documentation of the 
+database schema can be found:
+
+- `Database_structure.md`: Exhaustive documentation on tables, keys, attributes 
+  and references, including what each means and in which cases columns can be 
+  `NULL` or other specific values.
+- `Sensitive_data.md`: Additional documentation on what (future) steps can be 
+  taken for specific fields stored within the database to keep 
+  project-sensitive data and personal data secure.
+- `create-tables.sql`: The actual schema for MonetDB in `CREATE TABLE` SQL 
+  statements.
+- `database-model.mwb`: A MySQL Workbench file containing a converted version 
+  of the schema.
+
+Some of these files are used by the scripts in order to perform validation or 
+conversion to other formats, such as JSON.
