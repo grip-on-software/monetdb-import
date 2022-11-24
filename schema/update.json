@@ -1,0 +1,91 @@
+{
+    "$id": "https://gros.liacs.nl/schema/monetdb-import/update.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Database schema update",
+    "$comment": "Mini-format used as embedded YAML within SQL update files, demarcated by two percent signs (`%%`) on SQL comment lines (`--`).",
+    "$ref": "#/$defs/update",
+    "$defs": {
+        "update": {
+            "type": "object",
+            "properties": {
+                "schema": {
+                    "description": "Name of the database schema to work on.",
+                    "$ref": "#/$defs/field_name"
+                },
+                "table": {
+                    "description": "Name of the table to perform an update action on.",
+                    "$ref": "#/$defs/field_name"
+                },
+                "action": {
+                    "type": "string",
+                    "enum": ["create", "drop", "alter"],
+                    "default": "alter",
+                    "description": "Action to perform with regards to a table in the database. With `create`, a previously nonexistent table is to be created. With `drop`, a previously existent table is to be dropped. With `alter`, columns and keys are changed."
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "description": "Name of the column to update.",
+                                "$ref": "#/$defs/field_name"
+                            },
+                            "action": {
+                                "type": "string",
+                                "enum": ["add", "drop", "alter"],
+                                "description": "Action to perform with regards to a column. With `add`, a previously nonexistent column is to be created. With `drop`, a previously existent column is to be dropped. With `alter`, properties of the column are changed compared to a previous situation."
+                            },
+                            "null": {
+                                "type": "boolean",
+                                "description": "Whether the altered column will be allowed to store `NULL` values."
+                            },
+                            "default": {
+                                "type": ["string", "boolean", "number"],
+                                "description": "The default value that the column will store."
+                            }
+                        },
+                        "required": ["name", "action"]
+                    }
+                },
+                "keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "description": "Name of the key to update.",
+                                "$ref": "#/$defs/field_name"
+                            },
+                            "action": {
+                                "type": "string",
+                                "enum": ["create", "drop", "alter"],
+                                "description": "Action to perform with regards to a key. With `create`, a previously nonexistent key is to be created. With `drop`, a previously existent key is to be dropped. With `alter`, properties of the column are key compared to a previous situation."
+                            },
+                            "objects": {
+                                "type": "array",
+                                "description": "The columns to be used within the key.",
+                                "items": {"$ref": "#/$defs/field_name"}
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "Primary Key", "Unique Key", "Foreign Key",
+                                    "Hash", "Join", "Order preserving hash",
+                                    "No-index", "Imprint", "Ordered"
+                                ],
+                                "description": "The storage type to be used for the key."
+                            }
+                        },
+                        "required": ["name", "action"]
+                    }
+                }
+            },
+            "required": ["schema", "table"]
+        },
+        "field_name": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+        }
+    }
+}

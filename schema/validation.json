@@ -1,0 +1,84 @@
+{
+    "$id": "https://gros.liacs.nl/schema/monetdb-import/validation.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Table validation",
+    "$ref": "#/$defs/validation",
+    "$defs": {
+        "validation": {
+            "type": "object",
+            "properties": {
+                "table": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z_]+$": {
+                            "type": "object",
+                            "properties": {
+                                "field": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^[a-z_]+$": {
+                                            "type": "object",
+                                            "properties": {
+                                                "type": {"$ref": "#/$defs/field_type"},
+                                                "null": {"type": "boolean"},
+                                                "primary_key": {"type": "boolean"},
+                                                "reference": {
+                                                    "type": "array",
+                                                    "minItems": 2,
+                                                    "items": {
+                                                        "oneOf": [
+                                                            {"$ref": "#/$defs/field_name"},
+                                                            {"type": "null"}
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "primary_key_combined": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "items": {
+                                        "oneOf": [
+                                            {"$ref": "#/$defs/field_name"},
+                                            {"type": "null"}
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "special_type": {
+                    "type": "object",
+                    "properties": {
+                        "type": {"$ref": "#/$defs/field_type"},
+                        "limit": {
+                            "type": "string",
+                            "pattern": "^[0-9]+$"
+                        }
+                    }
+                },
+                "group": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".+": {
+                            "type": "array",
+                            "items": {"$ref": "#/$defs/field_name"}
+                        }
+                    }
+                }
+            },
+            "required": ["table"]
+        },
+        "field_name": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+        },
+        "field_type": {
+            "type": "string",
+            "pattern": "^[A-Z]+(\\([A-Za-z0-9, ]+\\))?$"
+        }
+    }
+}
