@@ -1,0 +1,80 @@
+{
+    "$id": "https://gros.liacs.nl/schema/monetdb-import/vcsdev_to_dev.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Version control system developer to Jira developer mapping",
+    "$ref": "#/$defs/vcsdev_to_dev",
+    "$defs": {
+        "vcsdev_to_dev": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {"$ref": "#/$defs/link_jira"},
+                    {"$ref": "#/$defs/link_id"},
+                    {"$ref": "#/$defs/link_pattern"}
+                ]
+            }
+        },
+        "link_base": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string",
+                    "description": "Name of the developer within a version control system to link to the same developer in Jira (whose name, account name and email address may have been written differently between systems)."
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address of the developer within a version control system to link to the same developer in Jira. The email address does not need to be formatted as an email (link may be made when name, account name or email address have been written differently between systems)."
+                }
+            }
+        },
+        "link_jira": {
+            "allOf": [
+                {"$ref": "#/$defs/link_base"}
+            ],
+            "properties": {
+                "jira_user_name": {
+                    "type": "string",
+                    "description": "Account name of the developer in Jira to link to."
+                }
+            },
+            "required": ["jira_user_name"]
+        },
+        "link_id": {
+            "allOf": [
+                {"$ref": "#/$defs/link_base"}
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "^-?\\d+$",
+                    "description": "Identifier of the developer in Jira to link to. When this is `-1`, the developer within a version control system is explicitly marked as not having a link with a Jira developer, such as a system account."
+                }
+            },
+            "required": ["id"]
+        },
+        "link_pattern": {
+            "type": "object",
+            "properties": {
+                "prefix": {
+                    "type": "string",
+                    "description": "Start of account names of developers within a version control name. Only developers with matching account names are considered for linking."
+                },
+                "pattern": {
+                    "type": "string",
+                    "format": "regex",
+                    "description": "Pattern to match within account names of developers that start with `prefix`. By default, only the `prefix` is matched."
+                },
+                "replace": {
+                    "type": "string",
+                    "description": "Pattern replacement to replace within account names of developers that start with `prefix`. May contain backreferences to groups within `pattern`. By default, only the `prefix` is removed from the replaced name."
+                },
+                "mutate": {
+                    "type": "string",
+                    "enum": ["lower"],
+                    "description": "Operator to perform on the account names of developers that start with `prefix`, after `pattern` and `replace` are handled, to obtain a linkable name. This may be `lower` to turn the account name to lowercase."
+                }
+            },
+            "required": ["prefix"]
+        }
+    }
+}
