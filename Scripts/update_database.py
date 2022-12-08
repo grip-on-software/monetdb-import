@@ -17,15 +17,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from configparser import RawConfigParser
 from glob import glob
 import logging
 from pathlib import Path
+from typing import overload, Any, Callable, Dict, Mapping, Optional, \
+    Sequence, Union
 from pymonetdb.sql.connections import Connection
+from pymonetdb.sql.cursors import Cursor
+from pymonetdb.sql.monetize import convert
 import yaml
 
-def parse_args():
+def parse_args() -> Namespace:
     """
     Parse command line arguments.
     """
@@ -66,7 +70,21 @@ def parse_args():
 
     return args
 
-def collect(cursor, table, attributes, conditions, prefix=''):
+@overload
+def collect(cursor: Cursor, table: str, attributes: None = None,
+            conditions: Optional[Mapping[str, Any]] = None,
+            prefix: str = '') -> Dict[str, int]:
+    ...
+@overload
+def collect(cursor: Cursor, table: str, attributes: Sequence[str],
+            conditions: Optional[Mapping[str, Any]] = None,
+            prefix: str = '') -> Dict[str, Dict[str, Any]]:
+    ...
+def collect(cursor: Cursor, table: str,
+            attributes: Optional[Sequence[str]] = None,
+            conditions: Optional[Mapping[str, Any]] = None,
+            prefix: str = '') -> \
+        Union[Dict[str, int], Dict[str, Dict[str, Any]]]:
     """
     Collect schema information from system tables.
 
@@ -84,9 +102,10 @@ def collect(cursor, table, attributes, conditions, prefix=''):
     """
 
     fields = ', '.join(f'"{field}"' for field in
-                       (f'{prefix}id', f'{prefix}name') + tuple(attributes))
+                       (f'{prefix}id', f'{prefix}name') +
+                        tuple(attributes if attributes is not None else ()))
     if conditions:
-        where = ' AND '.join(f'{column} = {value}'
+        where = ' AND '.join(f'{column} = {convert(value)}'
                              for column, value in conditions.items())
     else:
         where = '1=1'
@@ -94,20 +113,26 @@ def collect(cursor, table, attributes, conditions, prefix=''):
     cursor.execute(query)
     rows = cursor.fetchall()
     if not attributes:
-        return {row[1]: row[0] for row in rows}
+        return {str(row[1]): int(row[0]) for row in rows}
 
-    return {row[1]: dict(zip(attributes, row[2:]), id=row[0]) for row in rows}
+    return {
+        str(row[1]): dict(zip(attributes, row[2:]), id=row[0]) for row in rows
+    }
 
-def get_tables(cursor, schemas):
+def get_tables(cursor: Cursor, schemas: Dict[str, int]) -> \
+        Dict[str, Dict[str, int]]:
     """
     Retrieve table information for all the schemas given in `schemas`.
     """
 
-    return {name: collect(cursor, 'tables', [], {'schema_id': id})
-            for name, id in schemas.items()}
+    return {
+        name: collect(cursor, 'tables', conditions={'schema_id': id})
+        for name, id in schemas.items()
+    }
 
-def _check_column(column, columns):
-    name = column['name']
+def _check_column(column: Dict[str, Any],
+                  columns: Dict[str, Dict[str, Any]]) -> bool:
+    name = str(column['name'])
     if column['action'] == 'add':
         return name not in columns
     if column['action'] == 'drop':
@@ -120,9 +145,11 @@ def _check_column(column, columns):
     return column.get('null', null) != null or \
         column.get('default', default) != default
 
-def _check_key(key, keys, idxs, cursor, types):
+def _check_key(key: Dict[str, Any], keys: Dict[str, Dict[str, Any]],
+               idxs: Dict[str, Dict[str, Any]], cursor: Cursor,
+               types: Dict[str, Dict[str, int]]) -> bool:
     keys_indexes = {**keys, **idxs}
-    key_name = key['name']
+    key_name = str(key['name'])
     if key['action'] == 'create':
         return key_name not in keys_indexes
     if key['action'] == 'drop':
@@ -132,10 +159,10 @@ def _check_key(key, keys, idxs, cursor, types):
 
     orig = keys_indexes[key_name]
     objects = collect(cursor, 'objects', ('nr',), {'id': orig['id']})
-    parts = sorted(objects.keys(),
-                   key=lambda part, objs=objects: objs[part]['nr'])
-    change = key.get('objects', parts) != parts
-    key_type = key.get('type')
+    objects_sort: Callable[..., int] = lambda part, objs=objects: int(objs[part]['nr'])
+    parts = sorted(objects.keys(), key=objects_sort)
+    change = bool(key.get('objects', parts) != parts)
+    key_type = str(key.get('type'))
     if key_name in keys:
         # Should be(come) a key
         change = change or key_type in types['indexes'] or \
@@ -147,7 +174,9 @@ def _check_key(key, keys, idxs, cursor, types):
 
     return change
 
-def check_update(update, cursor, schema_tables, types):
+def check_update(update: Dict[str, Any], cursor: Cursor,
+                 schema_tables: Dict[str, Dict[str, int]],
+                 types: Dict[str, Dict[str, int]]) -> bool:
     """
     Check if a given update schema should have its associated update file
     executed in order to upgrade the database that we compare against.
@@ -165,15 +194,16 @@ def check_update(update, cursor, schema_tables, types):
     Returns a boolean if the upgrade should take place.
     """
 
-    table_id = schema_tables.get(update['schema'], {}).get(update['table'])
-    action = update.get('action', 'alter')
+    table = str(update['table'])
+    table_id = schema_tables.get(update['schema'], {}).get(table)
+    action = str(update.get('action', 'alter'))
     if action == 'create':
         return table_id is None
     if action == 'drop':
         return table_id is not None
 
     if table_id is None:
-        logging.error('Expected %s to exist', update['table'])
+        logging.error('Expected %s to exist', table)
         return False
 
     columns = collect(cursor, 'columns', ('default', 'null'),
@@ -185,19 +215,20 @@ def check_update(update, cursor, schema_tables, types):
         try:
             change = change or _check_column(column, columns)
         except KeyError as error:
-            logging.error('Expected column %s in %s', error, update['table'])
+            logging.error('Expected column %s in %s', error, table)
             return False
 
     for key in update.get('keys', {}):
         try:
             change = change or _check_key(key, keys, idxs, cursor, types)
         except KeyError as error:
-            logging.error('Expected key %s for %s', error, update['table'])
+            logging.error('Expected key %s for %s', error, table)
             return False
 
     return change
 
-def augment_error(yaml_error, filename, line):
+def augment_error(yaml_error: yaml.MarkedYAMLError, filename: str,
+                  line: int) -> None:
     """
     Correct marks of a YAML error to point to the loaded file and context line.
     """
@@ -209,7 +240,9 @@ def augment_error(yaml_error, filename, line):
         yaml_error.context_mark.name = filename
         yaml_error.context_mark.line += line
 
-def handle_schema(update_filename, args, cursor, schema_tables, types):
+def handle_schema(update_filename: str, args: Namespace, cursor: Cursor,
+                  schema_tables: Dict[str, Dict[str, int]],
+                  types: Dict[str, Dict[str, int]]) -> bool:
     """
     Load an update file, check if its schema indicates that the update should
     be applied to the database, and execute the relevant commands if so.
@@ -258,7 +291,7 @@ def handle_schema(update_filename, args, cursor, schema_tables, types):
 
     return do_update
 
-def main():
+def main() -> None:
     """
     Main entry point.
     """
@@ -268,11 +301,11 @@ def main():
                             username=args.username, password=args.password,
                             autocommit=True)
     cursor = connection.cursor()
-    schemas = collect(cursor, 'schemas', [], {'system': 'FALSE'})
+    schemas = collect(cursor, 'schemas', conditions={'system': 'FALSE'})
     schema_tables = get_tables(cursor, schemas)
     types = {
-        'keys': collect(cursor, 'key_types', [], {}, prefix='key_type_'),
-        'indexes': collect(cursor, 'index_types', [], {}, prefix='index_type_')
+        'keys': collect(cursor, 'key_types', prefix='key_type_'),
+        'indexes': collect(cursor, 'index_types', prefix='index_type_')
     }
     for update_filename in sorted(glob(f'{args.path}/*-[0-9]*.sql')):
         if handle_schema(update_filename, args, cursor, schema_tables, types):

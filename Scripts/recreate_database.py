@@ -19,7 +19,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from configparser import RawConfigParser
 import logging
 import socket
@@ -29,9 +29,11 @@ from pymonetdb.exceptions import OperationalError
 import requests
 from requests.auth import HTTPBasicAuth
 
-def check(database):
+TIMEOUT = 60
+
+def check(database: str) -> bool:
     """
-    Check whether the user confirms the action.
+    Check whether the user confirms the deletion of the database.
     """
 
     prompt = f'''This action wipes out the {database} database.
@@ -45,7 +47,7 @@ and replace the {database} database with a clean state? [y/N] '''
 
     return True
 
-def parse_args(config):
+def parse_args(config: RawConfigParser) -> Namespace:
     """
     Parse command line arguments.
     """
@@ -112,7 +114,7 @@ def parse_args(config):
 
     return args
 
-def delete_workspace(args):
+def delete_workspace(args: Namespace) -> None:
     """
     Delete a Jenkins workspace.
     """
@@ -123,16 +125,18 @@ def delete_workspace(args):
         auth = None
 
     if args.jenkins_crumb:
-        crumb_url = args.jenkins_host + '/crumbIssuer/api/json'
-        crumb_data = requests.get(crumb_url, auth=auth).json()
-        headers = {crumb_data['crumbRequestField']: crumb_data['crumb']}
+        crumb_url = f'{args.jenkins_host}/crumbIssuer/api/json'
+        crumb_data = requests.get(crumb_url, auth=auth, timeout=TIMEOUT).json()
+        headers = {
+            str(crumb_data['crumbRequestField']): str(crumb_data['crumb'])
+        }
     else:
         headers = {}
 
     url = f'{args.jenkins_host}/job/{args.jenkins_job}/doWipeOutWorkspace'
-    requests.post(url, auth=auth, headers=headers)
+    requests.post(url, auth=auth, headers=headers, timeout=TIMEOUT)
 
-def main():
+def main() -> None:
     """
     Main entry point.
     """
@@ -146,32 +150,33 @@ def main():
     except socket.error as error:
         raise RuntimeError('Cannot connect, address resolution error') from error
 
-    if not args.force and not check(args.database):
+    database = str(args.database)
+    if not args.force and not check(database):
         logging.info('Canceling process due to user input.')
         return
 
     try:
-        status = control.status(args.database)
+        status = control.status(database)
         if status['state'] != 3:
             logging.info('Stoppping database...')
-            control.stop(args.database)
+            control.stop(database)
 
         logging.info('Destroying database...')
-        control.destroy(args.database)
+        control.destroy(database)
     except OperationalError as error:
         logging.warning('MonetDB error: %s', str(error))
         logging.warning('Maybe the database did not exist, continuing anyway.')
 
     logging.info('Creating database...')
-    control.create(args.database)
+    control.create(database)
 
     logging.info('Starting database...')
-    control.start(args.database)
+    control.start(database)
 
     logging.info('Releasing database...')
-    control.release(args.database)
+    control.release(database)
 
-    connection = Connection(args.database, hostname=args.hostname,
+    connection = Connection(database, hostname=args.hostname,
                             username=args.username, password=args.password,
                             autocommit=True)
 

@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from configparser import RawConfigParser
 from collections import OrderedDict
 from copy import deepcopy
@@ -28,12 +28,20 @@ import logging
 from pathlib import Path
 import re
 import sys
+from typing import Any, Dict, Generator, IO, Iterable, List, Mapping, \
+    Optional, Set, Union
 from urllib.parse import urlparse
+from xml.etree.ElementTree import Element
 import zipfile
 import defusedxml.ElementTree
 import regex
 from requests import Session
 from requests.auth import HTTPBasicAuth
+
+Token = Dict[str, Any]
+Tokens = Dict[str, Token]
+Schema = Dict[str, Any]
+Field = Union[str, List[Optional[str]]]
 
 # Tokens for SQL schema file
 SQL_IDENT = r"[a-z_]+"
@@ -250,7 +258,7 @@ MD_TOKENS = {
     }
 }
 
-def parse_args(config):
+def parse_args(config: RawConfigParser) -> Namespace:
     """
     Parse command line arguments.
     """
@@ -294,19 +302,19 @@ class SchemaParser:
     Token-based parser of documented schemas.
     """
 
-    def __init__(self, tokens):
+    def __init__(self, tokens: Tokens) -> None:
         self._current_tokens = tokens
-        self._data = {}
+        self._data: Schema = {}
         self._parent_data = self._data
 
-    def handle_field(self, name, token, field):
+    def handle_field(self, name: str, token: Token, field: Field) -> bool:
         """
         Handle a nested field.
         """
 
         raise NotImplementedError('Must be implemented by subclasses')
 
-    def parse(self, line_iterator):
+    def parse(self, line_iterator: Iterable[str]) -> Schema:
         """
         Parse a file, sequence or other iterable that provides lines.
         """
@@ -319,16 +327,16 @@ class LineParser(SchemaParser):
     additional line context storage.
     """
 
-    def __init__(self, tokens, single_line=True):
+    def __init__(self, tokens: Tokens, single_line: bool = True) -> None:
         super().__init__(tokens)
 
         self._single_line = single_line
-        self._multiline = False
+        self._multiline: Optional[bool] = False
         self._reverse = False
         self._previous = ""
-        self._gobble = None
+        self._gobble: Optional[Dict[str, Any]] = None
 
-    def handle_field(self, name, token, field):
+    def handle_field(self, name: str, token: Token, field: Field) -> bool:
         if name == '__end':
             self._current_tokens = token['old']
             old_name = token.pop('old_token')
@@ -386,15 +394,14 @@ class LineParser(SchemaParser):
 
         return False
 
-    def test_line(self, line):
+    def test_line(self, line: str) -> List[str]:
         """
         Test whether the current token scope match the given line.
         """
 
         matches = []
-        iterator = self._current_tokens.items()
-        if self._reverse:
-            iterator = reversed(iterator)
+        iterator = reversed(self._current_tokens.items()) if self._reverse \
+            else self._current_tokens.items()
 
         for name, token in iterator:
             if token['pattern'] is None:
@@ -408,7 +415,7 @@ class LineParser(SchemaParser):
                     continue
 
                 matches.append(name)
-                groups = []
+                groups: List[Optional[str]] = []
                 for index in range(len(match.groups())):
                     captures = match.captures(index + 1)
                     if captures:
@@ -423,7 +430,8 @@ class LineParser(SchemaParser):
         self._multiline = None
         return matches
 
-    def handle_end_result(self, line, matches):
+    def handle_end_result(self, line: str, matches: List[str]) -> \
+            Optional[bool]:
         """
         Handle matches for a line when there are no nesting matches.
         """
@@ -483,7 +491,7 @@ class LineParser(SchemaParser):
         self._reverse = False
         return False if not matches else None
 
-    def parse(self, line_iterator):
+    def parse(self, line_iterator: Iterable[str]) -> Schema:
         self._previous = ""
         for line in line_iterator:
             first = True
@@ -523,31 +531,31 @@ class SymbolicRef:
     Symbolic reference to another named object.
     """
 
-    def __init__(self, identifier, references):
+    def __init__(self, identifier: str, references: Mapping[str, str]):
         self._id = identifier
         self._references = references
 
     @property
-    def reference(self):
+    def reference(self) -> str:
         """
         Retrieve the reference ID.
         """
 
         return self._id
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._references.get(self._id, self._id)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(str(self))
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(str(self))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return str(self) == other
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any) -> bool:
         return str(self) < other
 
 class XMLParser(SchemaParser):
@@ -555,11 +563,11 @@ class XMLParser(SchemaParser):
     Parser for XML files.
     """
 
-    def __init__(self, tokens):
+    def __init__(self, tokens: Tokens) -> None:
         super().__init__(tokens)
-        self._references = {}
+        self._references: Dict[str, str] = {}
 
-    def handle_field(self, name, token, field):
+    def handle_field(self, name: str, token: Token, field: Field) -> bool:
         if 'filter' in token and field != token['filter']:
             return False
 
@@ -570,7 +578,7 @@ class XMLParser(SchemaParser):
         if name == 'reference':
             self._parent_data[name] = [
                 SymbolicRef(reference, self._references)
-                for reference in field
+                for reference in field if reference is not None
             ]
             return True
 
@@ -581,7 +589,8 @@ class XMLParser(SchemaParser):
         return False
 
     @staticmethod
-    def _get_path(selector, nesting='//', tag='value'):
+    def _get_path(selector: Dict[str, str], nesting: str= '//',
+                  tag: str = 'value') -> str:
         selectors = ''.join(
             f"[{'@' if key != '.' else ''}{key}='{value}']"
             for key, value in selector.items()
@@ -589,7 +598,8 @@ class XMLParser(SchemaParser):
         return f".{nesting}{tag}{selectors}"
 
     @classmethod
-    def _flatten(cls, data, prefix=True):
+    def _flatten(cls, data: Iterable[Any], prefix: bool = True) -> \
+            Generator[str, None, None]:
         for element in data:
             if isinstance(element, list):
                 yield from cls._flatten(element, prefix=prefix)
@@ -601,7 +611,7 @@ class XMLParser(SchemaParser):
             else:
                 yield element
 
-    def parse_line(self, element, tokens):
+    def parse_line(self, element: Element, tokens: Tokens) -> None:
         """
         Parse elements in a field.
         """
@@ -616,13 +626,14 @@ class XMLParser(SchemaParser):
                 continue
 
             if 'key' in token['selector'] and name != 'reference':
-                field = children[0].text
+                field: Field = str(children[0].text)
             else:
                 field = [child.text for child in children]
 
             self.handle_field(name, token, field)
 
-    def parse_nested(self, element, tokens, data, prefix=''):
+    def parse_nested(self, element: Element, tokens: Tokens,
+                     data: Dict[str, Any], prefix: str= '') -> None:
         """
         Parse nested elements.
         """
@@ -668,8 +679,8 @@ class XMLParser(SchemaParser):
                     child_data['name']: child_data for child_data in data[name]
                 }
 
-    def parse(self, line_iterator):
-        if isinstance(line_iterator, io.IOBase):
+    def parse(self, line_iterator: Union[Iterable[str], IO[bytes]]) -> Schema:
+        if isinstance(line_iterator, (io.IOBase, IO)):
             root = defusedxml.ElementTree.parse(line_iterator).getroot()
         else:
             root = defusedxml.ElementTree.fromstring("\n".join(line_iterator))
@@ -678,7 +689,7 @@ class XMLParser(SchemaParser):
 
         return self._data
 
-def parse_schema(session, path):
+def parse_schema(session: Session, path: str) -> Schema:
     """
     Parse an SQL table schema.
     """
@@ -694,7 +705,7 @@ def parse_schema(session, path):
 
         request.raise_for_status()
         if request.headers['Content-Type'] != 'application/json':
-            raise RuntimeError('Can only use JSON schema URLs, content type of '
+            raise RuntimeError('Schema URL must have JSON content type, but '
                                f"{url} is {request.headers['Content-Type']}")
 
         try:
@@ -703,39 +714,35 @@ def parse_schema(session, path):
             raise RuntimeError(f"JSON schema at {url} was invalid") from error
     except ValueError:
         if zipfile.is_zipfile(path):
-            parser = XMLParser(MWB_TOKENS)
+            xml_parser = XMLParser(MWB_TOKENS)
             with zipfile.ZipFile(path, 'r') as zip_file:
                 with zip_file.open('document.mwb.xml') as workbench_file:
-                    return parser.parse(workbench_file)
+                    return xml_parser.parse(workbench_file)
         else:
-            parser = LineParser(SQL_TOKENS)
+            line_parser = LineParser(SQL_TOKENS)
             with open(path, 'r', encoding='utf-8') as schema_file:
-                return parser.parse(schema_file)
+                return line_parser.parse(schema_file)
 
-def parse_documentation(session, url, path):
+def parse_documentation(session: Session, url: str, path: Path) -> Schema:
     """
     Parse a documentation file or JSON structure from a URL.
     """
 
-    if path is not None and path.is_file():
+    if path.is_file():
         md_parser = LineParser(MD_TOKENS, single_line=False)
         with path.open('r') as structure_file:
             return md_parser.parse(structure_file)
 
     request = session.get(url)
-    if request.status_code == 404:
-        logging.warning('Documentation URL not found: %s', url)
-        return None
-
     request.raise_for_status()
     if request.headers['Content-Type'] != 'application/json':
-        logging.warning('Documentation URL must have JSON content type, not %s',
-                        request.headers['Content-Type'])
-        return None
+        raise RuntimeError('Documentation URL must have JSON content type, '
+                           f"but {url} is {request.headers['Content-Type']}")
 
     return request.json()
 
-def check_existing(one, two, key, extra=''):
+def check_existing(one: Dict[str, Any], two: Dict[str, Any], key: str,
+                   extra: str= '') -> int:
     """
     Check if two dictionaries that both have a key have subdictionaries with the
     same subkeys stored for that key.
@@ -747,8 +754,8 @@ def check_existing(one, two, key, extra=''):
         logging.warning('Missing %s%s', key, extra)
         return 1
 
-    missing = set(one[key].keys()) - set(two[key].keys())
-    superfluous = set(two[key].keys()) - set(one[key].keys())
+    missing: Set[str] = set(one[key].keys()) - set(two[key].keys())
+    superfluous: Set[str] = set(two[key].keys()) - set(one[key].keys())
     violations = 0
 
     if missing:
@@ -765,7 +772,9 @@ def check_existing(one, two, key, extra=''):
 
     return violations
 
-def check_equal(one, two, key, extra='', special_type=None):
+def check_equal(one: Dict[str, Any], two: Dict[str, Any], key: str,
+                extra: str = '',
+                specials: Optional[Dict[str, Dict[str, str]]] = None) -> int:
     """
     Check if two dictionaries have the same value stored for a key if the first
     dictionary has that key.
@@ -780,23 +789,23 @@ def check_equal(one, two, key, extra='', special_type=None):
 
         first = one[key]
         second = two[key]
-        if special_type is not None:
+        if specials is not None:
             if 'limit' in two:
                 second = f"{second}({two['limit']})"
             elif 'precision' in two and 'scale' in two:
                 second = f"{second}({two['precision']},{two['scale']})"
 
-        while special_type is not None and first in special_type:
-            if "type" not in special_type[first]:
+        while specials is not None and first in specials:
+            if "type" not in specials[first]:
                 logging.warning('Missing type for special_type %s of %s%s',
                                 first, key, extra)
                 return 1
 
-            if "limit" in special_type[first]:
-                next_type = special_type[first]
+            if "limit" in specials[first]:
+                next_type = specials[first]
                 first = f"{next_type['type']}({next_type['limit']})"
             else:
-                first = special_type[first]["type"]
+                first = specials[first]["type"]
 
         if isinstance(first, list):
             first = tuple(first)
@@ -810,7 +819,8 @@ def check_equal(one, two, key, extra='', special_type=None):
 
     return 0
 
-def check_reference(table_name, field_name, table, documentation, doc_field):
+def check_reference(table_name: str, field_name: str, table: Dict[str, Any],
+                    documentation: Schema, doc_field: Dict[str, Any]) -> int:
     """
     Check whether a field reference is valid and has the same type as the
     referent.
@@ -820,7 +830,7 @@ def check_reference(table_name, field_name, table, documentation, doc_field):
     from_name = f"{table_name}.{field_name}"
     references = set()
     if 'reference' in doc_field:
-        reference = doc_field['reference']
+        reference: List[Optional[str]] = doc_field['reference']
         while reference and reference[0] is not None:
             ref_table_name, ref_field_name = reference[:2]
             reference = reference[2:]
@@ -871,7 +881,7 @@ def check_reference(table_name, field_name, table, documentation, doc_field):
 
     return 0
 
-def validate_schema(schema, documentation):
+def validate_schema(schema: Schema, documentation: Schema) -> int:
     """
     Compare the documentation against the database schema.
     """
@@ -935,7 +945,7 @@ def validate_schema(schema, documentation):
 
     return violations
 
-def serialize_ref(json_object):
+def serialize_ref(json_object: SymbolicRef) -> str:
     """
     JSON object serializer for symbolic references.
     """
@@ -945,7 +955,7 @@ def serialize_ref(json_object):
 
     raise TypeError(f'Object of type {type(json_object)} is not JSON serializable')
 
-def main():
+def main() -> int:
     """
     Main entry point.
     """
@@ -980,10 +990,10 @@ def main():
 
     if violations > 0:
         logging.warning('Schema violations: %d', violations)
-        sys.exit(2)
-    else:
-        logging.info('No schema violations detected')
-        sys.exit(0)
+        return 2
+
+    logging.info('No schema violations detected')
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

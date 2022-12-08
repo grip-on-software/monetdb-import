@@ -12,3 +12,6 @@
 /Scripts/document.mwb.xml
 /Scripts/tables-documentation.json
 /Scripts/tables-schema.json
+mypy-report/
+owasp-dep/
+pylint-report.txt

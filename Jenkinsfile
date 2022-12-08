@@ -31,7 +31,8 @@ pipeline {
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, includes: 'junit/**/*,html/**/*', keepAll: false, reportDir: 'Code/importerjson/build/test', reportFiles: 'html/htmlReport.html', reportName: 'JUnit Results', reportTitles: ''])
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'Code/importerjson/build/test/jacoco', reportFiles: 'index.html', reportName: 'JaCoCo coverage', reportTitles: ''])
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'owasp-dep/', reportFiles: 'dependency-check-report.html', reportName: 'Dependencies', reportTitles: ''])
-            junit 'Code/importerjson/build/test/results/*.xml'
+            publishHTML([allowMissing: true, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'mypy-report/', reportFiles: 'index.html', reportName: 'Typing', reportTitles: ''])
+            junit 'Code/importerjson/build/test/results/*.xml,mypy-report/junit.xml'
         }
     }
 
@@ -71,6 +72,12 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
+                withPythonEnv('System-CPython-3') {
+                    pysh 'python -m pip install -r analysis-requirements.txt'
+                    pysh 'python -m pip install -r requirements.txt'
+                    pysh 'mypy Scripts/*.py --html-report mypy-report --cobertura-xml-report mypy-report --junit-xml mypy-report/junit.xml --no-incremental --show-traceback --config-file Scripts/setup.cfg || true'
+                    pysh 'python -m pylint Scripts/*.py --exit-zero --reports=n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" -d duplicate-code > pylint-report.txt'
+                }
                 withSonarQubeEnv('SonarQube') {
                     sh '${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=monetdb-import:$BRANCH_NAME -Dsonar.projectName="MonetDB importer $BRANCH_NAME"'
                 }
