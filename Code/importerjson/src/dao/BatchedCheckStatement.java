@@ -194,8 +194,8 @@ public abstract class BatchedCheckStatement implements AutoCloseable {
     /**
      * Denote that a combination of key values and data values that is already
      * queued for insertion is actually existing and should not be inserted.
-     * @param values The tuple of key values that belong to the data and should
-     * not be inserted.
+     * @param foundValues The tuple of key values that belong to the data and
+	 * should not be inserted.
      */
     protected void markExisting(List<Object> foundValues) {
         checkValues.remove(foundValues);
