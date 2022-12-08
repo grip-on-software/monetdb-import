@@ -73,8 +73,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withPythonEnv('System-CPython-3') {
-                    pysh 'python -m pip install -r analysis-requirements.txt'
-                    pysh 'python -m pip install -r requirements.txt'
+                    pysh 'python -m pip install -r Scripts/analysis-requirements.txt'
+                    pysh 'python -m pip install -r Scripts/requirements.txt'
                     pysh 'mypy Scripts/*.py --html-report mypy-report --cobertura-xml-report mypy-report --junit-xml mypy-report/junit.xml --no-incremental --show-traceback --config-file Scripts/setup.cfg || true'
                     pysh 'python -m pylint Scripts/*.py --exit-zero --reports=n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" -d duplicate-code > pylint-report.txt'
                 }
