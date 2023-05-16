@@ -1,7 +1,9 @@
 <#if licenseFirst??>
 ${licenseFirst}
 </#if>
-${licensePrefix}Copyright 2017-2018 ICTU
+${licensePrefix}Copyright 2017-2020 ICTU
+${licensePrefix}Copyright 2017-2022 Leiden University
+${licensePrefix}Copyright 2017-2023 Leon Helwerda
 ${licensePrefix}
 ${licensePrefix}Importer of gathered software development metrics for MonetDB
 <#if licenseLast??>
