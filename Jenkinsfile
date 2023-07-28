@@ -65,7 +65,7 @@ pipeline {
                     sh 'cp ../Code/importerjson/suppression.xml suppression.xml'
                     sh 'mkdir -p -m 0777 "$HOME/OWASP-Dependency-Check/data/cache"'
                     sh 'mkdir -p -m 0777 "$WORKSPACE/owasp-dep"'
-                    sh 'sed -i "s/\\(--out \\/report\\)/--exclude \\"**\\/.git\\/**\\" --exclude \\"**\\/coverage\\/**\\" --exclude \\"**\\/build\\/**\\" --exclude \\"**\\/dist\\/**\\" --project \\"MonetDB importer\\" \\1/" security_dependencycheck.sh'
+                    sh 'sed -i "s/\\(--out \\/report\\)/--exclude \\"**\\/.git\\/**\\" --exclude \\"**\\/coverage\\/**\\" --exclude \\"**\\/build\\/**\\" --exclude \\"**\\/dist\\/**\\" --project \\"MonetDB importer\\" --disableOssIndex true \\1/" security_dependencycheck.sh'
                     sh 'bash ./security_dependencycheck.sh "$WORKSPACE" "$WORKSPACE/owasp-dep"'
                 }
             }
