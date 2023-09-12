@@ -10,11 +10,11 @@
             "properties": {
                 "schema": {
                     "description": "Name of the database schema to work on.",
-                    "$ref": "#/$defs/field_name"
+                    "$ref": "#/$defs/update_field_name"
                 },
                 "table": {
                     "description": "Name of the table to perform an update action on.",
-                    "$ref": "#/$defs/field_name"
+                    "$ref": "#/$defs/update_field_name"
                 },
                 "action": {
                     "type": "string",
@@ -29,7 +29,7 @@
                         "properties": {
                             "name": {
                                 "description": "Name of the column to update.",
-                                "$ref": "#/$defs/field_name"
+                                "$ref": "#/$defs/update_field_name"
                             },
                             "action": {
                                 "type": "string",
@@ -55,7 +55,7 @@
                         "properties": {
                             "name": {
                                 "description": "Name of the key to update.",
-                                "$ref": "#/$defs/field_name"
+                                "$ref": "#/$defs/update_field_name"
                             },
                             "action": {
                                 "type": "string",
@@ -64,8 +64,8 @@
                             },
                             "objects": {
                                 "type": "array",
-                                "description": "The columns to be used within the key.",
-                                "items": {"$ref": "#/$defs/field_name"}
+                                "description": "The columns to be used within the updated key.",
+                                "items": {"$ref": "#/$defs/update_field_name"}
                             },
                             "type": {
                                 "type": "string",
@@ -74,7 +74,7 @@
                                     "Hash", "Join", "Order preserving hash",
                                     "No-index", "Imprint", "Ordered"
                                 ],
-                                "description": "The storage type to be used for the key."
+                                "description": "The storage type to be used for the updated key."
                             }
                         },
                         "required": ["name", "action"]
@@ -83,8 +83,9 @@
             },
             "required": ["schema", "table"]
         },
-        "field_name": {
+        "update_field_name": {
             "type": "string",
+            "title": "Update field name",
             "pattern": "^[a-z_]+$"
         }
     }

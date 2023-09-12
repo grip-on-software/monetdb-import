@@ -10,44 +10,7 @@
                 "table": {
                     "type": "object",
                     "patternProperties": {
-                        "^[a-z_]+$": {
-                            "type": "object",
-                            "properties": {
-                                "field": {
-                                    "type": "object",
-                                    "patternProperties": {
-                                        "^[a-z_]+$": {
-                                            "type": "object",
-                                            "properties": {
-                                                "type": {"$ref": "#/$defs/field_type"},
-                                                "null": {"type": "boolean"},
-                                                "primary_key": {"type": "boolean"},
-                                                "reference": {
-                                                    "type": "array",
-                                                    "minItems": 2,
-                                                    "items": {
-                                                        "oneOf": [
-                                                            {"$ref": "#/$defs/field_name"},
-                                                            {"type": "null"}
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                "primary_key_combined": {
-                                    "type": "array",
-                                    "minItems": 2,
-                                    "items": {
-                                        "oneOf": [
-                                            {"$ref": "#/$defs/field_name"},
-                                            {"type": "null"}
-                                        ]
-                                    }
-                                }
-                            }
-                        }
+                        "^[a-z_]+$": {"$ref": "#/$defs/table"}
                     }
                 },
                 "special_type": {
@@ -72,12 +35,53 @@
             },
             "required": ["table"]
         },
+        "table": {
+            "type": "object",
+            "title": "Validation table",
+            "properties": {
+                "field": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z_]+$": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"$ref": "#/$defs/field_type"},
+                                "null": {"type": "boolean"},
+                                "primary_key": {"type": "boolean"},
+                                "reference": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "items": {
+                                        "oneOf": [
+                                            {"$ref": "#/$defs/field_name"},
+                                            {"type": "null"}
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "primary_key_combined": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "oneOf": [
+                            {"$ref": "#/$defs/field_name"},
+                            {"type": "null"}
+                        ]
+                    }
+                }
+            }
+        },
         "field_name": {
             "type": "string",
+            "title": "Validation field name",
             "pattern": "^[a-z_]+$"
         },
         "field_type": {
             "type": "string",
+            "title": "Validation field type",
             "pattern": "^[A-Z]+(\\([A-Za-z0-9, ]+\\))?$"
         }
     }
