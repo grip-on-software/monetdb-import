@@ -178,13 +178,13 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         updateMetricValueStmt = new BatchedStatement(sql);
         sql = "insert into gros.metric_version(project_id,version_id,developer,message,commit_date,sprint_id) values (?,?,?,?,?,?);";
         insertMetricVersionStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_target(project_id,version_id,metric_id,type,target,low_target,comment) values (?,?,?,?,?,?,?);";
+        sql = "insert into gros.metric_target(project_id,version_id,metric_id,comment,direction,target,low_target,debt_target,scale) values (?,?,?,?,?,?,?,?,?);";
         insertMetricTargetStmt = new BatchedStatement(sql);
         sql = "insert into gros.source_id(project_id,domain_name,url,source_type,source_id,domain_type) values (?,?,?,?,?,?);";
         insertSourceIdStmt = new BatchedStatement(sql);
         sql = "update gros.source_id set source_type = ?, source_id = ?, domain_type = ? where project_id = ? and domain_name = ? and url = ?";
         updateSourceIdStmt = new BatchedStatement(sql);
-        sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target) values (?,?,?,?,?,?,?);";
+        sql = "insert into gros.metric_default(base_name,version_id,commit_date,direction,perfect,target,low_target,scale) values (?,?,?,?,?,?,?,?);";
         insertDefaultTargetStmt = new BatchedStatement(sql);
     }
     
@@ -594,8 +594,8 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         
         pstmt.setInt(1, projectId);
         pstmt.setString(2, version);
-        pstmt.setString(3, developer);
-        pstmt.setString(4, message);
+        setString(pstmt, 3, developer);
+        setString(pstmt, 4, message);
         pstmt.setTimestamp(5, commit_date);
         pstmt.setInt(6, sprint_id);
                     
@@ -607,23 +607,27 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @param projectId Identifier of the project to which the metric norm change applies
      * @param version The version identifier of the change
      * @param metricId Identifier of the metric name
-     * @param type The type of norm change: 'options', 'old_options', 'TechnicalDebtTarget' or 'DynamicTechnicalDebtTarget'
+     * @param comment Comment for technical debt targets describing the reason of the norm change
+     * @param direction Whether the metric improves if the metric value increases
      * @param target The norm value at which the category changes from green to yellow
      * @param low_target The norm value at which the category changes from yellow to red
-     * @param comment Comment for technical debt targets describing the reason of the norm change
+     * @param debt_target The norm value at which the category changes from gray (accepted technical debt) to yellow or red
+     * @param scale The scale of the metric
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_target(int projectId, String version, int metricId, String type, int target, int low_target, String comment) throws SQLException, PropertyVetoException {
+    public void insert_target(int projectId, String version, int metricId, String comment, Boolean direction, Float target, Float low_target, Float debt_target, String scale) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertMetricTargetStmt.getPreparedStatement();
         
         pstmt.setInt(1, projectId);
         pstmt.setString(2, version);
         pstmt.setInt(3, metricId);
-        pstmt.setString(4, type);
-        pstmt.setInt(5, target);
-        pstmt.setInt(6, low_target);
-        pstmt.setString(7, comment);
+        setString(pstmt, 4, comment);
+        setBoolean(pstmt, 5, direction);
+        setFloat(pstmt, 6, target);
+        setFloat(pstmt, 7, low_target);
+        setFloat(pstmt, 8, debt_target);
+        setString(pstmt, 9, scale);
         
         insertMetricTargetStmt.batch();
     }
@@ -768,10 +772,11 @@ public class MetricDb extends BaseDb implements AutoCloseable {
      * @param perfect The perfect value of the metric, or null if it is not known.
      * @param target The target value of the metric, or null if it is not known.
      * @param low_target The low target value of the metric, or null if it is not known.
+     * @param scale The scale of the metric.
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
-    public void insert_default_target(String base_name, String version, Timestamp commit_date, Boolean direction, Float perfect, Float target, Float low_target) throws SQLException, PropertyVetoException {
+    public void insert_default_target(String base_name, String version, Timestamp commit_date, Boolean direction, Float perfect, Float target, Float low_target, String scale) throws SQLException, PropertyVetoException {
         PreparedStatement pstmt = insertDefaultTargetStmt.getPreparedStatement();
         
         pstmt.setString(1, base_name);
@@ -781,6 +786,7 @@ public class MetricDb extends BaseDb implements AutoCloseable {
         setFloat(pstmt, 5, perfect);
         setFloat(pstmt, 6, target);
         setFloat(pstmt, 7, low_target);
+        setString(pstmt, 8, scale);
         
         insertDefaultTargetStmt.batch();
     }

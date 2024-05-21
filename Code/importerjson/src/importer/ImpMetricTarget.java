@@ -63,7 +63,6 @@ public class ImpMetricTarget extends BaseImport {
                 String name = (String) jsonObject.get("name");
                 String target = (String) jsonObject.get("target");
                 String low_target = (String) jsonObject.get("low_target");
-                String type = (String) jsonObject.get("type");
                 String comment = (String) jsonObject.get("comment");
                 String revision = (String) jsonObject.get("revision");
                 String base_name = (String) jsonObject.get("base_name");
@@ -71,13 +70,15 @@ public class ImpMetricTarget extends BaseImport {
                 String unchanged = (String) jsonObject.get("default");
                 String debt_target = (String) jsonObject.get("debt_target");
                 String domain_type = (String) jsonObject.get("domain_type");
+                String scale = (String) jsonObject.get("scale");
+                String direction = (String) jsonObject.get("direction");
                 
                 MetricName metricName = metricDb.check_metric(name);
                 if (metricName == null) {
                     metricDb.insert_metric(new MetricName(name, base_name, domain_name, domain_type));
                     metricName = metricDb.check_metric(name, true);
                 }
-                
+
                 if ("".equals(target)) {
                     target = "0";
                 }
@@ -86,11 +87,7 @@ public class ImpMetricTarget extends BaseImport {
                 }
                 
                 if (unchanged == null || "0".equals(unchanged)) {
-                    if (debt_target != null && !"".equals(debt_target)) {
-                        type = "TechnicalDebtTarget";
-                        target = debt_target;
-                    }
-                    metricDb.insert_target(projectId, revision, metricName.getId(), type, Integer.parseInt(target), Integer.parseInt(low_target), comment);
+                    metricDb.insert_target(projectId, revision, metricName.getId(), comment, parseDirection(direction), parseTarget(target), parseTarget(low_target), parseTarget(debt_target), scale);
                 }
             }            
         }
@@ -153,32 +150,26 @@ public class ImpMetricTarget extends BaseImport {
  
         try (
             MetricDb metricDb = new MetricDb();
-            FileReader fr = new FileReader(new File(getRootPath().toFile(), "data_hqlib.json"))
+            FileReader fr = new FileReader(new File(getRootPath().toFile(), "data_metric_defaults.json"))
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
             for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
-                String base_name = (String) jsonObject.get("class_name");
+                String base_name = (String) jsonObject.get("base_name");
                 String revision = (String) jsonObject.get("version_id");
                 String commit_date = (String) jsonObject.get("commit_date");
                 String direction = (String) jsonObject.get("direction");
                 String perfect = (String) jsonObject.get("perfect_value");
                 String target = (String) jsonObject.get("target_value");
                 String low_target = (String) jsonObject.get("low_target_value");
+                String scale = (String) jsonObject.get("scale");
                 
                 Timestamp date = Timestamp.valueOf(commit_date);
-                Boolean higherIsBetter = null;
-                if ("1".equals(direction)) {
-                    higherIsBetter = true;
-                }
-                else if ("-1".equals(direction)) {
-                    higherIsBetter = false;
-                }
 
                 if (!metricDb.check_default_target(base_name, revision)) {
-                    metricDb.insert_default_target(base_name, revision, date, higherIsBetter, parseTarget(perfect), parseTarget(target), parseTarget(low_target));
+                    metricDb.insert_default_target(base_name, revision, date, parseDirection(direction), parseTarget(perfect), parseTarget(target), parseTarget(low_target), scale);
                 }
             }            
         }
@@ -201,6 +192,17 @@ public class ImpMetricTarget extends BaseImport {
             }
         }
         return target;
+    }
+
+    protected Boolean parseDirection(String value) {
+        Boolean higherIsBetter = null;
+        if ("1".equals(value)) {
+            higherIsBetter = true;
+        }
+        else if ("-1".equals(value)) {
+            higherIsBetter = false;
+        }
+        return higherIsBetter;
     }
 
     @Override

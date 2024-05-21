@@ -295,7 +295,7 @@ public class ImpCommit extends BaseImport {
     }
 
     /**
-     * Updates the JiraID's of the VCS developer table. It uses a json file to read
+     * Updates the JiraID's of the VCS/LDAP developer tables. It uses a json file to read
      * all the aliases found on the version control system and then links them to the JiraID's.
      * Best is to do this after collecting all the records of all the projects.
      */

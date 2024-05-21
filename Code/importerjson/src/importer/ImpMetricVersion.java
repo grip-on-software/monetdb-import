@@ -19,7 +19,10 @@
  */
 package importer;
 
+import dao.DeveloperDb;
+import dao.DeveloperDb.Developer;
 import dao.MetricDb;
+import dao.SaltDb;
 import dao.SprintDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -44,6 +47,7 @@ public class ImpMetricVersion extends BaseImport {
         try (
             MetricDb metricDb = new MetricDb();
             SprintDb sprintDb = new SprintDb();
+            DeveloperDb devDb = new DeveloperDb();
             FileReader fr = new FileReader(getMainImportPath())
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
@@ -53,6 +57,7 @@ public class ImpMetricVersion extends BaseImport {
                 
                 String message = (String) jsonObject.get("message");
                 String developer = (String) jsonObject.get("developer");
+                String email = (String) jsonObject.get("email");
                 String revision = (String) jsonObject.get("version_id");
                 String date = (String) jsonObject.get("commit_date");
                 
@@ -61,6 +66,16 @@ public class ImpMetricVersion extends BaseImport {
                 if (version_id == null) {
                     Timestamp commit_date = Timestamp.valueOf(date);
                     int sprint_id = sprintDb.find_sprint(projectId, commit_date);
+
+                    if (developer != null) {
+                        Developer dev = new Developer(developer, email);
+                        Integer jira_id = devDb.check_ldap_developer(projectId, dev, SaltDb.Encryption.NONE);
+                        // check whether the developer does not already exist
+                        if (jira_id == null) {
+                            jira_id = devDb.check_developer(dev);
+                            devDb.insert_ldap_developer(projectId, jira_id, dev);
+                        }
+                    }
 
                     metricDb.insert_version(projectId, revision, developer, message, commit_date, sprint_id);
                 }

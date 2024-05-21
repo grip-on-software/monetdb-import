@@ -1199,8 +1199,9 @@ dashboard project definition.
         project to which the norm changes apply.
     -   **version_id** - VARCHAR(100): SHA hash or revision number
         belonging to the change of the target norms.
-    -   **developer** - VARCHAR(64): Developer or quality lead that made
-        the change.
+    -   **developer** - VARCHAR(64) - reference to ldap_developer.name: 
+        Developer or quality lead that made the change. This is NULL if the 
+        developer could not be obtained.
     -   **message** - TEXT: Commit message describing the change. This
         is the empty string if the message is not provided or NULL if it
         could not be obtained.
@@ -1223,18 +1224,28 @@ dashboard project definition.
         to the change of the target norm.
     -   **metric_id** - INT - reference to metric.metric_id: Metric
         whose norms are changed.
-    -   **type** - VARCHAR(100): Type of change: 'options',
-        'old_options' or 'TechnicalDebtTarget'. This is NULL if the type
-        of change comes from Quality Time and it does not contain a
-        technical debt target.
-    -   **target** - INT: Norm value at which the category changes from
-        green to yellow.
-    -   **low_target** - INT: Norm value at which the category changes
-        from yellow to red.
     -   **comment** - TEXT: Comment for technical debt targets
         describing the reason of the norm change. This is the empty
         string if no comment is provided or NULL if it could not be
         obtained.
+    -   **direction** - BOOL: Whether the metric improves if the metric
+        value increases. This is true if a higher value is better, false
+        if a lower value is better, or NULL if it is not known or not
+        applicable for the metric.
+    -   **target** - FLOAT: Norm value at which the category changes from
+        green to yellow. This is NULL if it is unchanged from the deafult.
+    -   **low_target** - FLOAT: Norm value at which the category changes
+        from yellow to red. This is NULL if it is unchanged from the default.
+    -   **debt_target** - FLOAT: Norm value at which the category changes from
+        yellow to grey, indicating a temporary acceptance of technical debt.
+        This is NULL if no debt target is currently active.
+    -   **scale** - VARCHAR(16): Scale of the metric. This can be "count" if 
+        measuring the metric happens by counting items, "percentage" if 
+        a fraction of items is compared to a total/potential of items, 
+        "version_number" if the metric provides a software version, "duration" 
+        if the metric indicates a duration of time in muties or "rating" if the 
+        metric is a rating from 1 to 5 where lower is better. This is NULL if 
+        the scale of the metric is unchanged from the default.
 
 
 -   **metric_default**: The default values of metric targets in the
@@ -1264,6 +1275,13 @@ dashboard project definition.
         target, are indicated by a yellow color in the quality report,
         while worse values are indicated by a red value). This is NULL
         if the low target value is not known.
+    -   **scale** - VARCHAR(16): Scale of the metric. This can be "count" if 
+        measuring the metric happens by counting items, "percentage" if 
+        a fraction of items is compared to a total/potential of items, 
+        "version_number" if the metric provides a software version, "duration" 
+        if the metric indicates a duration of time in muties or "rating" if the 
+        metric is a rating from 1 to 5 where lower is better. This is NULL if 
+        the scale of the metric is not known.
 
 ## Docker dashboard tables (BigBoat)
 
