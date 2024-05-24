@@ -6,17 +6,21 @@ representations of source information.
 
 The repository also contains scripts that validate schemas, perform schema 
 upgrades, allow imports of backups and exchange formats, as well as generate 
-exports partially via the `monetdb-dumper` repository.
+exports, partially via the 
+[monetdb-dumper](https://github.com/grip-on-software/monetdb-dumper) 
+repository.
 
 ## Importer application 
 
 ### Requirements, configuration and building
 
 The importer application has been tested with OpenJDK 8. In order to build the 
-application, we use Ant 1.10.1+ with the JDK (a package with `javac`).
+application, we use Ant 1.10.1+ with the JDK (a package with `javac`). Make 
+sure your `JAVA_HOME` environment variable points to the correct JDK directory.
 
 Before building, ensure you have create a file in the path 
-`Code/importerjson/nbproject/private/config.properties` containing the 
+`Code/importerjson/nbproject/private/config.properties`, possibly by copying 
+the `config.properties.example` file to there and editing it, containing the 
 following properties:
 
 ```
@@ -36,8 +40,10 @@ directory when the application is run. These properties can be overridden
 during execution using defines.
 
 Now run the following command in order to build the MonetDB import application: 
-`ant -buildfile Code/importerjson/build.xml -propertyfile 
-Code/importerjson/nbproject/private/config.properties`
+```
+ant -buildfile Code/importerjson/build.xml \
+    -propertyfile Code/importerjson/nbproject/private/config.properties
+```
 
 The JAR is then made available in `Code/importerjson/dist/importerjson.jar`.
 
@@ -161,3 +167,24 @@ database schema can be found:
 
 Some of these files are used by the scripts in order to perform validation or 
 conversion to other formats, such as JSON.
+
+## License
+
+The MonetDB importer is licensed under the Apache 2.0 License. Dependency 
+libraries are included in object form (some libraries are only used in tests) 
+and have the following licenses:
+
+- CopyLibs: Part of NetBeans, distributed under Apache 2.0 License
+- [ahocorasick](https://github.com/robert-bor/aho-corasick): Apache 2.0 License
+- [c3p0](https://github.com/swaldman/c3p0): LGPL v2.1 (or any later version) or 
+  EPL v1.0
+- [hamcrest-core](https://github.com/hamcrest/JavaHamcrest): BSD License, see 
+  [LICENSE.txt](Code/importerjson/lib/hamcrest/LICENSE.txt)
+- [jacoco](https://github.com/jacoco/jacoco) (agent and ant task): EPL v2.0
+- [joda-time](https://github.com/JodaOrg/joda-time): Apache 2.0 License
+- [json-simple](https://github.com/fangyidong/json-simple): Apache 2.0 License
+- [junit4](https://github.com/junit-team/junit4): EPL v1.0
+- [mchange-commons-java](https://github.com/swaldman/mchange-commons-java): 
+  LGPL v2.1 (or any later version) or EPL v1.0
+- [monetdb-jdbc](https://github.com/MonetDB/monetdb-java): MPL v2.0, available 
+  from [MonetDB Java Download Area](https://www.monetdb.org/downloads/Java/)

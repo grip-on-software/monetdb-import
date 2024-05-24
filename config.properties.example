@@ -1,0 +1,5 @@
+importer.url=jdbc:monetdb://localhost/gros
+importer.user=monetdb
+importer.password=monetdb
+importer.relPath=export
+importer.email_domain=example.org
