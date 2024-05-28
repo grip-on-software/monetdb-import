@@ -43,6 +43,7 @@ Token = Dict[str, Any]
 Tokens = Dict[str, Token]
 Schema = Dict[str, Any]
 Field = Union[str, List[Optional[str]]]
+TableField = Dict[str, Union[List[str], Tuple[str, ...], str]]
 
 # Tokens for SQL schema file
 SQL_IDENT = r"[a-z_]+"
@@ -752,13 +753,11 @@ def check_existing(one: Dict[str, Any], two: Dict[str, Any], key: str,
     missing: Set[str] = set(one[key].keys()) - set(two[key].keys())
     superfluous: Set[str] = set(two[key].keys()) - set(one[key].keys())
     violations = 0
-
     if missing:
         logging.warning('Missing %d %s%s%s: %s', len(missing), key,
                         's' if len(missing) > 1 else '', extra,
                         ', '.join(missing))
         violations += len(missing)
-
     if superfluous:
         logging.warning('Superfluous %d %s%s%s: %s', len(superfluous), key,
                         's' if len(superfluous) > 1 else '', extra,
@@ -767,49 +766,53 @@ def check_existing(one: Dict[str, Any], two: Dict[str, Any], key: str,
 
     return violations
 
-def check_equal(one: Dict[str, Any], two: Dict[str, Any], key: str,
-                extra: str = '',
+def _convert_type(field: TableField, key: str,
+                  specials: Optional[Dict[str, Dict[str, str]]]) -> List[str]:
+    item = field[key]
+    if specials is not None:
+        if 'limit' in field:
+            item = f"{item}({field['limit']})"
+        elif 'precision' in field and 'scale' in field:
+            item = f"{item}({field['precision']},{field['scale']})"
+
+    while specials is not None and item in specials:
+        if "type" not in specials[str(item)]:
+            raise ValueError(f'Missing type for special_type {item} of {key}')
+
+        if "limit" in specials[str(item)]:
+            next_type = specials[str(item)]
+            item = f"{next_type['type']}({next_type['limit']})"
+        else:
+            item = specials[str(item)]["type"]
+
+    if isinstance(item, tuple):
+        return list(item)
+    if isinstance(item, list):
+        return item
+    return [item]
+
+def check_equal(one: TableField, two: TableField, key: str, extra: str = '',
                 specials: Optional[Dict[str, Dict[str, str]]] = None) -> int:
     """
     Check if two dictionaries have the same value stored for a key if the first
     dictionary has that key. Returns the number of violations.
     """
 
-    if key in one:
-        if key not in two:
-            logging.warning('Missing %s%s', key, extra)
-            return 1
+    if key not in one:
+        return 0
+    if key not in two:
+        logging.warning('Missing %s%s', key, extra)
+        return 1
 
-        first: Union[List[str], Tuple[str, ...], str] = one[key]
-        second: Union[List[str], Tuple[str, ...], str] = two[key]
-        if specials is not None:
-            if 'limit' in two:
-                second = f"{second}({two['limit']})"
-            elif 'precision' in two and 'scale' in two:
-                second = f"{second}({two['precision']},{two['scale']})"
-
-        while specials is not None and first in specials:
-            if "type" not in specials[str(first)]:
-                logging.warning('Missing type for special_type %s of %s%s',
-                                first, key, extra)
-                return 1
-
-            if "limit" in specials[str(first)]:
-                next_type = specials[str(first)]
-                first = f"{next_type['type']}({next_type['limit']})"
-            else:
-                first = specials[str(first)]["type"]
-
-        if isinstance(first, list):
-            first = tuple(first)
-        if isinstance(second, list):
-            second = tuple(second)
-
-        if first != second:
-            logging.warning('%s%s does not match: %s vs. %s', key, extra,
-                            first, second)
-            return 1
-
+    try:
+        first = _convert_type(one, key, specials)
+        second = _convert_type(two, key, specials)
+    except ValueError as error:
+        logging.warning('%s%s', error, key)
+        return 1
+    if first != second:
+        logging.warning('Unmatched %s%s: %s vs. %s', key, extra, first, second)
+        return 1
     return 0
 
 def _check_single_reference(ref_table_name: str, ref_field_name: str,
@@ -865,7 +868,6 @@ def _check_reference(table_name: str, field_name: str, table: Dict[str, Any],
     if 'reference' in table:
         violations += _check_table_reference(table_name, field_name,
                                              table['reference'], references)
-
     return violations
 
 def _check_table_reference(table_name: str, field_name: str,
@@ -884,7 +886,6 @@ def _check_table_reference(table_name: str, field_name: str,
                 logging.warning('Missing reference to %s%s', to_reference,
                                 field_text)
                 return 1
-
     return 0
 
 def _check_field(table_name: str, field_name: str, table: Dict[str, Any],
@@ -916,9 +917,8 @@ def _check_field(table_name: str, field_name: str, table: Dict[str, Any],
                         table_name, field_name)
         violations += 1
 
-    violations += _check_reference(table_name, field_name,
-                                   table, documentation, doc_field)
-    return violations
+    return violations + _check_reference(table_name, field_name, table,
+                                         documentation, doc_field)
 
 def validate_schema(schema: Schema, documentation: Schema) -> int:
     """
@@ -947,7 +947,6 @@ def validate_schema(schema: Schema, documentation: Schema) -> int:
             for field_name in table.get('field', {}):
                 violations += _check_field(table_name, field_name, table,
                                            documentation, doc_table)
-
     return violations
 
 def serialize_ref(json_object: SymbolicRef) -> str:
