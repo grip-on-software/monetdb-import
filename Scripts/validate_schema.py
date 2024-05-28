@@ -220,36 +220,26 @@ MD_TOKENS = {
                                          re.M | re.S),
                 'multiline': True,
                 'line': {
-                    'type': {
-                        'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
-                                                      ^{MD_FIELD}\s+-\s+([A-Z]+
-                                                      (?:\([A-Za-z0-9, ]+\))?)
-                                                      (?!.+^{MD_FIELD})""",
-                                                 re.M | re.S | re.X)
-                    },
-                    'primary_key': {
-                        'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
-                                                      ^{MD_FIELD}\s+-\s+[^:]*
-                                                      primary\s+key[:-]
-                                                      (?!.+^{MD_FIELD})""",
-                                                 re.M | re.S | re.X)
-                    },
-                    'reference': {
-                        'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
-                                                      ^{MD_FIELD}\s+-\s+[^:]*
-                                                      reference\s+to\s+
-                                                      ([a-z_]+)\.([a-z_]+)
-                                                      (?:\s+or\s+
-                                                      ([a-z_]+)\.([a-z_]+))*:
-                                                      (?!.+^{MD_FIELD})""",
-                                                 re.M | re.S | re.X)
-                    },
-                    'null': {
-                        'pattern': regex.compile(rf"""(?:(?!^{MD_FIELD}).+)?
-                                                      ^{MD_FIELD}[^:]*:\s+.+\s+
-                                                      NULL(?!.+^{MD_FIELD})""",
-                                                 re.M | re.S | re.X)
-                    },
+                    'type': {'pattern': regex.compile(
+                        rf"""(?:(?!^{MD_FIELD}).+)?^{MD_FIELD}\s+-\s+([A-Z]+
+                             (?:\([A-Za-z0-9, ]+\))?)(?!.+^{MD_FIELD})""",
+                        re.M | re.S | re.X
+                    )},
+                    'primary_key': {'pattern': regex.compile(
+                        rf"""(?:(?!^{MD_FIELD}).+)?^{MD_FIELD}\s+-\s+[^:]*
+                             primary\s+key[:-](?!.+^{MD_FIELD})""",
+                        re.M | re.S | re.X
+                    )},
+                    'reference': {'pattern': regex.compile(
+                        rf"""(?:(?!^{MD_FIELD}).+)?^{MD_FIELD}\s+-\s+[^:]*
+                             reference\s+to\s+([a-z_]+)\.([a-z_]+)
+                             (?:\s+or\s+([a-z_]+)\.([a-z_]+))*:
+                             (?!.+^{MD_FIELD})""", re.M | re.S | re.X
+                    )},
+                    'null': {'pattern': regex.compile(
+                        rf"""(?:(?!^{MD_FIELD}).+)?^{MD_FIELD}[^:]*:\s+.+\s+
+                             NULL(?!.+^{MD_FIELD})""", re.M | re.S | re.X
+                    )},
                 },
                 'end': regex.compile(rf".*^{MD_FIELD}.*^{MD_FIELD}|.*\n\n",
                                      re.M | re.S)
@@ -259,6 +249,9 @@ MD_TOKENS = {
     }
 }
 
+PRIMARY = 'primary_key'
+COMBINED = 'primary_key_combined'
+
 def parse_args(config: RawConfigParser) -> Namespace:
     """
     Parse command line arguments.
@@ -266,27 +259,32 @@ def parse_args(config: RawConfigParser) -> Namespace:
 
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-    verify = config.get('schema', 'verify')
+    verify = config.get('schema', 'verify', fallback=True)
     if verify in ('false', 'no', 'off', '-', '0', '', None):
         verify = False
-    elif not Path(verify).exists():
+    elif not Path(str(verify)).exists():
         verify = True
 
     parser = ArgumentParser(description=description)
-    parser.add_argument('--path', default=config.get('schema', 'path'),
-                        help='Path or URL to retrieve SQL schema from')
-    parser.add_argument('--doc', default=config.get('schema', 'doc'),
+    parser.add_argument('--path',
+                        default=config.get('schema', 'path',
+                                           fallback='create-tables.sql'),
+                        help='Path to retrieve SQL schema from')
+    parser.add_argument('--doc',
+                        default=config.get('schema', 'doc',
+                                           fallback='Database_structure.md'),
                         help='Path to retrieve Markdown documentation from')
-    parser.add_argument('--url', default=config.get('schema', 'url'),
+    parser.add_argument('--url',
+                        default=config.get('schema', 'url', fallback=''),
                         help='URL to retrieve JSON documentation from')
     parser.add_argument('--verify', nargs='?', const=True, default=verify,
                         help='Enable SSL certificate verification')
     parser.add_argument('--no-verify', action='store_false', dest='verify',
                         help='Disable SSL certificate verification')
     parser.add_argument('--username', help='Username for documentation URL',
-                        default=config.get('schema', 'username'))
+                        default=config.get('schema', 'username', fallback=''))
     parser.add_argument('--password', help='Password for documentation URL',
-                        default=config.get('schema', 'password'))
+                        default=config.get('schema', 'password', fallback=''))
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
     parser.add_argument('--export', action='store_true', default=False,
@@ -431,8 +429,7 @@ class LineParser(SchemaParser):
         self._multiline = None
         return matches
 
-    def handle_end_result(self, line: str, matches: List[str]) -> \
-            Optional[bool]:
+    def handle_line_end(self, line: str, matches: List[str]) -> Optional[bool]:
         """
         Handle matches for a line when there are no nesting matches.
         """
@@ -509,7 +506,7 @@ class LineParser(SchemaParser):
                 if self._multiline is None:
                     if '__end' in self._current_tokens:
                         # No nesting matches
-                        loop = self.handle_end_result(line, matches)
+                        loop = self.handle_line_end(line, matches)
                         if loop:
                             continue
                         if loop is not None:
@@ -590,7 +587,7 @@ class XMLParser(SchemaParser):
         return False
 
     @staticmethod
-    def _get_path(selector: Dict[str, str], nesting: str= '//',
+    def _get_path(selector: Dict[str, str], nesting: str = '//',
                   tag: str = 'value') -> str:
         selectors = ''.join(
             f"[{'@' if key != '.' else ''}{key}='{value}']"
@@ -692,7 +689,7 @@ class XMLParser(SchemaParser):
 
 def parse_schema(session: Session, path: str) -> Schema:
     """
-    Parse an SQL table schema.
+    Parse an SQL table schema or retrieve an already-parsed JSON structure.
     """
 
     try:
@@ -701,9 +698,6 @@ def parse_schema(session: Session, path: str) -> Schema:
             raise ValueError('URL must be absolute')
 
         request = session.get(path)
-        if request.status_code == 404:
-            raise RuntimeError(f"Schema URL not found: {url}")
-
         request.raise_for_status()
         if request.headers['Content-Type'] != 'application/json':
             raise RuntimeError('Schema URL must have JSON content type, but '
@@ -731,7 +725,7 @@ def parse_documentation(session: Session, url: str, path: Path) -> Schema:
 
     if path.is_file():
         md_parser = LineParser(MD_TOKENS, single_line=False)
-        with path.open('r') as structure_file:
+        with path.open('r', encoding='utf-8') as structure_file:
             return md_parser.parse(structure_file)
 
     request = session.get(url)
@@ -778,9 +772,7 @@ def check_equal(one: Dict[str, Any], two: Dict[str, Any], key: str,
                 specials: Optional[Dict[str, Dict[str, str]]] = None) -> int:
     """
     Check if two dictionaries have the same value stored for a key if the first
-    dictionary has that key.
-
-    Returns the number of violations.
+    dictionary has that key. Returns the number of violations.
     """
 
     if key in one:
@@ -824,7 +816,7 @@ def check_reference(table_name: str, field_name: str, table: Dict[str, Any],
                     documentation: Schema, doc_field: Dict[str, Any]) -> int:
     """
     Check whether a field reference is valid and has the same type as the
-    referent.
+    referent. Returns 1 if a violation is detected, otherwise 0.
     """
 
     field_text = f' of field {field_name} in table {table_name}'
@@ -836,8 +828,7 @@ def check_reference(table_name: str, field_name: str, table: Dict[str, Any],
             ref_table_name, ref_field_name = reference[:2]
             reference = reference[2:]
 
-            if ref_table_name not in documentation['table'] or \
-                'field' not in documentation['table'][ref_table_name]:
+            if 'field' not in documentation['table'].get(ref_table_name, {}):
                 logging.warning('Invalid table reference %s%s',
                                 ref_table_name, field_text)
                 return 1
@@ -848,12 +839,11 @@ def check_reference(table_name: str, field_name: str, table: Dict[str, Any],
                                 ref_table_name, ref_field_name, field_text)
                 return 1
 
-            if 'type' in doc_field and \
-                'type' in ref_fields[ref_field_name] and \
-                doc_field['type'] != ref_fields[ref_field_name]['type']:
+            ref_type = ref_fields[ref_field_name].get('type')
+            if 'type' in doc_field and ref_type is not None and \
+                doc_field['type'] != ref_type:
                 logging.warning('Referenced field %s.%s with type %s does not match type %s%s',
-                                ref_table_name, ref_field_name,
-                                ref_fields[ref_field_name]['type'],
+                                ref_table_name, ref_field_name, ref_type,
                                 doc_field['type'], field_text)
                 return 1
 
@@ -867,24 +857,37 @@ def check_reference(table_name: str, field_name: str, table: Dict[str, Any],
                                     to_name, field_text)
                     return 1
 
-    # Validate documentation references to MWB references from/to names pairs
     if 'reference' in table:
-        for relationship in table['reference']:
-            if not references.isdisjoint(relationship['to']) and \
-                from_name in relationship['from']:
-                index = relationship['to'].index(
-                    references.intersection(relationship['to']).pop()
-                )
-                if relationship['from'][index] != from_name:
-                    logging.warning('Missing reference to %s%s',
-                                    relationship['to'][index], field_text)
-                    return 1
+        return check_table_reference(table_name, field_name, table['reference'],
+                                     references)
+
+    return 0
+
+def check_table_reference(table_name: str, field_name: str,
+                          reference: List[Dict[str, Any]],
+                          references: Set[str]) -> int:
+    """
+    Validate documentation references to MWB references from/to names pairs.
+    Returns 1 if a violation is detected, otherwise 0.
+    """
+
+    field_text = f' of field {field_name} in table {table_name}'
+    from_name = f"{table_name}.{field_name}"
+    for relationship in reference:
+        if not references.isdisjoint(relationship['to']) and \
+            from_name in relationship['from']:
+            to_reference = references.intersection(relationship['to']).pop()
+            index = relationship['to'].index(to_reference)
+            if relationship['from'][index] != from_name:
+                logging.warning('Missing reference to %s%s', to_reference,
+                                field_text)
+                return 1
 
     return 0
 
 def validate_schema(schema: Schema, documentation: Schema) -> int:
     """
-    Compare the documentation against the database schema.
+    Compare `schema` with `documentation`. Returns the number of violations.
     """
 
     violations = check_existing(schema, documentation, 'table')
@@ -908,8 +911,7 @@ def validate_schema(schema: Schema, documentation: Schema) -> int:
         logging.info('Checking table %s', table_name)
         table_text = f' for table {table_name}'
         doc_table = documentation['table'][table_name]
-        violations += check_equal(doc_table, table, 'primary_key_combined',
-                                  table_text)
+        violations += check_equal(doc_table, table, COMBINED, table_text)
         violations += check_existing(table, doc_table, 'field', table_text)
 
         for field_name, field in table.get('field', {}).items():
@@ -926,17 +928,14 @@ def validate_schema(schema: Schema, documentation: Schema) -> int:
             else:
                 violations += 1
 
-            violations += check_equal(field, doc_field, 'primary_key',
-                                      field_text)
-            combined = 'primary_key_combined'
-            if 'primary_key' in doc_field:
-                if 'primary_key' not in field and \
-                    field_name not in table.get(combined, []):
+            violations += check_equal(field, doc_field, PRIMARY, field_text)
+            is_combined = field_name in table.get(COMBINED, [])
+            if PRIMARY in doc_field:
+                if PRIMARY not in field and not is_combined:
                     logging.warning('Table %s does not have primary key %s',
                                     table_name, field_name)
                     violations += 1
-            elif field_name in table.get(combined, []) and \
-                field_name not in doc_table.get(combined, []):
+            elif is_combined and field_name not in doc_table.get(COMBINED, []):
                 logging.warning('Table %s should have primary key %s',
                                 table_name, field_name)
                 violations += 1
@@ -977,18 +976,13 @@ def main() -> int:
     documentation = parse_documentation(session, args.url.format(branch=''),
                                         Path(args.doc))
     schema = parse_schema(session, args.path)
-
     if args.export:
-        tables = {
-            'tables-documentation.json': documentation,
-            'tables-schema.json': schema
-        }
-        for filename, table in tables.items():
-            with open(filename, 'w', encoding='utf-8') as tables_file:
+        for name, table in [('documentation', documentation), ('schema', schema)]:
+            tables_path = Path(f'tables-{name}.json')
+            with tables_path.open('w', encoding='utf-8') as tables_file:
                 json.dump(table, tables_file, indent=4, default=serialize_ref)
 
     violations = validate_schema(schema, documentation)
-
     if violations > 0:
         logging.warning('Schema violations: %d', violations)
         return 2
