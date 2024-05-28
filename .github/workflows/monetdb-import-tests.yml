@@ -27,12 +27,12 @@ jobs:
           python-version: 3.12.3
       - name: Validate
         run: |
-          pip install Scripts/requirements.txt
+          pip install -r Scripts/requirements.txt
           cd Scripts
           python validate_schema.py --log WARNING
       - name: Mypy typing coverage
         run: |
-          pip install Scripts/analysis-requirements.txt
+          pip install -r Scripts/analysis-requirements.txt
           mypy Scripts/*.py --cobertura-xml-report mypy-report --junit-xml mypy-report/junit.xml --no-incremental --show-traceback --config-file Scripts/setup.cfg
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v2.1.1
