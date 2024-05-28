@@ -30,7 +30,7 @@ from pathlib import Path
 import re
 import sys
 from typing import Any, Dict, Generator, IO, Iterable, List, Mapping, \
-    Optional, Set, Union
+    Optional, Set, Tuple, Union
 from urllib.parse import urlparse
 from xml.etree.ElementTree import Element
 import zipfile
@@ -259,8 +259,8 @@ def parse_args(config: RawConfigParser) -> Namespace:
 
     description = 'Delete all data and recreate the database'
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-    verify = config.get('schema', 'verify', fallback=True)
-    if verify in ('false', 'no', 'off', '-', '0', '', None):
+    verify: Union[str, bool] = config.get('schema', 'verify', fallback=True)
+    if verify in ('false', 'no', 'off', '-', '0', ''):
         verify = False
     elif not Path(str(verify)).exists():
         verify = True
@@ -429,6 +429,21 @@ class LineParser(SchemaParser):
         self._multiline = None
         return matches
 
+    def _update_multi_line(self, line: str, matches: List[str],
+                           old_token: Token) -> None:
+        if '__end' in matches:
+            # The '__end' token triggered and handled most cleanup already
+            self._previous = ""
+        else:
+            # Remove any former lines not relevant for the token pattern
+            self._multiline = True
+            previous = self._previous
+            while previous and \
+                (old_token['end'].match(previous + line) or \
+                not old_token['pattern'].match(previous + line)):
+                previous = '\n'.join(previous.split('\n')[1:])
+            self._previous = previous + line
+
     def handle_line_end(self, line: str, matches: List[str]) -> Optional[bool]:
         """
         Handle matches for a line when there are no nesting matches.
@@ -452,23 +467,10 @@ class LineParser(SchemaParser):
             if self._single_line:
                 return False
 
-            if '__end' in matches:
-                # The '__end' token triggered and handled most cleanup already
-                self._previous = ""
-            else:
-                # Remove any former lines not relevant for the token pattern
-                self._multiline = True
-                previous = self._previous
-                while previous and \
-                    (old_token['end'].match(previous + line) or \
-                    not old_token['pattern'].match(previous + line)):
-                    previous = '\n'.join(previous.split('\n')[1:])
-                self._previous = previous + line
-
+            self._update_multi_line(line, matches, old_token)
             return True
 
-        if 'within' in old_token and \
-            '__skip_within' in old_token and \
+        if 'within' in old_token and '__skip_within' in old_token and \
             'end' in old_token and \
             not old_token['end'].match(self._previous + line):
             # Only go to parent when the '__end' token triggers
@@ -550,11 +552,11 @@ class SymbolicRef:
     def __hash__(self) -> int:
         return hash(str(self))
 
-    def __eq__(self, other: Any) -> bool:
-        return str(self) == other
+    def __eq__(self, other: object) -> bool:
+        return str(self) == str(other)
 
-    def __lt__(self, other: Any) -> bool:
-        return str(self) < other
+    def __lt__(self, other: object) -> bool:
+        return str(self) < str(other)
 
 class XMLParser(SchemaParser):
     """
@@ -596,8 +598,8 @@ class XMLParser(SchemaParser):
         return f".{nesting}{tag}{selectors}"
 
     @classmethod
-    def _flatten(cls, data: Iterable[Any], prefix: bool = True) -> \
-            Generator[str, None, None]:
+    def _flatten(cls, data: Iterable[Union[List[str], Dict[str, str], str]],
+                 prefix: Union[bool, str] = True) -> Generator[str, None, None]:
         for element in data:
             if isinstance(element, list):
                 yield from cls._flatten(element, prefix=prefix)
@@ -631,7 +633,7 @@ class XMLParser(SchemaParser):
             self.handle_field(name, token, field)
 
     def parse_nested(self, element: Element, tokens: Tokens,
-                     data: Dict[str, Any], prefix: str= '') -> None:
+                     data: Dict[str, Any], prefix: str = '') -> None:
         """
         Parse nested elements.
         """
@@ -671,7 +673,7 @@ class XMLParser(SchemaParser):
 
             if 'unroll_prefix' in token:
                 data[name] = list(self._flatten(data[name],
-                                  prefix=token['unroll_prefix']))
+                                                prefix=token['unroll_prefix']))
             elif named:
                 data[name] = {
                     child_data['name']: child_data for child_data in data[name]
@@ -737,12 +739,10 @@ def parse_documentation(session: Session, url: str, path: Path) -> Schema:
     return request.json()
 
 def check_existing(one: Dict[str, Any], two: Dict[str, Any], key: str,
-                   extra: str= '') -> int:
+                   extra: str = '') -> int:
     """
     Check if two dictionaries that both have a key have subdictionaries with the
-    same subkeys stored for that key.
-
-    Returns the number of violations.
+    same subkeys stored for that key. Returns the number of violations.
     """
 
     if key not in one or key not in two:
@@ -780,8 +780,8 @@ def check_equal(one: Dict[str, Any], two: Dict[str, Any], key: str,
             logging.warning('Missing %s%s', key, extra)
             return 1
 
-        first = one[key]
-        second = two[key]
+        first: Union[List[str], Tuple[str, ...], str] = one[key]
+        second: Union[List[str], Tuple[str, ...], str] = two[key]
         if specials is not None:
             if 'limit' in two:
                 second = f"{second}({two['limit']})"
@@ -789,16 +789,16 @@ def check_equal(one: Dict[str, Any], two: Dict[str, Any], key: str,
                 second = f"{second}({two['precision']},{two['scale']})"
 
         while specials is not None and first in specials:
-            if "type" not in specials[first]:
+            if "type" not in specials[str(first)]:
                 logging.warning('Missing type for special_type %s of %s%s',
                                 first, key, extra)
                 return 1
 
-            if "limit" in specials[first]:
-                next_type = specials[first]
+            if "limit" in specials[str(first)]:
+                next_type = specials[str(first)]
                 first = f"{next_type['type']}({next_type['limit']})"
             else:
-                first = specials[first]["type"]
+                first = specials[str(first)]["type"]
 
         if isinstance(first, list):
             first = tuple(first)
@@ -812,65 +812,67 @@ def check_equal(one: Dict[str, Any], two: Dict[str, Any], key: str,
 
     return 0
 
-def check_reference(table_name: str, field_name: str, table: Dict[str, Any],
-                    documentation: Schema, doc_field: Dict[str, Any]) -> int:
-    """
-    Check whether a field reference is valid and has the same type as the
-    referent. Returns 1 if a violation is detected, otherwise 0.
-    """
+def _check_single_reference(ref_table_name: str, ref_field_name: str,
+                            documentation: Schema, doc_field: Dict[str, Any],
+                            field_text: str) -> int:
+    # Check a single reference. Returns 1 if there is a violation, otherwise 0.
+    if 'field' not in documentation['table'].get(ref_table_name, {}):
+        logging.warning('Invalid table reference %s%s', ref_table_name, field_text)
+        return 1
 
+    ref_fields = documentation['table'][ref_table_name]['field']
+    if ref_field_name not in ref_fields:
+        logging.warning('Invalid field reference %s.%s%s',
+                        ref_table_name, ref_field_name, field_text)
+        return 1
+
+    ref_type = ref_fields[ref_field_name].get('type')
+    if 'type' in doc_field and ref_type is not None and \
+        doc_field['type'] != ref_type:
+        logging.warning('Referenced field %s.%s with type %s does not match type %s%s',
+                        ref_table_name, ref_field_name, ref_type,
+                        doc_field['type'], field_text)
+        return 1
+
+    return 0
+
+def _check_reference(table_name: str, field_name: str, table: Dict[str, Any],
+                     documentation: Schema, doc_field: Dict[str, Any]) -> int:
+    # Check whether a field reference is valid and has the same type as the
+    # referent. Returns the number of violations
     field_text = f' of field {field_name} in table {table_name}'
     from_name = f"{table_name}.{field_name}"
     references = set()
+    violations = 0
     if 'reference' in doc_field:
         reference: List[Optional[str]] = doc_field['reference']
-        while reference and reference[0] is not None:
-            ref_table_name, ref_field_name = reference[:2]
-            reference = reference[2:]
-
-            if 'field' not in documentation['table'].get(ref_table_name, {}):
-                logging.warning('Invalid table reference %s%s',
-                                ref_table_name, field_text)
-                return 1
-
-            ref_fields = documentation['table'][ref_table_name]['field']
-            if ref_field_name not in ref_fields:
-                logging.warning('Invalid field reference %s.%s%s',
-                                ref_table_name, ref_field_name, field_text)
-                return 1
-
-            ref_type = ref_fields[ref_field_name].get('type')
-            if 'type' in doc_field and ref_type is not None and \
-                doc_field['type'] != ref_type:
-                logging.warning('Referenced field %s.%s with type %s does not match type %s%s',
-                                ref_table_name, ref_field_name, ref_type,
-                                doc_field['type'], field_text)
-                return 1
-
+        while reference and reference[0] is not None and reference[1] is not None:
+            violations += _check_single_reference(reference[0], reference[1],
+                                                  documentation, doc_field,
+                                                  field_text)
             if 'reference' in table:
-                to_name = f"{ref_table_name}.{ref_field_name}"
+                to_name = f"{reference[0]}.{reference[1]}"
                 references.add(to_name)
                 if not any(candidate for candidate in table['reference']
                            if from_name in candidate['from'] and
                            to_name in candidate['to']):
                     logging.warning('Superfluous reference to %s%s',
                                     to_name, field_text)
-                    return 1
+                    violations += 1
+
+            reference = reference[2:]
 
     if 'reference' in table:
-        return check_table_reference(table_name, field_name, table['reference'],
-                                     references)
+        violations += _check_table_reference(table_name, field_name,
+                                             table['reference'], references)
 
-    return 0
+    return violations
 
-def check_table_reference(table_name: str, field_name: str,
-                          reference: List[Dict[str, Any]],
-                          references: Set[str]) -> int:
-    """
-    Validate documentation references to MWB references from/to names pairs.
-    Returns 1 if a violation is detected, otherwise 0.
-    """
-
+def _check_table_reference(table_name: str, field_name: str,
+                           reference: List[Dict[str, List[str]]],
+                           references: Set[str]) -> int:
+    # Validate documentation references to MWB references from/to names pairs.
+    # Returns 1 if a violation is detected, otherwise 0.
     field_text = f' of field {field_name} in table {table_name}'
     from_name = f"{table_name}.{field_name}"
     for relationship in reference:
@@ -885,6 +887,39 @@ def check_table_reference(table_name: str, field_name: str,
 
     return 0
 
+def _check_field(table_name: str, field_name: str, table: Dict[str, Any],
+                 documentation: Schema, doc_table: Dict[str, Any]) -> int:
+    # Check a table field. Returns the number of violations.
+    if field_name not in doc_table.get('field', {}):
+        return 0
+
+    field_text = f' of field {field_name} in table {table_name}'
+    field: Dict[str, Any] = table['field'][field_name]
+    doc_field: Dict[str, Any] = doc_table['field'][field_name]
+
+    violations = check_equal(doc_field, field, 'type', field_text,
+                             documentation['special_type'])
+    if check_equal(field, doc_field, 'null', field_text) == 0:
+        violations += check_equal(doc_field, field, 'null', field_text)
+    else:
+        violations += 1
+
+    violations += check_equal(field, doc_field, PRIMARY, field_text)
+    is_combined = field_name in table.get(COMBINED, [])
+    if PRIMARY in doc_field:
+        if PRIMARY not in field and not is_combined:
+            logging.warning('Table %s does not have primary key %s',
+                            table_name, field_name)
+            violations += 1
+    elif is_combined and field_name not in doc_table.get(COMBINED, []):
+        logging.warning('Table %s should have primary key %s',
+                        table_name, field_name)
+        violations += 1
+
+    violations += _check_reference(table_name, field_name,
+                                   table, documentation, doc_field)
+    return violations
+
 def validate_schema(schema: Schema, documentation: Schema) -> int:
     """
     Compare `schema` with `documentation`. Returns the number of violations.
@@ -894,54 +929,24 @@ def validate_schema(schema: Schema, documentation: Schema) -> int:
     if 'table' not in documentation:
         return violations
 
-    # Aliases
     if 'special_type' not in documentation:
         logging.warning('Missing special types in documentation')
         return violations + 1
-
     documentation['special_type'].update({
         'INT': {'type': 'INTEGER'},
         'BOOL': {'type': 'BOOLEAN'}
     })
 
     for table_name, table in schema['table'].items():
-        if table_name not in documentation['table']:
-            continue
-
-        logging.info('Checking table %s', table_name)
-        table_text = f' for table {table_name}'
-        doc_table = documentation['table'][table_name]
-        violations += check_equal(doc_table, table, COMBINED, table_text)
-        violations += check_existing(table, doc_table, 'field', table_text)
-
-        for field_name, field in table.get('field', {}).items():
-            if field_name not in doc_table.get('field', {}):
-                continue
-
-            field_text = f' of field {field_name} in table {table_name}'
-            doc_field = doc_table['field'][field_name]
-
-            violations += check_equal(doc_field, field, 'type', field_text,
-                                      documentation['special_type'])
-            if check_equal(field, doc_field, 'null', field_text) == 0:
-                violations += check_equal(doc_field, field, 'null', field_text)
-            else:
-                violations += 1
-
-            violations += check_equal(field, doc_field, PRIMARY, field_text)
-            is_combined = field_name in table.get(COMBINED, [])
-            if PRIMARY in doc_field:
-                if PRIMARY not in field and not is_combined:
-                    logging.warning('Table %s does not have primary key %s',
-                                    table_name, field_name)
-                    violations += 1
-            elif is_combined and field_name not in doc_table.get(COMBINED, []):
-                logging.warning('Table %s should have primary key %s',
-                                table_name, field_name)
-                violations += 1
-
-            violations += check_reference(table_name, field_name,
-                                          table, documentation, doc_field)
+        if table_name in documentation['table']:
+            logging.info('Checking table %s', table_name)
+            table_text = f' for table {table_name}'
+            doc_table = documentation['table'][table_name]
+            violations += check_equal(doc_table, table, COMBINED, table_text)
+            violations += check_existing(table, doc_table, 'field', table_text)
+            for field_name in table.get('field', {}):
+                violations += _check_field(table_name, field_name, table,
+                                           documentation, doc_table)
 
     return violations
 
