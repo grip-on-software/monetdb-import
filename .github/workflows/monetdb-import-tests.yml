@@ -34,6 +34,10 @@ jobs:
         run: |
           pip install -r Scripts/analysis-requirements.txt
           mypy Scripts/*.py --cobertura-xml-report mypy-report --junit-xml mypy-report/junit.xml --no-incremental --show-traceback --config-file Scripts/setup.cfg
+      - name: Adjust source paths in coverage for Sonar
+        run: |
+          sed -i "s/<source>\/home\/runner\/work\/monetdb-import\/monetdb-import/<source>\/github\/workspace/g" \
+            mypy-report/cobertura.xml
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v2.1.1
         env:
