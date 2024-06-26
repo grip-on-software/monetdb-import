@@ -44,6 +44,8 @@ import util.BaseImport;
  * @author Leon Helwerda
  */
 public class Importerjson {
+    private final static String VERSION = "0.0.3";
+
     private static String projectName = "";
     private static int projectID = 0;
     private static Set<String> problematicImports = new TreeSet<>();
@@ -291,10 +293,29 @@ public class Importerjson {
     }
     
     private static String formatUsage(boolean all) {
-        StringBuilder usage = new StringBuilder("\nUsage: java [-Dimporter.log=LEVEL] -jar importerjson.jar <project> [tasks]");
+        StringBuilder usage = new StringBuilder("\n");
+        usage.append("Usage: java [-Dimporter.log=LEVEL] [...] -jar importerjson.jar <project> [tasks]\n");
+        usage.append("\nMonetDB importer ").append(VERSION);
         
         if (all) {
-            usage.append("\n\nTask groups and tasks:\n\n - all: All default (non-special) tasks\n");
+            usage.append("\n\nDefines: Connection and organization properties, task configuration");
+            usage.append("\nDefines marked with (P) have defaults from a bundled config.properties");
+            usage.append("\n-Dimporter.log=LEVEL: Log level (default: WARNING)");
+            usage.append("\n-Dimporter.url=URL: JDBC URL for database connection (P)");
+            usage.append("\n-Dimporter.user=USER: Username for database (P)");
+            usage.append("\n-Dimporter.password=PASSWORD: Password for database (P)");
+            usage.append("\n-Dimporter.relPath=PATH: Root directory of JSON files, relative from workdir (P)");
+            usage.append("\n-Dimporter.email_domain=DOMAIN: Local domain for internal developers (P)");
+            usage.append("\n-Dimporter.update=\"FILE FILE\": Update tracker files for \"update\" task");
+            usage.append("\n-Dimporter.encrypt_table=TABLE,TABLE: Tables for \"encrypt\" task");
+
+            usage.append("\n\nProject: A primary source key (Jira/Azure DevOps) to import for, or:\n");
+            usage.append("\n--help: Print this usage");
+            usage.append("\n--files: Instead print a list of files involved in selected tasks");
+            usage.append("\n--: Only run special tasks that do not need a project");
+
+            usage.append("\n\nTask groups and tasks:\n");
+            usage.append("\n- all: All default (non-special) tasks\n");
             
             List<String> otherTasks = new ArrayList<>(DEFAULT_TASKS);
             for (Map.Entry<String, List<String>> group : GROUPED_TASKS.entrySet()) {
@@ -305,7 +326,7 @@ public class Importerjson {
             }
             
             usage.append("\n\n - Other (default) tasks: ").append(String.join(", ", otherTasks));
-            usage.append("\n - Special tasks: ").append(String.join(", ", SPECIAL_TASKS));
+            usage.append("\n\n- Special tasks: ").append(String.join(", ", SPECIAL_TASKS));
         }
         
         return usage.toString();

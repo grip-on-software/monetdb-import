@@ -133,7 +133,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         sql = "UPDATE gros.ldap_developer SET jira_dev_id=? WHERE (" + condition + " OR " + condition + ");";
         linkLdapDeveloperStmt = new BatchedStatement(sql);
         
-        localDomain = getBundle().getString("email_domain");
+        localDomain = getProperty("email_domain");
     }
     
     /**

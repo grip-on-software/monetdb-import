@@ -16,7 +16,8 @@ repository.
 
 The importer application has been tested with OpenJDK 8. In order to build the 
 application, we use Ant 1.10.1+ with the JDK (a package with `javac`). Make 
-sure your `JAVA_HOME` environment variable points to the correct JDK directory.
+sure your `JAVA_HOME` environment variable points to the correct JDK directory 
+if you have multiple possible installations.
 
 Before building, ensure you have create a file in the path 
 `Code/importerjson/nbproject/private/config.properties`, possibly by copying 
@@ -49,27 +50,50 @@ The JAR is then made available in `Code/importerjson/dist/importerjson.jar`.
 
 ### Running
 
-Run the application as follows: `java -Dimporter.log=LEVEL [...other defines] 
--jar Code/importerjson/dist/importerjson.jar PROJECT TASKS`. Replace `LEVEL` 
-with an appropriate log level (for example `INFO`), the `PROJECT` with 
-a project key to import for (must be a subdirectory of the relative path), and 
-the `TASKS` with the import tasks (`all` by default). In case there is 
-a complex selection of tasks required, then they may be provided as 
-a comma-separated list of tasks or group names, where a minus sign before 
-a task or group excludes that task from operation again. Special tasks (often 
-data corrections) are not performed by default and should be added to the list 
-if they are to be performed. The import tasks are also described when `--help` 
-is provided for the project argument.
+The MonetDB importer works on JSON data files that contain representations of 
+data acquired from software development systems which have been processed by 
+a [data-gathering](https://github.com/grip-on-software/data-gathering) agent. 
+JSON schemas for those files are also available in that repository. Typically, 
+a released version of the importer is compatible with the same version of the 
+data-gathering agent, with backward compatibility for the same major version.
+
+Run the application as follows:
+
+```
+java -Dimporter.log=LEVEL [...other defines] -jar \
+    Code/importerjson/dist/importerjson.jar PROJECT TASKS
+```
+
+In this command, replace `LEVEL` with an appropriate log level (for example 
+`INFO`), the `PROJECT` with a project key to import for (must be a subdirectory 
+of the relative path), and the `TASKS` with the import tasks (`all` by 
+default). In case there is a complex selection of tasks required, then they may 
+be provided as a comma-separated list of tasks or group names, where a minus 
+sign before a task or group excludes that task from operation again. Special 
+tasks (often data corrections) are not performed by default and should be added 
+to the list if they are to be performed. If the project argument is `--`, then 
+only special tasks may be performed and they are done as organization-wide 
+changes (if not already). The project argument can also be `--files`, in which 
+case a list of files involved for the selected tasks is printed instead of 
+performing them. The import tasks and configuration aspects are also described 
+when `--help` is provided for the project argument, which then also exits out.
 
 You may possibly add other defines at the start of the command, including 
 replacement values for the properties defined in the `config.properties` 
 property file included during the build (`importer.url`, `importer.user`, 
-`importer.password`, and `importer.relPath`), as well as the following:
+`importer.password`, `importer.relPath` and `importer.email_domain`), as well 
+as the following:
 
-- `importer.update`: A list of update tracker files to import for the `update` 
-  task, such that subsequent data gathering can continue from this state and 
-  thus support incremental collection and import. Update trackers are also used 
-  by some GROS visualizations to determine the source age.
+- `importer.update`: A space-separated list of update tracker files to import 
+  for the `update` task, such that subsequent data gathering can continue from 
+  this state and thus support incremental collection and import. Update 
+  trackers are also used by some GROS visualizations to determine source age.
+- `importer.encrypt_tables`: A comma-separated list of table names to perform 
+  encryption of personally identifying information on for the `encrypt` task. 
+  By default, this task encrypts project-specific tables with developer 
+  information with the project encryption key if a project is selected or 
+  organization-common tables with the global encryption key if no project is 
+  selected (with `--` as `PROJECT` argument).
 
 ## Management scripts
 
