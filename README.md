@@ -14,10 +14,10 @@ repository.
 
 ### Requirements, configuration and building
 
-The importer application has been tested with OpenJDK 8. In order to build the 
-application, we use Ant 1.10.1+ with the JDK (a package with `javac`). Make 
-sure your `JAVA_HOME` environment variable points to the correct JDK directory 
-if you have multiple possible installations.
+The importer application has been tested with Semeru OpenJDK 21. In order to 
+build the application, we use Ant 1.10.1+ with the JDK (a package with 
+`javac`). Make sure your `JAVA_HOME` environment variable points to the correct 
+JDK directory if you have multiple possible installations.
 
 Before building, ensure you have create a file in the path 
 `Code/importerjson/nbproject/private/config.properties`, possibly by copying 

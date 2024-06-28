@@ -21,7 +21,6 @@ package importer;
 
 import dao.RepositoryDb;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -411,14 +410,14 @@ public class Importerjson {
                         Arrays.fill(typeSpec, String.class);
                         Constructor<? extends BaseImport> constructor = importClass.getDeclaredConstructor(typeSpec);
                         importer = constructor.newInstance((Object[]) arguments);
-                    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
+                    } catch (ReflectiveOperationException ex) {
                         LOGGER.log(Level.SEVERE, "While instatiating importer for task " + task, ex);
                     }
                 }
                 else {
                     try {
-                        importer = importClass.newInstance();
-                    } catch (InstantiationException | IllegalAccessException ex) {
+                        importer = importClass.getDeclaredConstructor().newInstance();
+                    } catch (ReflectiveOperationException ex) {
                         LOGGER.log(Level.SEVERE, "While instantiating importer for task " + task, ex);
                     }
                 }
