@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: >-
+    Importer of gathered data into a MonetDB database
+message: Please cite this software as follows.
+type: software
+authors:
+  - given-names: Leon
+    family-names: Helwerda
+    email: l.s.helwerda@liacs.leidenuniv.nl
+    affiliation: Leiden University
+    orcid: 'https://orcid.org/0000-0002-4299-466X'
+  - given-names: Enrique
+    family-names: Larios Vargas
+    orcid: 'https://orcid.org/0000-0002-6406-5263'
+  - given-names: Thomas
+    family-names: Helling
+  - given-names: Thomas
+    family-names: Prikkel
+repository-code: 'https://github.com/grip-on-software/monetdb-import'
+url: 'https://gros.liacs.nl/'
+keywords:
+  - monetdb
+  - database-importer
+license: Apache-2.0
+version: 0.0.3
