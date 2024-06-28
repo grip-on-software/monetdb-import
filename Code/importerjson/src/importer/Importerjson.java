@@ -456,7 +456,7 @@ public class Importerjson {
             impCommit.updateJiraID(); // fix developer linking manually (out of json file) after all projects are checked.
             impCommit.showUnknownDevs();
             
-            showCompleteTask("Fixed JIRA and VCS developer linking", startTime);
+            showCompleteTask("Fixed JIRA and VCS/LDAP developer linking", startTime);
         }
         
         if (tasks.contains("metric_domain_name")) {

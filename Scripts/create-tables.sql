@@ -194,7 +194,7 @@ CREATE TABLE "gros"."metric_value" (
 CREATE TABLE "gros"."metric_version" (
 	"project_id"     INTEGER     NOT NULL,
 	"version_id"     VARCHAR(100)     NOT NULL,
-	"developer"      VARCHAR(64) NOT NULL,
+	"developer"      VARCHAR(64) NULL,
 	"message"        TEXT      NULL,
 	"commit_date"    TIMESTAMP NOT NULL,
 	"sprint_id"      INTEGER   NULL,
@@ -206,10 +206,12 @@ CREATE TABLE "gros"."metric_target" (
 	"project_id"     INTEGER     NOT NULL,
 	"version_id"     VARCHAR(100)     NOT NULL,
 	"metric_id"      INTEGER     NOT NULL,
-	"type"           VARCHAR(100) NULL,
-	"target"         INTEGER     NOT NULL,
-	"low_target"     INTEGER     NOT NULL,
-	"comment"        TEXT     NULL
+	"comment"        TEXT     NULL,
+	"direction"      BOOLEAN      NULL,
+	"target"         FLOAT     NULL,
+	"low_target"     FLOAT     NULL,
+	"debt_target"    FLOAT     NULL,
+	"scale"          VARCHAR(16) NULL
 );
 
 CREATE TABLE "gros"."metric_default" (
@@ -220,6 +222,7 @@ CREATE TABLE "gros"."metric_default" (
 	"perfect"        FLOAT     NULL,
 	"target"         FLOAT     NULL,
 	"low_target"     FLOAT     NULL,
+	"scale"          VARCHAR(16) NULL,
 	    CONSTRAINT "pk_metric_default_id" PRIMARY KEY ("base_name", "version_id")
 );
 
