@@ -64,8 +64,8 @@ public class BaseDb {
         password = getProperty("password");
         
         // Get system file path from Java jar location.
-        File f = new File(System.getProperty("java.class.path"));
-        File dir = f.getAbsoluteFile().getParentFile();
+        File f = new File(System.getProperty("user.dir"));
+        File dir = f.getAbsoluteFile();
         rootPath = dir.toPath();
         String relPath = getProperty("relPath");
         File absPath = new File(dir, relPath);

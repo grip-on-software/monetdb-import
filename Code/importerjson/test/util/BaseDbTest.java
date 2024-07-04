@@ -143,7 +143,7 @@ public class BaseDbTest {
      */
     @Test
     public void testGetRootPath() {
-        System.setProperty("java.class.path", "/test/root/path/classes");
+        System.setProperty("user.dir", "/test/root/path");
         BaseDb instance = new BaseDb();
         File expResult = new File("/test/root/path/");
         Path result = instance.getRootPath();
@@ -155,7 +155,7 @@ public class BaseDbTest {
      */
     @Test
     public void testGetPath() {
-        System.setProperty("java.class.path", "/test/root/path/classes");
+        System.setProperty("user.dir", "/test/root/path");
         System.setProperty("importer.relPath", "test/rel/path");
         BaseDb instance = new BaseDb();
         File expResult = new File("/test/root/path/test/rel/path/");
