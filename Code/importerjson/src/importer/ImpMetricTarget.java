@@ -85,6 +85,9 @@ public class ImpMetricTarget extends BaseImport {
                 if ("".equals(low_target)) {
                     low_target = "0";
                 }
+                if ("".equals(debt_target)) {
+                    debt_target = null;
+                }
                 
                 if (unchanged == null || "0".equals(unchanged)) {
                     metricDb.insert_target(projectId, revision, metricName.getId(), comment, parseDirection(direction), parseTarget(target), parseTarget(low_target), parseTarget(debt_target), scale);
@@ -150,7 +153,7 @@ public class ImpMetricTarget extends BaseImport {
  
         try (
             MetricDb metricDb = new MetricDb();
-            FileReader fr = new FileReader(new File(getRootPath().toFile(), "data_metric_defaults.json"))
+            FileReader fr = new FileReader(new File(getExportPath(), "data_metric_defaults.json"))
         ) {
             JSONArray a = (JSONArray) parser.parse(fr);
             
@@ -214,4 +217,5 @@ public class ImpMetricTarget extends BaseImport {
     public String[] getImportFiles() {
         return new String[]{"data_metric_targets.json"};
     }
+
 }

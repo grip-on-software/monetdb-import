@@ -106,7 +106,7 @@ public class StatusDb extends BaseDb implements AutoCloseable {
             if (rs.next()) {
                 if (name.equals(rs.getString("name")) &&
                         description.equals(rs.getString("description")) &&
-                        category_id == null ? rs.getObject("category_id") == null : category_id == rs.getInt("category_id")) {
+                        (category_id == null ? rs.getObject("category_id") == null : category_id.equals(rs.getInt("category_id")))) {
                     return CheckResult.EXISTS;
                 }
                 else {
@@ -133,7 +133,7 @@ public class StatusDb extends BaseDb implements AutoCloseable {
         pstmt.setInt(1, id);
         pstmt.setString(2, name);
         pstmt.setString(3, description);
-        setInteger(pstmt, 4, id);
+        setInteger(pstmt, 4, category_id);
         
         insertStatusStmt.batch();
     }

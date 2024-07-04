@@ -75,7 +75,8 @@ public class ImpGitHubIssue extends BaseImport {
                 int encryption = SaltDb.Encryption.parseInt(encrypted);
                 int repo_id = repoDb.check_repo(repo_name, project_id);
                 if (repo_id == 0) {
-                    throw new ImporterException("Cannot determine repository: " + repo_name);
+                    getLogger().log(Level.WARNING, "Cannot determine repository in {0}: {1}", new Object[]{getMainImportPath(), repo_name});
+                    continue;
                 }
                 int issue_id = Integer.parseInt(id);
                 Integer pull_request_id = Integer.parseInt(request_id);

@@ -543,7 +543,7 @@ public class DeveloperDb extends BaseDb implements AutoCloseable {
         checkProjectDeveloperIdStmt.setInt(2, dev_id);
         try (ResultSet rs = checkProjectDeveloperIdStmt.executeQuery()) {
             while (rs.next()) {
-                if (team_id == null ? rs.getObject("team_id") == null : team_id == rs.getInt("team_id")) {
+                if (team_id == null ? rs.getObject("team_id") == null : team_id.equals(rs.getInt("team_id"))) {
                     return;
                 }
             }

@@ -23,6 +23,9 @@ import dao.FixVersionDb;
 import util.BaseImport;
 import java.io.FileReader;
 import java.sql.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -43,11 +46,18 @@ public class ImpDataFixVersion extends BaseImport {
             FixVersionDb versionDb = new FixVersionDb()
         ) {            
             JSONArray a = (JSONArray) parser.parse(fr);
+            Set<String> identifiers = new HashSet<>();
             
             for (Object o : a) {
                 JSONObject jsonObject = (JSONObject) o;
                 
                 String id = (String) jsonObject.get("id");
+                if (identifiers.contains(id)) {
+                    getLogger().log(Level.WARNING, "Duplicate identifier in {0}: {1}", new Object[]{getMainImportPath(), id});
+                    continue;
+                }
+                identifiers.add(id);
+
                 String name = (String) jsonObject.get("name");
                 String description = (String) jsonObject.get("description");
                 String start_date = (String) jsonObject.get("start_date");

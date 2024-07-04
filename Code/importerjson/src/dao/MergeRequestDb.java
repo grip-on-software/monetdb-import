@@ -96,7 +96,7 @@ public class MergeRequestDb extends BaseDb implements AutoCloseable {
                         source_branch.equals(rs.getString("source_branch")) &&
                         target_branch.equals(rs.getString("target_branch")) &&
                         author_id == rs.getInt("author_id") &&
-                        (assignee_id == null ? rs.getObject("assignee_id") == null : assignee_id == rs.getInt("assignee_id")) &&
+                        (assignee_id == null ? rs.getObject("assignee_id") == null : assignee_id.equals(rs.getInt("assignee_id"))) &&
                         upvotes == rs.getInt("upvotes") &&
                         downvotes == rs.getInt("downvotes") &&
                         created_date.equals(rs.getTimestamp("created_date")) &&
