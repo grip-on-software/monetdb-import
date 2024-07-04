@@ -22,8 +22,8 @@ package importer;
 import dao.EnvironmentDb;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -56,11 +56,12 @@ public class ImpEnvironment extends BaseImport {
                 String version = (String) jsonObject.get("version");
                 if (url != null) {
                     try {
-                        URL parsedUrl = new URL(url);
-                        URL cleanUrl = new URL(parsedUrl.getProtocol(), parsedUrl.getHost(), parsedUrl.getPort(), parsedUrl.getFile());
+                        // Clean up the URL to not contain any user credentials and fragment identifiers
+                        URI parsedUrl = new URI(url);
+                        URI cleanUrl = new URI(parsedUrl.getScheme(), "", parsedUrl.getHost(), parsedUrl.getPort(), parsedUrl.getPath(), parsedUrl.getQuery(), "");
                         url = cleanUrl.toString();
                     }
-                    catch (MalformedURLException ex) {
+                    catch (URISyntaxException ex) {
                         getLogger().log(Level.INFO, "Source environment {0} is not a URL: {1}", new Object[]{url, ex.getMessage()});
                     }
                     EnvironmentDb.CheckResult result = envDb.check_source(project, type, url, environment, version);
