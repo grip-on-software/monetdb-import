@@ -48,7 +48,7 @@ ant -buildfile Code/importerjson/build.xml \
 
 The JAR is then made available in `Code/importerjson/dist/importerjson.jar`.
 
-### Running
+### Running importer
 
 The MonetDB importer works on JSON data files that contain representations of 
 data acquired from software development systems which have been processed by 
@@ -94,6 +94,37 @@ as the following:
   information with the project encryption key if a project is selected or 
   organization-common tables with the global encryption key if no project is 
   selected (with `--` as `PROJECT` argument).
+
+### Testing
+
+Tests can be performed during the build using:
+
+```
+ant -buildfile Code/importerjson/build.xml \
+    -propertyfile Code/importerjson/nbproject/private/config.properties test
+```
+
+Note that one test is an integration test, which requires a few things to be 
+set up beforehand, otherwise it will detect and skip the test:
+
+- Import data files should be placed in directories 
+  `Code/importerjson/export/TEST1` through `Code/importerjson/export/TEST10`, 
+  as well as `Code/importerjson/data_vcsdev_to_dev.json`.
+- A MonetDB database instance should be running on `localhost` on the default 
+  port (`50000`) and a database with the name `gros_test` should be created and 
+  pre-filled with the database schema.
+
+These two steps can be simplified by [running scripts](#running-scripts), 
+respectively the `generate_test_files.py` and `recreate_database.py` scripts. 
+Note that the check whether a database is available may take a long time before 
+skipping, as this depends on database pooling options which try to reconnect to 
+the database several times until it gives up.
+
+Test output should indicate the successful, failed and skipped tests. Once the 
+test is complete, test result and coverage information is made available in 
+`Code/importerjson/build/test`, with JUnit XML files in `junit/junit.xml` in 
+that directory and JaCoCo coverage XML in `jacoco.xml` and HTML reports in 
+`jacoco/index.html`.
 
 ## Management scripts
 
@@ -152,7 +183,7 @@ the groups in order to properly configure the environment of the scripts:
 Some configuration can be adjusted through command line arguments in the 
 scripts (and some scripts do not use the configuration file).
 
-### Running
+### Running scripts
 
 The following scripts are available to manage the database:
 
@@ -169,6 +200,12 @@ The following scripts are available to manage the database:
 
 Use the `--help` argument for the scripts to receive more details on running 
 the scripts and their arguments.
+
+Additionally, the file `generate_test_files.py` is usable for setting up the 
+integration tests for the importer application by creating generated files 
+based on JSON Schemas of the data imports, which requires a clone of the 
+[data-gathering](https://github.com/grip-on-software/data-gathering) repository 
+to be available.
 
 The script `workbench_group.py` only works within the MySQL Workbench Scripting 
 Shell and is meant to alter the model file for entity-relationship diagrams.

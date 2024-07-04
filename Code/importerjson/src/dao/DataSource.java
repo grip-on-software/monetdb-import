@@ -66,6 +66,14 @@ public class DataSource extends BaseDb {
             return datasource;
         }
     }
+    
+    /**
+     * Resets the singleton object.
+     */
+    public static void reset() {
+        datasource.cpds.close();
+        datasource = null;
+    }
 
     /**
      * Returns the connection with the database. 

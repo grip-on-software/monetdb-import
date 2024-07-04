@@ -1,9 +1,11 @@
 /Code/importerjson/dist/
 /Code/importerjson/build/
+/Code/importerjson/export/
 /Code/importerjson/nbproject/private/
 /Code/importerjson/src/util/import.properties
 /Scripts/env/
 /Scripts/settings*.cfg
+/Scripts/.hypothesis/
 /Scripts/.monetdb
 /Scripts/database-model.pdf
 /Scripts/database-model.png
@@ -15,3 +17,4 @@
 mypy-report/
 owasp-dep/
 pylint-report.txt
+data_vcsdev_to_dev.json
