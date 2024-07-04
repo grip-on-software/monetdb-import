@@ -202,13 +202,16 @@ and have the following licenses:
 - [ahocorasick](https://github.com/robert-bor/aho-corasick): Apache 2.0 License
 - [c3p0](https://github.com/swaldman/c3p0): LGPL v2.1 (or any later version) or 
   EPL v1.0
-- [hamcrest-core](https://github.com/hamcrest/JavaHamcrest): BSD License, see 
-  [LICENSE.txt](Code/importerjson/lib/hamcrest/LICENSE.txt)
-- [jacoco](https://github.com/jacoco/jacoco) (agent and ant task): EPL v2.0
 - [joda-time](https://github.com/JodaOrg/joda-time): Apache 2.0 License
 - [json-simple](https://github.com/fangyidong/json-simple): Apache 2.0 License
-- [junit4](https://github.com/junit-team/junit4): EPL v1.0
 - [mchange-commons-java](https://github.com/swaldman/mchange-commons-java): 
   LGPL v2.1 (or any later version) or EPL v1.0
 - [monetdb-jdbc](https://github.com/MonetDB/monetdb-java): MPL v2.0, available 
   from [MonetDB Java Download Area](https://www.monetdb.org/downloads/Java/)
+
+Test libraries:
+
+- [hamcrest-core](https://github.com/hamcrest/JavaHamcrest): BSD License, see 
+  [LICENSE.txt](Code/importerjson/lib/hamcrest/LICENSE.txt)
+- [jacoco](https://github.com/jacoco/jacoco) (agent and ant task): EPL v2.0
+- [junit4](https://github.com/junit-team/junit4): EPL v1.0
