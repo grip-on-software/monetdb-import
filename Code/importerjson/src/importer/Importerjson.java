@@ -355,6 +355,14 @@ public class Importerjson {
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
+        selectAndPerformTasks(args);
+    }
+    
+    /**
+     * Select tasks to perform from command-line arguments and perform them.
+     * @param args Command-line arguments
+     */
+    public static void selectAndPerformTasks(String[] args) {
         String logLevel = System.getProperty("importer.log", "WARNING");
         System.setProperty("java.util.logging.SimpleFormatter.format",
                            "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS:%4$s:%2$s:%5$s%6$s%n");
@@ -371,14 +379,6 @@ public class Importerjson {
             throw new ImporterException("Illegal importer.log argument: " + ex.getMessage() + formatUsage());
         }
         
-        selectAndPerformTasks(args);
-    }
-    
-    /**
-     * Select tasks to perform from command-line arguments and perform them.
-     * @param args Command-line arguments
-     */
-    public static void selectAndPerformTasks(String[] args) {
         if (args.length <= 0 || "--help".equals(args[0])) {
             throw new ImporterException(formatUsage(true));
         }
