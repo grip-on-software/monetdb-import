@@ -57,19 +57,24 @@ def parse_args(config: RawConfigParser) -> Namespace:
     log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
     parser = ArgumentParser(description=description, conflict_handler='resolve')
     parser.add_argument('-h', '--hostname', nargs='?',
-                        default=config.get('monetdb', 'hostname'),
+                        default=config.get('monetdb', 'hostname',
+                                           fallback='localhost'),
                         help='host name of the monetdb database to connect to')
     parser.add_argument('-s', '--passphrase',
-                        default=config.get('monetdb', 'passphrase'),
+                        default=config.get('monetdb', 'passphrase',
+                                           fallback='monetdb-root'),
                         help='passphrase for the remote control')
     parser.add_argument('-u', '--username',
-                        default=config.get('monetdb', 'username'),
+                        default=config.get('monetdb', 'username',
+                                           fallback='monetdb'),
                         help='username that creates the tables')
     parser.add_argument('-P', '--password',
-                        default=config.get('monetdb', 'password'),
+                        default=config.get('monetdb', 'password',
+                                           fallback='monetdb'),
                         help='password of the user creating the tables')
     parser.add_argument('-d', '--database',
-                        default=config.get('monetdb', 'database'),
+                        default=config.get('monetdb', 'database',
+                                           fallback='gros'),
                         help='database name to create into')
     parser.add_argument('-f', '--force', action='store_true', default=False,
                         help='Do not prompt for confirmation')
@@ -86,20 +91,22 @@ def parse_args(config: RawConfigParser) -> Namespace:
                         action='store_false', default=True,
                         help='Do not delete Jenkins workspace automatically')
     parser.add_argument('--jenkins-host', dest='jenkins_host',
-                        default=config.get('jenkins', 'host'),
+                        default=config.get('jenkins', 'host', fallback=''),
                         help='Base URL of the Jenkins instance')
     parser.add_argument('--jenkins-job', dest='jenkins_job',
-                        default=config.get('jenkins', 'job'),
+                        default=config.get('jenkins', 'job',
+                                           fallback='scrape-projects'),
                         help='Jenkins job to delete workspace from')
     parser.add_argument('--jenkins-username', dest='jenkins_username',
-                        default=config.get('jenkins', 'username'),
+                        default=config.get('jenkins', 'username', fallback=''),
                         help='Username to log in to Jenkins')
     parser.add_argument('--jenkins-token', dest='jenkins_token',
-                        default=config.get('jenkins', 'token'),
+                        default=config.get('jenkins', 'token', fallback=''),
                         help='Password or API token to log in to Jenkins')
     parser.add_argument('--jenkins-crumb', dest='jenkins_crumb',
                         action='store_true',
-                        default=config.getboolean('jenkins', 'crumb'),
+                        default=config.getboolean('jenkins', 'crumb',
+                                                  fallback=True),
                         help='Request a CSRF crumb from Jenkins')
     parser.add_argument('-l', '--log', choices=log_levels, default='INFO',
                         help='log level (info by default)')
@@ -136,6 +143,23 @@ def delete_workspace(args: Namespace) -> None:
 
     url = f'{args.jenkins_host}/job/{args.jenkins_job}/doWipeOutWorkspace'
     requests.post(url, auth=auth, headers=headers, timeout=TIMEOUT)
+
+def create_tables(connection: Connection, import_tables: str) -> None:
+    """
+    Create tables in the newly recreated database based on an SQL file with
+    `CREATE TABLE` statements.
+    """
+
+    with open(import_tables, 'r', encoding='utf-8') as table_file:
+        command = ""
+        for line in table_file:
+            if line.strip() == "":
+                continue
+
+            command += line
+            if line.rstrip().endswith(';'):
+                connection.execute(command)
+                command = ""
 
 def main() -> None:
     """
@@ -188,20 +212,11 @@ def main() -> None:
 
     if args.import_tables:
         logging.info('Creating tables...')
-        with open(args.import_tables, 'r', encoding='utf-8') as table_file:
-            command = ""
-            for line in table_file:
-                if line.strip() == "":
-                    continue
-
-                command += line
-                if line.rstrip().endswith(';'):
-                    connection.execute(command)
-                    command = ""
+        create_tables(connection, args.import_tables)
 
     connection.close()
 
-    if args.delete_jenkins:
+    if args.delete_jenkins and args.jenkins_host != '':
         logging.info('Deleting Jenkins workspace...')
         delete_workspace(args)
 
