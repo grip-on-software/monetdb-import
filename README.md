@@ -1,5 +1,13 @@
 # MonetDB import and management
 
+[![Build 
+status](https://github.com/grip-on-software/monetdb-import/actions/workflows/monetdb-import-tests.yml/badge.svg)](https://github.com/grip-on-software/monetdb-import/actions/workflows/monetdb-import-tests.yml)
+[![Coverage 
+Status](https://coveralls.io/repos/github/grip-on-software/monetdb-import/badge.svg?branch=master)](https://coveralls.io/github/grip-on-software/monetdb-import?branch=master)
+[![Quality Gate
+Status](https://sonarcloud.io/api/project_badges/measure?project=grip-on-software_monetdb-import&metric=alert_status)](https://sonarcloud.io/project/overview?id=grip-on-software_monetdb-import)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12583197.svg)](https://doi.org/10.5281/zenodo.12583197)
+
 This repository contains a Java application which can interact with a MonetDB 
 database for a Grip on Software data collection in order to import JSON 
 representations of source information.
@@ -125,6 +133,13 @@ test is complete, test result and coverage information is made available in
 `Code/importerjson/build/test`, with JUnit XML files in `junit/junit.xml` in 
 that directory and JaCoCo coverage XML in `jacoco.xml` and HTML reports in 
 `jacoco/index.html`.
+
+[GitHub Actions](https://github.com/grip-on-software/monetdb-import/actions) is 
+used to run the unit tests and report on coverage on commits and pull requests. 
+This includes quality gate scans tracked by 
+[SonarCloud](https://sonarcloud.io/project/overview?id=grip-on-software_monetdb-import) 
+and [Coveralls](https://coveralls.io/github/grip-on-software/monetdb-import) 
+for coverage history.
 
 ## Management scripts
 
