@@ -4,3 +4,4 @@ pymonetdb==1.6.2
 PyYAML==6.0.1
 requests==2.32.3
 regex==2024.5.15
+setuptools==70.0.0

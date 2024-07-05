@@ -1,0 +1,63 @@
+name: grip-on-software/monetdb-import
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5.1.0
+        with:
+          python-version: 3.12.3
+      - name: Validate schema
+        run: |
+          pip install -r Scripts/requirements.txt
+          cd Scripts
+          python validate_schema.py --log WARNING
+      - name: Mypy typing coverage
+        run: |
+          pip install -r Scripts/requirements-analysis.txt
+          mypy Scripts/*.py --cobertura-xml-report mypy-report --junit-xml mypy-report/junit.xml --no-incremental --show-traceback --config-file Scripts/setup.cfg
+      - name: Adjust source paths in coverage for Sonar
+        run: |
+          sed -i "s/<source>\/home\/runner\/work\/monetdb-import\/monetdb-import/<source>\/github\/workspace/g" \
+            mypy-report/cobertura.xml
+      - name: Checkout data-gathering schemas
+        uses: actions/checkout@v4.1.6
+        with:
+          repository: grip-on-software/data-gathering
+          path: data-gathering
+          sparse-checkout: |
+            schema-exports.json
+            schema
+      - name: Start MonetDB instance
+        run: docker run --name monetdb -p 50000:50000 -d -it --rm -e MDB_DAEMON_PASS=monetdb-root -e MDB_DB_ADMIN_PASS=monetdb monetdb/monetdb:Dec2023-SP3
+      - name: Create test files and database schema
+        run: |
+          cd Scripts
+          python generate_test_files.py -r ../data-gathering -l WARNING
+          python recreate_database.py -f -k -d gros_test
+      - uses: actions/setup-java@v4.2.1
+        with:
+          distribution: semeru
+          java-version: 21
+      - uses: cedx/setup-ant@v2.0.0
+        with:
+          version: 1.10.14
+      - name: Build and test
+        run: ant -buildfile Code/importerjson/build.xml -propertyfile config.properties.example
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@v2.1.1
+        env:
+          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        if: "${{ success() }}"
