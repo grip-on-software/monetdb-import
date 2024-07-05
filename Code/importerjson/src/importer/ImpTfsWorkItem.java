@@ -21,6 +21,7 @@ package importer;
 
 import dao.BatchedUpdateStatement;
 import dao.RepositoryDb;
+import dao.SaltDb;
 import dao.SprintDb;
 import dao.TeamDb;
 import java.beans.PropertyVetoException;
@@ -45,7 +46,7 @@ public class ImpTfsWorkItem extends BaseImport {
         "issue_id", "changelog_id", "title", "type", "priority", "created",
         "updated", "description", "duedate", "project_id", "status", "reporter",
         "assignee", "attachments", "additional_information", "story_points",
-        "sprint_id", "team_id", "updated_by", "labels"
+        "sprint_id", "team_id", "updated_by", "labels", "encryption"
     };
 
     private static final BigDecimal MAX_POINTS = BigDecimal.valueOf(999.0);
@@ -140,6 +141,9 @@ public class ImpTfsWorkItem extends BaseImport {
             
             setString(pstmt, ++index, (String) jsonObject.get("updated_by"), 100);
             setInteger(pstmt, ++index, (String) jsonObject.get("labels"));
+
+            // Encryption
+            pstmt.setInt(++index, SaltDb.Encryption.NONE);
 
             if (is_update) {
                 pstmt.setInt(++index, issue_id);

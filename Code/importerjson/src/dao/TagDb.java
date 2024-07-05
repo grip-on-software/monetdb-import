@@ -151,12 +151,12 @@ public class TagDb extends BaseDb implements AutoCloseable {
      * then the tag has no separate message.
      * @param tagged_date Timestamp on which the tag is created (Git) or most
      * recently updated (Subversion). May be null for incomplete tags.
-     * @param tagger_id Idenitifier of the VCS developer that created the tag.
+     * @param tagger_id Identifier of the VCS developer that created the tag.
      * If this is null, then the developer could not be deduced from tag information
      * @return An indicator of the state of the database regarding the given tag.
      * This is CheckResult.MISSING if the tag with the provided repository and name
      * does not exist. This is CheckResult.DIFFERS if there is a row with the provided
-     * repsoitory identifier and tag name in the database, but it has different values
+     * repository identifier and tag name in the database, but it has different values
      * in its other fields. This is CheckResult.EXISTS if there is an merge request
      * in the database that matches all the provided parameters.
      * @throws SQLException If a database access error occurs
@@ -193,9 +193,9 @@ public class TagDb extends BaseDb implements AutoCloseable {
      * then the tag has no separate message.
      * @param tagged_date Timestamp on which the tag is created (Git) or most
      * recently updated (Subversion). May be null for incomplete tags.
-     * @param tagger_id Idenitifier of the VCS developer that created the tag.
+     * @param tagger_id Identifier of the VCS developer that created the tag.
      * If this is null, then the developer could not be deduced from tag information
-     * @param sprint_id Idenitifer of the sprint in which the tag is created
+     * @param sprint_id Identifier of the sprint in which the tag is created
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */
@@ -226,9 +226,9 @@ public class TagDb extends BaseDb implements AutoCloseable {
      * then the tag has no separate message.
      * @param tagged_date Timestamp on which the tag is created (Git) or most
      * recently updated (Subversion). May be null for incomplete tags.
-     * @param tagger_id Idenitifier of the VCS developer that created the tag.
+     * @param tagger_id Identifier of the VCS developer that created the tag.
      * If this is null, then the developer could not be deduced from tag information
-     * @param sprint_id Idenitifer of the sprint in which the tag is created
+     * @param sprint_id Identifier of the sprint in which the tag is created
      * @throws SQLException If a database access error occurs
      * @throws PropertyVetoException If the database connection cannot be configured
      */

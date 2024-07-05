@@ -104,7 +104,7 @@ public class ImpMetricValue extends BaseImport {
             if (start != null) {
                 since_date = Timestamp.valueOf(start);
             }
-            insert(metric_name, Integer.parseInt(value), category, Timestamp.valueOf(date), since_date, nameParts);
+            insert(metric_name, Float.parseFloat(value), category, Timestamp.valueOf(date), since_date, nameParts);
         }
 
         public void insert(String metric_name, float value, String category, Timestamp date, Timestamp since_date, MetricName nameParts) throws SQLException, PropertyVetoException {

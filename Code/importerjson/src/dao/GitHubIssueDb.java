@@ -97,13 +97,13 @@ public class GitHubIssueDb extends BaseDb implements AutoCloseable {
                         description.equals(rs.getString("description")) &&
                         status.equals(rs.getString("status")) &&
                         author_id == rs.getInt("author_id") &&
-                        (assignee_id == null ? rs.getObject("assignee_id") == null : assignee_id == rs.getInt("assignee_id")) &&
+                        (assignee_id == null ? rs.getObject("assignee_id") == null : assignee_id.equals(rs.getInt("assignee_id"))) &&
                         created_date.equals(rs.getTimestamp("created_date")) &&
                         updated_date.equals(rs.getTimestamp("updated_date")) &&
-                        (pull_request_id == null ? rs.getObject("pull_request_id") == null : pull_request_id == rs.getInt("pull_request_id")) &&
+                        (pull_request_id == null ? rs.getObject("pull_request_id") == null : pull_request_id.equals(rs.getInt("pull_request_id"))) &&
                         labels == rs.getInt("labels") &&
                         (closed_date == null ? rs.getObject("closed_date") == null : closed_date.equals(rs.getTimestamp("closed_date"))) &&
-                        (closer_id == null ? rs.getObject("closer_id") == null : closer_id == rs.getInt("closer_id"))) {
+                        (closer_id == null ? rs.getObject("closer_id") == null : closer_id.equals(rs.getInt("closer_id")))) {
                     result = CheckResult.EXISTS;
                 }
                 else {

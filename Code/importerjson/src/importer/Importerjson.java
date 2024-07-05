@@ -47,7 +47,6 @@ public class Importerjson {
 
     private static String projectName = "";
     private static int projectID = 0;
-    private static Set<String> problematicImports = new TreeSet<>();
     
     private final static HashMap<String, List<String>> GROUPED_TASKS = retrieveGroupedTasks();
 
@@ -198,9 +197,13 @@ public class Importerjson {
     
     private static abstract class ImportTask {
         public abstract void performTask(BaseImport importer);
+        public abstract List<String> getFiles();
+        public abstract boolean hasProblems();
     }
 
     private static class PerformImport extends ImportTask {
+        protected final Set<String> problematicImports = new TreeSet<>();
+        
         @Override
         public void performTask(BaseImport importer) {
             long startTime;
@@ -224,10 +227,20 @@ public class Importerjson {
                 showCompleteTask("Imported " + importer.getImportName(), startTime);
             }
         }
+        
+        @Override
+        public List<String> getFiles() {
+            return new ArrayList<>(problematicImports);
+        }
+        
+        @Override
+        public boolean hasProblems() {
+            return !problematicImports.isEmpty();
+        }
     }
     
     private static class FileCollector extends ImportTask {
-        private ArrayList<String> files = new ArrayList<>();
+        private final ArrayList<String> files = new ArrayList<>();
         
         @Override
         public void performTask(BaseImport importer) {
@@ -236,11 +249,17 @@ public class Importerjson {
             files.addAll(Arrays.asList(importFiles));
         }
         
+        @Override
         public List<String> getFiles() {
             return files;
         }
-    }
         
+        @Override
+        public boolean hasProblems() {
+            return false;
+        }
+    }
+    
     private static void showCompleteTask(String taskName, long startTime, Level logLevel) {
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
@@ -287,11 +306,11 @@ public class Importerjson {
         return tasks;
     }
     
-    private static String formatUsage() {
+    public static String formatUsage() {
         return formatUsage(false);
     }
     
-    private static String formatUsage(boolean all) {
+    public static String formatUsage(boolean all) {
         StringBuilder usage = new StringBuilder("\n");
         usage.append("Usage: java [-Dimporter.log=LEVEL] [...] -jar importerjson.jar <project> [tasks]\n");
         usage.append("\nMonetDB importer ").append(VERSION);
@@ -314,7 +333,7 @@ public class Importerjson {
             usage.append("\n--: Only run special tasks that do not need a project");
 
             usage.append("\n\nTask groups and tasks:\n");
-            usage.append("\n- all: All default (non-special) tasks\n");
+            usage.append("\n- all: All default (non-special) tasks and developerlink special task\n");
             
             List<String> otherTasks = new ArrayList<>(DEFAULT_TASKS);
             for (Map.Entry<String, List<String>> group : GROUPED_TASKS.entrySet()) {
@@ -331,6 +350,10 @@ public class Importerjson {
         return usage.toString();
     }
     
+    /**
+     * Main entry point.
+     * @param args Command-line arguments
+     */
     public static void main(String[] args) {
         String logLevel = System.getProperty("importer.log", "WARNING");
         System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -347,6 +370,15 @@ public class Importerjson {
         catch (IllegalArgumentException ex) {
             throw new ImporterException("Illegal importer.log argument: " + ex.getMessage() + formatUsage());
         }
+        
+        selectAndPerformTasks(args);
+    }
+    
+    /**
+     * Select tasks to perform from command-line arguments and perform them.
+     * @param args Command-line arguments
+     */
+    public static void selectAndPerformTasks(String[] args) {
         if (args.length <= 0 || "--help".equals(args[0])) {
             throw new ImporterException(formatUsage(true));
         }
@@ -365,31 +397,41 @@ public class Importerjson {
         else {
             tasks = allTasks;
         }
-                
-        if ("--files".equals(args[0])) {
-            FileCollector performer = new FileCollector();
-            projectName = "ANY";
-            performTasks(tasks, performer);
-            String files = String.join(" ", performer.getFiles());
-            // Output the file list to standard output.
-            System.out.println(files); //NOSONAR
-            return;
-        }
-        else if ("--".equals(args[0])) {
-            // Only allow special tasks that may run project-independently
-            if (!SPECIAL_TASKS.containsAll(tasks)) {
-                throw new ImporterException("Project must be given for the provided tasks" + formatUsage());
+        
+        ImportTask performer = null;
+        switch (args[0]) {
+            case "--files" -> {
+                performer = new FileCollector();
+                projectName = "ANY";
+                performTasks(tasks, performer);
+                String files = String.join(" ", performer.getFiles());
+                // Output the file list to standard output.
+                System.out.println(files); //NOSONAR
+                return;
             }
-        }
-        else {
-            projectName = args[0].trim();
+            case "--" -> {
+                // Only allow special tasks that may run project-independently
+                if (!SPECIAL_TASKS.containsAll(tasks)) {
+                    throw new ImporterException("Project must be given for the provided tasks" + formatUsage());
+                }
+                performer = new PerformImport();
+            }
+            default -> {
+                projectName = args[0].trim();
+                if (performer == null) {
+                    performer = new PerformImport();
+                }
+            }
         }
         
         LOGGER.log(Level.INFO, "Tasks to run: {0}", Arrays.toString(tasks.toArray()));
         
         // Perform project import so that project ID is known to exist
-        performTasks(tasks, new PerformImport());
+        performTasks(tasks, performer);
         performSpecialTasks(tasks);
+        if (performer.hasProblems()) {
+            throw new ImporterException("Not all tasks finished successfully");
+        }
     }
     
     private static void performTasks(SortedSet<String> tasks, ImportTask performer) {
@@ -433,6 +475,8 @@ public class Importerjson {
         impCommit.setProjectName(projectName);
         impCommit.setProjectID(projectID);
         ImpMetricTarget impMetric = new ImpMetricTarget();
+        impMetric.setProjectName(projectName);
+        impMetric.setProjectID(projectID);
         if (tasks.contains("sprintlink")) {
             long startTime = System.currentTimeMillis();
             

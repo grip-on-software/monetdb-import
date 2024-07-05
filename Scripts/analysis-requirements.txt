@@ -1,6 +1,0 @@
-pylint
-mypy
-lxml
-types-PyYAML
-types-regex
-types-requests
