@@ -43,7 +43,7 @@ import util.BaseImport;
  * @author Leon Helwerda
  */
 public class Importerjson {
-    private final static String VERSION = "0.0.3";
+    private final static String VERSION = "1.0.0";
 
     private static String projectName = "";
     private static int projectID = 0;
